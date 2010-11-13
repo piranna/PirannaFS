@@ -1,0 +1,3 @@
+Plugin system with dependencies
+
+Group of signals
