@@ -1,0 +1,53 @@
+[2010-08-22] 0.1
+================
+[2010-08-22] Creacion, listado y eliminacion de directorios (¡¡¡Hurra!!! :-D)
+
+[2010-09-04] 0.2
+================
+[2010-09-04] Archivos
+    [2010-08-26] Lectura
+    [2010-09-02] Escritura
+    [2010-09-04] Funciones varias (touch, truncate, append...)
+
+0.3
+===
+Modificar base de datos
+    [2010-08-30] Size y timestamp en tabla files
+    Almacenar fechas como UNIX timestamp (INTEGER), no como texto
+plugins
+    (soporte)
+    log
+    checksum
+    Links simbolicos
+plugins funcionando por eventos
+
+0.4
+===
+Commits
+StatFS
+
+0.9
+===
+Usar multiples dispositivos simultaneamente
+
+1.0
+===
+Utilidades de administracion externas
+    mkfs y fsck
+    defrag
+
+
+1.1
+===
+plugins
+    ACL
+    COW
+        Utilidades de versionado
+    auto_defrag
+
+2.0
+===
+Incluir la base de datos dentro de la propia particion (sistema autocontenido)
+	sector 0: apuntador y metadatos
+	filtrar eventos relaccionados con la base de datos (evitar sobrecarga y/o entrar en bucle infinito)
+
