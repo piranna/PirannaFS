@@ -4,99 +4,23 @@ Created on 16/08/2010
 @author: piranna
 '''
 
-import sys
-
 import errno
 import os
 import stat
 
-import fuse
-fuse.fuse_python_api = (0, 2)
-
 import plugins
 
-import Dir
-import File
 import DB
 import LL
 
 
 
-class FileSystem(fuse.Fuse):
-    def __init__(self, *args,**kw):
-        fuse.Fuse.__init__(self, *args,**kw)
+class FileSystem:
+    def __init__(self, db,drive,sector):
+        self.db = DB.DB(db)
+        self.ll = LL.LL(drive,sector)
 
-        # This thing that is like a ugly hack it seems that is the correct way
-        # to pass parameters to the FUSE core as it's explained at
-        # https://techknowhow.library.emory.edu/blogs/rsutton/2009/01/16/python-fuse-command-line-arguments
-        # and at the Xmp.py example code. You have to set the default values
-        # to object attributes that will be overwritten later by the parser.
-        # Really too little pythonic...
-        self.db = '../test/db.sqlite'
-        self.drive = '../test/disk_part.img'
-        self.sector = 512
-
-        self.parser.add_option(mountopt="db", metavar="DB",
-                               default=self.db,
-                               help="filesystem metadata database")
-        self.parser.add_option(mountopt="drive", metavar="DRIVE",
-                               default=self.drive,
-                               help="filesystem drive")
-        self.parser.add_option(mountopt="sector", metavar="SECTOR_SIZE",
-                               default=self.sector,
-                               help="filesystem sector size")
-
-        self.parse(values=self, errex=1)
-
-        self.db = DB.DB(self.db)
-        self.ll = LL.LL(self.drive,self.sector)
-
-        # http://sourceforge.net/apps/mediawiki/fuse/index.php?title=FUSE_Python_Reference#File_Class_Methods
-        # http://old.nabble.com/Python:-Pass-parameters-to-file_class-td18301066.html
-
-        class wrapped_dir_class(Dir.Dir):
-            def __init__(self2, *a,**kw):
-                Dir.Dir.__init__(self2, self, *a,**kw)
-
-        class wrapped_file_class(File.File):
-            def __init__(self2, *a,**kw):
-                File.File.__init__(self2, self, *a,**kw)
-
-        self.dir_class = wrapped_dir_class
-        self.file_class = wrapped_file_class
-#        print >> sys.stderr, '*** FS.__init__'
         plugins.send("FS.__init__", db=self.db, ll=self.ll)
-
-
-    # Overloaded
-    def access(self, path,mode):
-        print >> sys.stderr, '*** access'
-        return -errno.ENOSYS
-
-
-#    def bmap(self):
-#        print >> sys.stderr, '*** bmap'
-#        return -errno.ENOSYS
-
-
-#    def chmod(self, path,mode):
-#        print >> sys.stderr, '*** chmod', path,mode
-#        return -errno.ENOSYS
-
-
-#    def chown(self, path,user,group):
-#        print >> sys.stderr, '*** chown', path,user,group
-#        return -errno.ENOSYS
-
-
-#    def fsinit(self):
-#        print >> sys.stderr, '*** fsinit'
-#        return -errno.ENOSYS
-
-
-#    def fsdestroy(self):
-#        print >> sys.stderr, '*** fsdestroy'
-#        return -errno.ENOSYS
 
 
     def getattr(self, path):                                                    # OK
@@ -115,11 +39,6 @@ class FileSystem(fuse.Fuse):
         if not dir_entry:
             return -errno.ENOENT
         return dir_entry
-
-
-#    def getxattr(self, path,name,size):
-#        print >> sys.stderr, '*** getxattr', path,name,size
-#        return -errno.ENOSYS
 
 
     def link(self, targetPath,linkPath):                                        # OK
@@ -149,11 +68,6 @@ class FileSystem(fuse.Fuse):
         return 0
 
 
-#    def listxattr(self, path,size):
-#        print >> sys.stderr, '*** listxattr', path,size
-#        return -errno.ENOSYS
-
-
     def mkdir(self, path,mode):                                                 # OK
 #        print >> sys.stderr, '*** mkdir', path,mode
         error = self.__Mkdir(path[1:],mode)
@@ -172,11 +86,6 @@ class FileSystem(fuse.Fuse):
             return str(response[0][1])
 
         return ""
-
-
-#    def removexattr(self):
-#        print >> sys.stderr, '*** removexattr'
-#        return -errno.ENOSYS
 
 
     def rename(self, path_old,path_new):                                        # OK
@@ -264,16 +173,6 @@ class FileSystem(fuse.Fuse):
         return self.unlink(path)
 
 
-#    def setxattr(self):
-#        print >> sys.stderr, '*** setxattr'
-#        return -errno.ENOSYS
-
-
-    def statfs(self):
-#        print >> sys.stderr, '*** statfs'
-        return fuse.StatVfs()
-
-
     def symlink(self, targetPath,linkPath):                                     # OK
 #        print >> sys.stderr, '*** symlink', targetPath,linkPath
 
@@ -302,33 +201,6 @@ class FileSystem(fuse.Fuse):
         self.db.unlink(parent_dir_inode,name)
 
         return 0
-
-
-## [BUG] http://sourceforge.net/mailarchive/forum.php?thread_name=4B4608C7.9030901%40hartwork.org&forum_name=fuse-devel
-#
-#    def utime(self, path,times=None):                                           # FAILURE
-#        '''
-#        Set the access and modification time stamps of PATH
-#        '''
-#        print >> sys.stderr, '*** utime', path,times
-#        if times==None:
-#            times = (None,None)
-#
-#        return self.utimens(path, times[0],times[1])
-#
-#
-#    def utimens(self, path,ts_acc=None,ts_mod=None):                            # FAILURE
-#        '''
-#        Set the access and modification time stamps of PATH
-#        '''
-#        print >> sys.stderr, '*** utimens', path,ts_acc,ts_mod
-#        inode = self.Get_Inode(path[1:])
-#        if inode < 0:
-#            return inode
-#
-#        self.db.utimens(inode, ts_acc,ts_mod)
-#
-#        return 0
 
 
     # Shared
