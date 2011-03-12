@@ -3,6 +3,7 @@
 	<name>PirannaFS</name>
 	<comment></comment>
 	<projects>
+		<project>PyFilesystem-read_only</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

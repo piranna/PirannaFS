@@ -11,16 +11,15 @@ import sqlite3
 
 
 
-class DictObj(dict,object):
-    pass
-
 def DictObj_factory(cursor, row):
+    class DictObj(dict,object):
+        pass
+
     d = DictObj()
     for idx, col in enumerate(cursor.description):
         d[col[0]] = row[idx]
         setattr(d, col[0],row[idx])
     return d
-
 
 
 class DB():

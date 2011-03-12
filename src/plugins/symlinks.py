@@ -46,7 +46,7 @@ class symlinks(plugins.Plugin):
 #        print >> sys.stderr, '*** fs_readlink', sender,path
 
         if not path:
-            return -errno.ENOENT
+            raise ResourceNotFoundError(path)
 
         inode = sender.Get_Inode(path[1:])
         if inode < 0:
@@ -77,7 +77,7 @@ class symlinks(plugins.Plugin):
         # If no linkPath,
         # return error
         if not linkPath:
-            return -errno.ENOENT
+            raise ResourceNotFoundError(path)
 
         # Get parent dir of linkPath
         inodeName = sender.Path2InodeName(linkPath[1:])
