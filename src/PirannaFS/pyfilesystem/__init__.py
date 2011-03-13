@@ -19,7 +19,6 @@ import plugins
 from .. import DB,LL
 
 
-
 class FileSystem(base.FS):
     def __init__(self):
         base.FS.__init__(self)
@@ -45,24 +44,14 @@ class FileSystem(base.FS):
         :param path: a path to retrieve information for
 
         :rtype: dict
+
+        :raises ParentDirectoryMissingError
+        :raises ResourceInvalidError
+        :raises ResourceNotFoundError:  If the path does not exist
         """
         parent_dir,name = self.Path2InodeName(path[1:])
 
-#        print >> sys.stderr, "\t",repr(parent_dir),repr(name)
-
-        dir_entry = self.db.getattr(parent_dir,name)
-#        print >> sys.stderr, "\t",repr(dir_entry)
-
-        if dir_entry:
-            return dir_entry
-
-        raise ResourceNotFoundError(path)
-
-#        if info < 0:
-#            if info == -errno.ENOENT:
-#                raise ParentDirectoryMissingError(path)
-#
-#        return info
+        return self.db.getattr(parent_dir,name)
 
 
     def isdir(self, path):                                                      # OK
@@ -72,12 +61,13 @@ class FileSystem(base.FS):
 
         :rtype: bool
 
+        :raises ParentDirectoryMissingError
+        :raises ResourceInvalidError
         :raises ResourceNotFoundError:  If the path does not exist
         """
         inode = self.Get_Inode(path[1:])
 
         return self.db.Get_Mode(inode) == stat.S_IFDIR
-
 
     def isfile(self, path):                                                     # OK
         """Check if a path references a file.
@@ -86,6 +76,8 @@ class FileSystem(base.FS):
 
         :rtype: bool
 
+        :raises ParentDirectoryMissingError
+        :raises ResourceInvalidError
         :raises ResourceNotFoundError:  If the path does not exist
         """
         return not self.isdir(path)
@@ -111,8 +103,11 @@ class FileSystem(base.FS):
 
         :rtype: iterable of paths
 
-        :raises ResourceNotFoundError: if the path is not found
-        :raises ResourceInvalidError:  if the path exists, but is not a directory
+        :raises UnsupportedError: if the method was not defined
+
+        :raises ParentDirectoryMissingError: if a containing directory is missing
+        :raises ResourceInvalidError:        if the path exists, but is not a directory
+        :raises ResourceNotFoundError:       if the path is not found
         """
         if self.dir_class:
             dir = self.dir_class(self, path)
@@ -130,9 +125,12 @@ class FileSystem(base.FS):
         :param allow_recreate: if True, re-creating a directory wont be an error
         :type allow_create: bool
 
-        :raises DestinationExistsError:      if the path is already a directory, and allow_recreate is False
+        :raises DestinationExistsError: if the path is already a directory, and allow_recreate is False
+        :raises UnsupportedError:       if the method was not defined
+
         :raises ParentDirectoryMissingError: if a containing directory is missing and recursive is False
         :raises ResourceInvalidError:        if a path is an existing file
+        :raises ResourceNotFoundError:       if the path is not found
         """
         if self.dir_class:
             dir = self.dir_class(self, path)
@@ -151,6 +149,11 @@ class FileSystem(base.FS):
 
         :rtype: a file-like object
 
+        :raises UnsupportedError: if the method was not defined
+
+        :raises ParentDirectoryMissingError: if a containing directory is missing and recursive is False
+        :raises ResourceInvalidError:        if a parent path is an file
+        :raises ResourceNotFoundError:       if the path is not found
         """
         if self.file_class:
             return self.file_class(self, path, mode, kwargs)
@@ -162,8 +165,9 @@ class FileSystem(base.FS):
 
         :param path: Path of the resource to remove
 
-        :raises ResourceNotFoundError: if the path does not exist
-        :raises ResourceInvalidError:  if the path is a directory
+        :raises ParentDirectoryMissingError: if a containing directory is missing and recursive is False
+        :raises ResourceInvalidError:        if the path is a directory or a parent path is an file
+        :raises ResourceNotFoundError:       if the path is not found
         """
         # Return error if triying to unlink root path of the filesystem
         if path == os.sep:
@@ -172,13 +176,13 @@ class FileSystem(base.FS):
         # Get inode and name from path
         inode,name = self.Path2InodeName(path[1:])
 
+        # If the dir entry is a directory
+        # raise error
+        if self.db.Get_Mode(inode) == stat.S_IFDIR:
+            raise ResourceInvalidError(path)
+
         # Unlink dir entry
         self.db.unlink(inode,name)
-
-#        if error < 0:
-#            if error == -errno.EISDIR:
-#                raise ResourceInvalidError(path)
-
 
     def removedir(self, path, recursive=False, force=False):                    # OK
         """Remove a directory from the filesystem
@@ -189,9 +193,12 @@ class FileSystem(base.FS):
         :param force: if True, any directory contents will be removed
         :type force: bool
 
-        :raises ResourceNotFoundError:  If the path does not exist
-        :raises ResourceInvalidError:   If the path is not a directory
-        :raises DirectoryNotEmptyError: If the directory is not empty and force is False
+        :raises DirectoryNotEmptyError: if the directory is not empty and force is False
+        :raises UnsupportedError:       if the method was not defined
+
+        :raises ParentDirectoryMissingError: if a containing directory is missing
+        :raises ResourceInvalidError:        if the path or a parent path is not a directory
+        :raises ResourceNotFoundError:       if the path is not found
         """
         if self.dir_class:
             dir = self.dir_class(self, path)
@@ -205,8 +212,11 @@ class FileSystem(base.FS):
         :param src: path to rename
         :param dst: new name
 
-        :raises ResourceNotFoundError:  If the path does not exist
-        :raises ResourceInvalidError
+        :raises ParentDirectoryMissingError: if a containing directory is missing
+        :raises ResourceInvalidError:        if the path or a parent path is not a directory
+                                             or src is a parent of dst
+                                             or one of src or dst is a dir and the other not 
+        :raises ResourceNotFoundError:       if the src path does not exist
         """
         if src == dst:
             return
@@ -217,22 +227,13 @@ class FileSystem(base.FS):
         src = src[1:]
         dst = dst[1:]
 
-        # Get old parent dir inode and name
+        # Get parent dir inodes and names
         parent_inode_old,name_old = self.Path2InodeName(src)
+        parent_inode_new,name_new = self.Path2InodeName(dst)
 
-        try:
-            parent_inode_new,name_new = self.Path2InodeName(dst)
-
-        except: # -errno.ENOENT
-            # If new doesn't exist,
-            # rename link directly
-            dst = dst.rpartition(os.sep, 1)
-
-            self.db.rename(parent_inode_old,name_old,
-                           self._mkdir(dst[0]),dst[2])
-
-        else:
-            # If old path type is different from new path type raise error
+        # If dst exist, unlink it before rename src link
+        if self.db.Get_Inode(parent_inode_new,name_new) != None:
+            # If old path type is different from new path type then raise error
             type_old = self.db.Get_Mode(self.Get_Inode(name_old,parent_inode_old))
             type_new = self.db.Get_Mode(self.Get_Inode(name_new,parent_inode_new))
 
@@ -241,8 +242,10 @@ class FileSystem(base.FS):
 
             # Unlink new path and rename old path to new
             self.db.unlink(parent_inode_new,name_new)
-            self.db.rename(parent_inode_old,name_old,
-                           parent_inode_new,name_new)
+
+        # Rename old link
+        self.db.rename(parent_inode_old,name_old,
+                       parent_inode_new,name_new)
 
 
     #
@@ -495,9 +498,14 @@ class FileSystem(base.FS):
             # Get inode of the dir entry
             inode = self.db.Get_Inode(inode,path[0])
 
-            # There's no such dir entry
+            # If there's no such dir entry, raise the adecuate exception
+            # depending of it's related to the resource we are looking for
+            # or to one of it's parents
             if inode == None:
-                raise ResourceNotFoundError(path)
+                if os.sep in path:
+                    raise ParentDirectoryMissingError(path)
+                else:
+                    raise ResourceNotFoundError(path)
 
             # If the dir entry is a directory
             # get child inode
@@ -509,9 +517,11 @@ class FileSystem(base.FS):
             if path[2]:
                 raise ResourceInvalidError(path)
 
-        # If path is empty (we achieved root path)
-        # or is not a directory and is last path element
-        # return computed inode
+        # Path is empty, so
+        # * it's the root path
+        # * or we consumed it
+        # * or it's not a directory and it's the last path element
+        # so return computed inode
         return inode
 
 

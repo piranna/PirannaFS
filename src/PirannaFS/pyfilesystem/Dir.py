@@ -32,23 +32,17 @@ class Dir:
         return True
 
     def make(self, recursive=False, allow_recreate=False):
-        error = self._mkdir(path[1:], recursive=recursive)
+        try:
+            parent_dir_inode,name = self.Path2InodeName(path)
 
+        except ResourceNotFoundError:
+            if not recursive:
+                raise
 
-        inodeName = self.Path2InodeName(path)
-        # Path dirEntry exists
-        if inodeName >= 0:
-            parent_dir_inode,name = inodeName
-
-        # Parent doesn't exist but we want to create them
-        elif inodeName == -errno.ENOENT and recursive:
+            # Parent doesn't exist but we want to create them
             path = path.rpartition(os.sep)
             parent_dir_inode = self._mkdir(path[0], mode, recursive)
             name = path[2]
-
-        # Error
-        else:
-            return inodeName
 
         # If parent dir is not a directory,
         # return error
