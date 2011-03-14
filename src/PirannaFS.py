@@ -8,6 +8,8 @@ Created on 26/07/2010
 import sys
 sys.stderr = open('../test/error.log', 'w')
 
+import sqlite3
+
 from PirannaFS import FileSystem
 
 import plugins
@@ -16,6 +18,8 @@ import plugins
 pm = plugins.Manager()
 pm.Load_Dir("./plugins")
 
-fs = FileSystem()
+db = sqlite3.connect('../test/db.sqlite')
+
+fs = FileSystem(db)
 fs.multithreaded = False
 fs.main()

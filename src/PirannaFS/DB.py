@@ -7,9 +7,6 @@ Created on 04/08/2010
 import stat
 import sys
 
-import sqlite3
-
-
 
 def DictObj_factory(cursor, row):
     class DictObj(dict):
@@ -30,27 +27,26 @@ class DB():
     classdocs
     '''
 
-    def __init__(self, db_name):                                                # OK
+    def __init__(self, connection):                                                # OK
         '''
         Constructor
         '''
-        self.connection = sqlite3.connect(db_name)
+        self.connection = connection
 
         self.connection.row_factory = DictObj_factory
-#        self.connection.row_factory = sqlite3.Row
         self.connection.isolation_level = None
 
         self.connection.execute("PRAGMA foreign_keys = ON;")
         self.__Create_Database()
 
 
-    def getattr(self, parent_dir,name):                                         # OK
+    def getattr(self, parent_dir, name):                                         # OK
         '''
         Get the stat info of a directory entry
         '''
 #        print >> sys.stderr, '*** DB.getattr', parent_dir,name
 
-        inodeCreation = self.__Get_InodeCreation(parent_dir,name)
+        inodeCreation = self.__Get_InodeCreation(parent_dir, name)
         if inodeCreation:
             return self.connection.execute('''
                 SELECT
@@ -82,7 +78,7 @@ class DB():
                 inodeCreation).fetchone()
 
 
-    def link(self, parent_dir_inode,name,child_entry_inode):                    # OK
+    def link(self, parent_dir_inode, name, child_entry_inode):                    # OK
 #        print >> sys.stderr, '*** link', parent_dir_inode,name,child_entry_inode
 
         cursor = self.connection.cursor()
@@ -90,7 +86,7 @@ class DB():
             INSERT INTO links(parent_dir,name,child_entry)
             VALUES(?,?,?)
             ''',
-            (parent_dir_inode,name,child_entry_inode))
+            (parent_dir_inode, name, child_entry_inode))
 
         return cursor.lastrowid
 
@@ -123,34 +119,37 @@ class DB():
         return inode
 
 
-    def readdir(self, parent):                                                  # OK
-        return self.connection.execute('''
+    def readdir(self, parent, limit=None):                                                  # OK
+        sql = '''
             SELECT name FROM links
             WHERE parent_dir = ?
-            ''',
-            (parent,)).fetchall()
+            '''
+        if limit:
+            sql += "LIMIT %" % limit
+
+        return self.connection.execute(sql, (parent,)).fetchall()
 
 
-    def rename(self, parent_old,name_old, parent_new,name_new):                 # OK
+    def rename(self, parent_old, name_old, parent_new, name_new):                 # OK
         return self.connection.execute('''
             UPDATE links
             SET parent_dir = ?, name = ?
             WHERE parent_dir = ? AND name = ?
             ''',
-            (parent_new,name_new,
-             parent_old,name_old))
+            (parent_new, name_new,
+             parent_old, name_old))
 
 
-    def unlink(self, parent_dir_inode,name):                                    # OK
+    def unlink(self, parent_dir_inode, name):                                    # OK
 #        print >> sys.stderr, '\t', parent_dir_inode,name
         return self.connection.execute('''
             DELETE FROM links
             WHERE parent_dir = ? AND name = ?
             ''',
-            (parent_dir_inode,name))
+            (parent_dir_inode, name))
 
 
-    def utimens(self, inode, ts_acc,ts_mod):
+    def utimens(self, inode, ts_acc, ts_mod):
         if ts_acc == None:  ts_acc = "now"
         if ts_mod == None:  ts_mod = "now"
 
@@ -159,11 +158,11 @@ class DB():
             SET access = ?, modification = ?
             WHERE inode = ?
             ''',
-            (ts_acc,ts_mod, inode))
+            (ts_acc, ts_mod, inode))
 
 
     def Free_Chunks(self, chunk):
-        print >> sys.stderr, '*** Free_Chunks',chunk
+        print >> sys.stderr, '*** Free_Chunks', chunk
 
         # Free chunks whose offset is greather that new file size
         return self.connection.execute('''
@@ -174,7 +173,7 @@ class DB():
             chunk)
 
 
-    def Get_Chunks(self, file,floor,ceil):                                      # OK
+    def Get_Chunks(self, file, floor, ceil):                                      # OK
         '''
         Get chunks of the required file that are content between the
         defined floor and ceil
@@ -186,14 +185,14 @@ class DB():
             GROUP BY file,block
             ORDER BY block
             ''',
-            (file,floor,ceil)).fetchall()
+            (file, floor, ceil)).fetchall()
 
 
-    def Get_Chunks_Truncate(self, file,ceil):
+    def Get_Chunks_Truncate(self, file, ceil):
         """
         Get chunks whose offset+length is greather that new file size
         """
-        print >> sys.stderr, '*** Get_Chunks_Truncate',chunk
+        print >> sys.stderr, '*** Get_Chunks_Truncate', chunk
 
         return cursor.execute('''
             SELECT file, block, ?-block AS length
@@ -201,10 +200,10 @@ class DB():
             WHERE file IS ?
               AND block+length > ?
             ''',
-            (ceil,file,ceil))
+            (ceil, file, ceil))
 
 
-    def Get_FreeSpace(self, sectors_required,chunks):                           # OK
+    def Get_FreeSpace(self, sectors_required, chunks):                           # OK
         '''
         Get the free space chunk that best fit to the requested space
         or is the biggest space available and has not been get before
@@ -228,15 +227,15 @@ class DB():
             ORDER BY length DESC
             LIMIT 1
             ''',
-            (sectors_required,sectors_required)).fetchone()
+            (sectors_required, sectors_required)).fetchone()
 
 
-    def Get_Inode(self, parent_dir,name):                                       # OK
+    def Get_Inode(self, parent_dir, name):                                       # OK
         '''
         Get the inode of a dir entry
         from a given parent directory inode and a dir entry name
         '''
-        inode = self.__Get_InodeCreation(parent_dir,name)
+        inode = self.__Get_InodeCreation(parent_dir, name)
         if inode:
             return inode['inode']
 
@@ -305,7 +304,7 @@ class DB():
             chunks)
 
 
-    def Set_Size(self, inode,length):                                           # OK
+    def Set_Size(self, inode, length):                                           # OK
         return self.connection.execute('''
             UPDATE files
             SET size = ?
@@ -465,11 +464,11 @@ class DB():
                 INSERT INTO chunks(file,block,length,sector)
                 VALUES(NULL,0,?,?)
                 ''',
-                (2048,0))
+                (2048, 0))
 #            self.connection.execute("PRAGMA foreign_keys = ON")
 
 
-    def __Get_InodeCreation(self, parent_dir,name):                             # OK
+    def __Get_InodeCreation(self, parent_dir, name):                             # OK
         '''
         Get the inode and the creation date of a dir entry
         from a given parent directory inode and a dir entry name
@@ -483,4 +482,4 @@ class DB():
                 AND name == ?
             LIMIT 1
             ''',
-            (parent_dir,str(name))).fetchone()
+            (parent_dir, str(name))).fetchone()

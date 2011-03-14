@@ -4,12 +4,12 @@ Created on 15/08/2010
 @author: piranna
 '''
 
-import errno
 import os
 import stat
 
-import plugins
+from fs.errors import *
 
+import plugins
 
 
 class Dir:
@@ -21,77 +21,84 @@ class Dir:
         '''
         Constructor
         '''
-        self.__inode = self.Get_Inode(path[1:])
-        self.__db = fs.db
+        try:
+            self.__inode = fs.Get_Inode(path[1:])
+        except ResourceError:
+            self.__inode = None
+        else:
+            # Inode is not from a dir
+            if fs.db.Get_Mode(self.__inode) != stat.S_IFDIR:
+                raise ResourceInvalidError(path)
 
-        # Inode is not from a dir
-        if self.__db.Get_Mode(self.__inode) != stat.S_IFDIR:
-            raise ResourceInvalidError(path)
+        self.fs = fs
+        self.path = path
 
     def isempty(self):
-        return True
+        return self.fs.db.readdir(self.__inode, 1)
 
     def make(self, recursive=False, allow_recreate=False):
-        try:
-            parent_dir_inode,name = self.Path2InodeName(path)
+        # Check if dir_entry exist and we can recreate it if so happens
+        if self.__inode and not allow_recreate:
+            raise DestinationExistsError(self.path)
 
-        except ResourceNotFoundError:
+        # Get parent dir
+        try:
+            parent_dir_inode, name = self.fs.Path2InodeName(self.path)
+
+        except ParentDirectoryMissingError:
             if not recursive:
                 raise
 
-            # Parent doesn't exist but we want to create them
-            path = path.rpartition(os.sep)
-            parent_dir_inode = self._mkdir(path[0], mode, recursive)
-            name = path[2]
-
-        # If parent dir is not a directory,
-        # return error
-        if self.db.Get_Mode(parent_dir_inode) != stat.S_IFDIR:
-            raise ResourceInvalidError(path)
-
-        # If dir_entry exist,
-        # return its inode if it's a directory or error
-        inode = self.Get_Inode(name,parent_dir_inode)
-        if inode >= 0:
-#            if self.db.Get_Mode(inode) == stat.S_IFDIR:
-#                return inode
-            return -errno.EEXIST
+            # Parents doesn't exist, they are the Three Wise men ;-)
+            # but we want to create them anyway to get their inode
+            path, _, name = self.path.rpartition(os.sep)
+            d = Dir(self.fs, path)
+            d.make(path, recursive)
+            parent_dir_inode = d.__inode
 
         # Make directory
-        inode = self.db.mkdir()
-        self.db.link(parent_dir_inode,name,inode)
-
-        return inode
-
-
-        if error < 0:
-            if error == -errno.EEXIST and not allow_recreate:
-                raise DestinationExistsError(path)
-
-            if error == -errno.ENOENT:
-                raise ParentDirectoryMissingError(path)
+        self.__inode = self.db.mkdir()
+        self.db.link(parent_dir_inode, name, self.__inode)
 
     def read(self):                                                          # OK
+        plugins.send("Dir.read start")
+
 #        yield unicode('.')
 #        yield unicode('..')
 
-        for dir_entry in self.__db.readdir(self.__inode):
+        for dir_entry in self.fs.db.readdir(self.__inode):
             if dir_entry['name']:
                 yield unicode(dir_entry['name'])
 
-        plugins.send("DIR.readdir")
+        plugins.send("Dir.read end")
 
     def remove(self, recursive=False, force=False):
-#        if force:
-#            pass
+        # Force dir deletion
+        if force:
+            for dir_entry in self.fs.db.readdir(self.__inode):
+                path = os.path.join(self.path, dir_entry)
+                inode = self.fs.Get_Inode(path)
 
-        # Inode dir is not empty 
-        if self.db.readdir(self.__inode):
-            return -errno.ENOTEMPTY
+                if self.fs.db.Get_Mode(inode) == stat.S_IFDIR:
+                    d = Dir(self.fs, path)
+                    d.remove(force=True)
+                else:
+                    self.fs.remove(path)
 
-        # Unlink removed directory and return it's operation result
-        return self.db.unlink(parent_dir_inode,name)
+        # If dir is not empty raise error
+        if self.fs.db.readdir(self.__inode):
+            raise DirectoryNotEmptyError(self.path)
 
+        # Removed directory
+        parent_dir_inode, name = self.fs.Path2InodeName(self.path)
+        self.fs.db.unlink(parent_dir_inode, name)
+        self.__inode = None
+
+        # Delete parent dirs recursively if empty
         if recursive:
-            path = path.rsplit(os.sep,1)[0]
-            self.removedir(path,True)
+            path = self.path.rpartition(os.sep)[0]
+            d = Dir(self.fs, path)
+            try:
+                d.remove(True)
+            except DirectoryNotEmptyError:
+                pass

@@ -38,7 +38,7 @@ class File(object):
     def read(self, size=-1):
 #        print >> sys.stderr, '*** read', length
 
-        plugins.send("File.reading")
+        plugins.send("File.read begin")
 
         # Adjust read size
         remanent = self.__db.Get_Size(self.__inode) - self.__offset
@@ -62,17 +62,17 @@ class File(object):
         self.__offset += size
 
         # Return data
-        plugins.send("File.readed")
+        plugins.send("File.read end")
         return readed[offset:self.__offset]
 
 
     def readline(self, size=-1):
-        pass
-
+        plugins.send("File.readline begin")
+        plugins.send("File.readline end")
 
 #    def readlines(self, sizehint=-1):
-#        pass
-
+#        plugins.send("File.readlines begin")
+#        plugins.send("File.readlines end")
 
     def seek(self, offset, whence=os.SEEK_SET):
 #        print >> sys.stderr, '*** read', length,offset

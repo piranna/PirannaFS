@@ -20,10 +20,10 @@ from .. import DB,LL
 
 
 class FileSystem(base.FS):
-    def __init__(self):
+    def __init__(self, db):
         base.FS.__init__(self)
 
-        self.db = DB.DB('../test/db.sqlite')
+        self.db = DB.DB(db)
         self.ll = LL.LL('../test/disk_part.img',512)
 
         self.dir_class = Dir.Dir
@@ -523,7 +523,6 @@ class FileSystem(base.FS):
         # * or it's not a directory and it's the last path element
         # so return computed inode
         return inode
-
 
     def Path2InodeName(self, path):                                             # OK
         '''
