@@ -20,6 +20,6 @@ pm.Load_Dir("./plugins")
 
 db = sqlite3.connect('../test/db.sqlite')
 
-fs = FileSystem(db)
+fs = FileSystem(db, '../test/disk_part.img', 512)
 fs.multithreaded = False
 fs.main()

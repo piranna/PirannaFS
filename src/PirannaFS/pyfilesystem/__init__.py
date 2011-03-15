@@ -16,15 +16,15 @@ import File
 
 import plugins
 
-from .. import DB,LL
+from .. import DB, LL
 
 
 class FileSystem(base.FS):
-    def __init__(self, db):
+    def __init__(self, db, drive, sector_size):
         base.FS.__init__(self)
 
         self.db = DB.DB(db)
-        self.ll = LL.LL('../test/disk_part.img',512)
+        self.ll = LL.LL(drive, sector_size)
 
         self.dir_class = Dir.Dir
         self.file_class = File.File
@@ -49,9 +49,9 @@ class FileSystem(base.FS):
         :raises ResourceInvalidError
         :raises ResourceNotFoundError:  If the path does not exist
         """
-        parent_dir,name = self.Path2InodeName(path[1:])
+        parent_dir, name = self.Path2InodeName(path[1:])
 
-        return self.db.getattr(parent_dir,name)
+        return self.db.getattr(parent_dir, name)
 
 
     def isdir(self, path):                                                      # OK
@@ -83,7 +83,7 @@ class FileSystem(base.FS):
         return not self.isdir(path)
 
 
-    def listdir(self, path="./", wildcard=None, full=False, absolute=False,     # OK
+    def listdir(self, path="./", wildcard=None, full=False, absolute=False, # OK
                       dirs_only=False, files_only=False):
         """Lists the files and directories under a given path.
         The directory contents are returned as a list of unicode paths.
@@ -111,7 +111,7 @@ class FileSystem(base.FS):
         """
         if self.dir_class:
             dir = self.dir_class(self, path)
-            return self._listdir_helper(path, dir.read(), wildcard, full,
+            return self._listdir_helper(path, dir.list(), wildcard, full,
                                         absolute, dirs_only, files_only)
 
         raise UnsupportedError("list dir")
@@ -134,7 +134,7 @@ class FileSystem(base.FS):
         """
         if self.dir_class:
             dir = self.dir_class(self, path)
-            dir.make(recursive,allow_recreate)
+            dir.make(recursive, allow_recreate)
 
         raise UnsupportedError("make dir")
 
@@ -174,7 +174,7 @@ class FileSystem(base.FS):
             raise ResourceError(path)
 
         # Get inode and name from path
-        inode,name = self.Path2InodeName(path[1:])
+        inode, name = self.Path2InodeName(path[1:])
 
         # If the dir entry is a directory
         # raise error
@@ -182,7 +182,7 @@ class FileSystem(base.FS):
             raise ResourceInvalidError(path)
 
         # Unlink dir entry
-        self.db.unlink(inode,name)
+        self.db.unlink(inode, name)
 
     def removedir(self, path, recursive=False, force=False):                    # OK
         """Remove a directory from the filesystem
@@ -202,7 +202,7 @@ class FileSystem(base.FS):
         """
         if self.dir_class:
             dir = self.dir_class(self, path)
-            dir.remove(recursive,force)
+            dir.remove(recursive, force)
 
         raise UnsupportedError("remove dir")
 
@@ -222,30 +222,30 @@ class FileSystem(base.FS):
             return
 
         if src in dst:
-            raise ResourceInvalidError(path)
+            raise ResourceInvalidError(src)
 
         src = src[1:]
         dst = dst[1:]
 
         # Get parent dir inodes and names
-        parent_inode_old,name_old = self.Path2InodeName(src)
-        parent_inode_new,name_new = self.Path2InodeName(dst)
+        parent_inode_old, name_old = self.Path2InodeName(src)
+        parent_inode_new, name_new = self.Path2InodeName(dst)
 
         # If dst exist, unlink it before rename src link
-        if self.db.Get_Inode(parent_inode_new,name_new) != None:
+        if self.db.Get_Inode(parent_inode_new, name_new) != None:
             # If old path type is different from new path type then raise error
-            type_old = self.db.Get_Mode(self.Get_Inode(name_old,parent_inode_old))
-            type_new = self.db.Get_Mode(self.Get_Inode(name_new,parent_inode_new))
+            type_old = self.db.Get_Mode(self.Get_Inode(name_old, parent_inode_old))
+            type_new = self.db.Get_Mode(self.Get_Inode(name_new, parent_inode_new))
 
             if type_old != type_new:
-                raise ResourceInvalidError(path)
+                raise ResourceInvalidError(src)
 
             # Unlink new path and rename old path to new
-            self.db.unlink(parent_inode_new,name_new)
+            self.db.unlink(parent_inode_new, name_new)
 
         # Rename old link
-        self.db.rename(parent_inode_old,name_old,
-                       parent_inode_new,name_new)
+        self.db.rename(parent_inode_old, name_old,
+                       parent_inode_new, name_new)
 
 
     #
@@ -404,8 +404,9 @@ class FileSystem(base.FS):
     def isdirempty(self, path):
         """Check if a directory is empty (contains no files or sub-directories)
 
-        :param path: a directory path
-        :rtype: bool
+        @param path: a directory path
+
+        @rtype: bool
         """
         if self.file_class:
             dir = self.file_class(self, path)
@@ -484,7 +485,7 @@ class FileSystem(base.FS):
 #        pass
 
 
-    def Get_Inode(self, path,inode=0):                                          # OK
+    def Get_Inode(self, path, inode=0):                                          # OK
         '''
         Get the inode of a path
         '''
@@ -496,7 +497,7 @@ class FileSystem(base.FS):
             path = path.partition(os.sep)
 
             # Get inode of the dir entry
-            inode = self.db.Get_Inode(inode,path[0])
+            inode = self.db.Get_Inode(inode, path[0])
 
             # If there's no such dir entry, raise the adecuate exception
             # depending of it's related to the resource we are looking for
@@ -510,7 +511,7 @@ class FileSystem(base.FS):
             # If the dir entry is a directory
             # get child inode
             if self.db.Get_Mode(inode) == stat.S_IFDIR:
-                return self.Get_Inode(path[2],inode)
+                return self.Get_Inode(path[2], inode)
 
             # If is not a directory and is not the last path element
             # return error
@@ -532,4 +533,4 @@ class FileSystem(base.FS):
         path = path.rpartition(os.sep)
         inode = self.Get_Inode(path[0])
 
-        return inode,path[2]
+        return inode, path[2]
