@@ -16,7 +16,7 @@ import plugins
 
 class Dir:
     '''
-    classdocs
+    http://pubs.opengroup.org/onlinepubs/007908799/xsh/dirent.h.html
     '''
 
     def __init__(self, fs, path):                                              # OK
@@ -84,13 +84,13 @@ class Dir:
 
         plugins.send("Dir.make")
 
-    def list(self):                                                          # OK
+    def read(self):                                                          # OK
         """Lists the files and directories under a given path.
         The directory contents are returned as a list of unicode paths.
 
         @rtype: iterable of paths
         """
-        plugins.send("Dir.list begin")
+        plugins.send("Dir.read begin")
 
 #        yield unicode('.')
 #        yield unicode('..')
@@ -99,7 +99,7 @@ class Dir:
             if dir_entry['name']:
                 yield unicode(dir_entry['name'])
 
-        plugins.send("Dir.list end")
+        plugins.send("Dir.read end")
 
     def remove(self, recursive=False, force=False):
         """Remove a directory from the filesystem

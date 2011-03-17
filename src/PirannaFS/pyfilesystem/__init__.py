@@ -111,7 +111,7 @@ class FileSystem(base.FS):
         """
         if self.dir_class:
             dir = self.dir_class(self, path)
-            return self._listdir_helper(path, dir.list(), wildcard, full,
+            return self._listdir_helper(path, dir.read(), wildcard, full,
                                         absolute, dirs_only, files_only)
 
         raise UnsupportedError("list dir")
@@ -333,16 +333,16 @@ class FileSystem(base.FS):
 #        pass
 
 
-    def opendir(self, path):
-        """Opens a directory and returns a FS object representing its contents.
-
-        :param path: path to directory to open
-        :rtype: An FS object
-        """
-        if self.dir_class:
-            return self.dir_class(self, path)
-
-        raise UnsupportedError("open dir")
+#    def opendir(self, path):
+#        """Opens a directory and returns a FS object representing its contents.
+#
+#        :param path: path to directory to open
+#        :rtype: An FS object
+#        """
+#        if self.dir_class:
+#            return self.dir_class(self, path)
+#
+#        raise UnsupportedError("open dir")
 
 
 #    def safeopen(self, *args, **kwargs):
