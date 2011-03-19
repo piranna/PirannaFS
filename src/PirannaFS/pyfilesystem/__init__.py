@@ -65,9 +65,7 @@ class FileSystem(base.FS):
         :raises ResourceInvalidError
         :raises ResourceNotFoundError:  If the path does not exist
         """
-        inode = self.Get_Inode(path[1:])
-
-        return self.db.Get_Mode(inode) == stat.S_IFDIR
+        return self.db.Get_Mode(self.Get_Inode(path[1:])) == stat.S_IFDIR
 
     def isfile(self, path):                                                     # OK
         """Check if a path references a file.
@@ -111,7 +109,7 @@ class FileSystem(base.FS):
         """
         if self.dir_class:
             dir = self.dir_class(self, path)
-            return self._listdir_helper(path, dir.read(), wildcard, full,
+            return self._listdir_helper(path, dir, wildcard, full,
                                         absolute, dirs_only, files_only)
 
         raise UnsupportedError("list dir")
@@ -165,24 +163,17 @@ class FileSystem(base.FS):
 
         :param path: Path of the resource to remove
 
+        :raises UnsupportedError: if the method was not defined
+
         :raises ParentDirectoryMissingError: if a containing directory is missing and recursive is False
         :raises ResourceInvalidError:        if the path is a directory or a parent path is an file
         :raises ResourceNotFoundError:       if the path is not found
         """
-        # Return error if triying to unlink root path of the filesystem
-        if path == os.sep:
-            raise ResourceError(path)
+        if self.file_class:
+            dir = self.file_class(self, path)
+            dir.remove()
 
-        # Get inode and name from path
-        inode, name = self.Path2InodeName(path[1:])
-
-        # If the dir entry is a directory
-        # raise error
-        if self.db.Get_Mode(inode) == stat.S_IFDIR:
-            raise ResourceInvalidError(path)
-
-        # Unlink dir entry
-        self.db.unlink(inode, name)
+        raise UnsupportedError("remove file")
 
     def removedir(self, path, recursive=False, force=False):                    # OK
         """Remove a directory from the filesystem

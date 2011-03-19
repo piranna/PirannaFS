@@ -8,14 +8,14 @@ import stat
 import sys
 
 
-def DictObj_factory(cursor, row):
-    class DictObj(dict):
-        def __getattr__(self, name):
-            try:
-                return self[name]
-            except KeyError:
-                raise AttributeError(name)
+class DictObj(dict):
+    def __getattr__(self, name):
+        try:
+            return self[name]
+        except KeyError:
+            raise AttributeError(name)
 
+def DictObj_factory(cursor, row):
     d = DictObj()
     for idx, col in enumerate(cursor.description):
         d[col[0]] = row[idx]
@@ -192,9 +192,7 @@ class DB():
         """
         Get chunks whose offset+length is greather that new file size
         """
-        print >> sys.stderr, '*** Get_Chunks_Truncate', chunk
-
-        return cursor.execute('''
+        return self.connection.execute('''
             SELECT file, block, ?-block AS length
             FROM chunks
             WHERE file IS ?

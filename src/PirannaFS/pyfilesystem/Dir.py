@@ -19,7 +19,7 @@ class Dir:
     http://pubs.opengroup.org/onlinepubs/007908799/xsh/dirent.h.html
     '''
 
-    def __init__(self, fs, path):                                              # OK
+    def __init__(self, fs, path):                                               # OK
         """Constructor
 
         @param fs: reference to the filesystem instance
@@ -41,6 +41,11 @@ class Dir:
 
         self.fs = fs
         self.path = path
+
+
+    def close(self):
+        pass
+
 
     def isempty(self):
         """Check if a directory is empty (contains no files or sub-directories)
@@ -79,12 +84,20 @@ class Dir:
             parent_dir_inode = d.__inode
 
         # Make directory
-        self.__inode = self.db.mkdir()
-        self.db.link(parent_dir_inode, name, self.__inode)
+        self.__inode = self.fs.db.mkdir()
+        self.fs.db.link(parent_dir_inode, name, self.__inode)
 
         plugins.send("Dir.make")
 
-    def read(self):                                                          # OK
+
+    def next(self):
+        data = self.readline()
+        if data:
+            return data
+        raise StopIteration
+
+
+    def readline(self):                                                         # OK
         """Lists the files and directories under a given path.
         The directory contents are returned as a list of unicode paths.
 
@@ -100,6 +113,10 @@ class Dir:
                 yield unicode(dir_entry['name'])
 
         plugins.send("Dir.read end")
+
+    def readlines(self):
+        """Return a list of all lines in the file."""
+        return [ln for ln in self]
 
     def remove(self, recursive=False, force=False):
         """Remove a directory from the filesystem
@@ -142,3 +159,14 @@ class Dir:
                 pass
 
         plugins.send("Dir.remove")
+
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
+        return False
+
+    def __iter__(self):
+        return self
