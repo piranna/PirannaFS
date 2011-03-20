@@ -20,7 +20,7 @@ from .. import DB, LL
 
 
 class FileSystem(base.FS):
-    def __init__(self, db, drive, sector_size):
+    def __init__(self, db, drive, sector_size=512):
         base.FS.__init__(self)
 
         self.db = DB.DB(db)
@@ -49,9 +49,12 @@ class FileSystem(base.FS):
         :raises ResourceInvalidError
         :raises ResourceNotFoundError:  If the path does not exist
         """
-        parent_dir, name = self.Path2InodeName(path[1:])
+        parent_dir, name = self.Path2InodeName(path)
 
-        return self.db.getattr(parent_dir, name)
+        if self.db.Get_Inode(parent_dir, name) == None:
+            raise ResourceNotFoundError(path)
+
+        return self.db.getinfo(parent_dir, name)
 
 
     def isdir(self, path):                                                      # OK
@@ -60,12 +63,12 @@ class FileSystem(base.FS):
         :param path: a path in the filesystem
 
         :rtype: bool
-
-        :raises ParentDirectoryMissingError
-        :raises ResourceInvalidError
-        :raises ResourceNotFoundError:  If the path does not exist
         """
-        return self.db.Get_Mode(self.Get_Inode(path[1:])) == stat.S_IFDIR
+        try:
+            inode = self.Get_Inode(path)
+        except (ParentDirectoryMissingError, ResourceInvalidError, ResourceNotFoundError):
+            return False
+        return self.db.Get_Mode(inode) == stat.S_IFDIR
 
     def isfile(self, path):                                                     # OK
         """Check if a path references a file.
@@ -73,12 +76,12 @@ class FileSystem(base.FS):
         :param path: a path in the filessystem
 
         :rtype: bool
-
-        :raises ParentDirectoryMissingError
-        :raises ResourceInvalidError
-        :raises ResourceNotFoundError:  If the path does not exist
         """
-        return not self.isdir(path)
+        try:
+            inode = self.Get_Inode(path)
+        except (ParentDirectoryMissingError, ResourceInvalidError, ResourceNotFoundError):
+            return False
+        return self.db.Get_Mode(inode) != stat.S_IFDIR
 
 
     def listdir(self, path="./", wildcard=None, full=False, absolute=False, # OK
@@ -109,7 +112,7 @@ class FileSystem(base.FS):
         """
         if self.dir_class:
             dir = self.dir_class(self, path)
-            return self._listdir_helper(path, dir, wildcard, full,
+            return self._listdir_helper(path, dir.readlines(), wildcard, full,
                                         absolute, dirs_only, files_only)
 
         raise UnsupportedError("list dir")
@@ -132,7 +135,7 @@ class FileSystem(base.FS):
         """
         if self.dir_class:
             dir = self.dir_class(self, path)
-            dir.make(recursive, allow_recreate)
+            return dir.make(recursive, allow_recreate)
 
         raise UnsupportedError("make dir")
 
@@ -154,7 +157,7 @@ class FileSystem(base.FS):
         :raises ResourceNotFoundError:       if the path is not found
         """
         if self.file_class:
-            return self.file_class(self, path, mode, kwargs)
+            return self.file_class(self, path, mode, **kwargs)
 
         raise UnsupportedError("open file")
 
@@ -170,8 +173,8 @@ class FileSystem(base.FS):
         :raises ResourceNotFoundError:       if the path is not found
         """
         if self.file_class:
-            dir = self.file_class(self, path)
-            dir.remove()
+            dir = self.file_class(self, path, 'r')
+            return dir.remove()
 
         raise UnsupportedError("remove file")
 
@@ -193,7 +196,7 @@ class FileSystem(base.FS):
         """
         if self.dir_class:
             dir = self.dir_class(self, path)
-            dir.remove(recursive, force)
+            return dir.remove(recursive, force)
 
         raise UnsupportedError("remove dir")
 
@@ -214,9 +217,6 @@ class FileSystem(base.FS):
 
         if src in dst:
             raise ResourceInvalidError(src)
-
-        src = src[1:]
-        dst = dst[1:]
 
         # Get parent dir inodes and names
         parent_inode_old, name_old = self.Path2InodeName(src)
@@ -495,9 +495,9 @@ class FileSystem(base.FS):
             # or to one of it's parents
             if inode == None:
                 if os.sep in path:
-                    raise ParentDirectoryMissingError(path)
+                    raise ParentDirectoryMissingError(path[0])
                 else:
-                    raise ResourceNotFoundError(path)
+                    raise ResourceNotFoundError(path[0])
 
             # If the dir entry is a directory
             # get child inode
@@ -507,7 +507,7 @@ class FileSystem(base.FS):
             # If is not a directory and is not the last path element
             # return error
             if path[2]:
-                raise ResourceInvalidError(path)
+                raise ResourceInvalidError(path[0])
 
         # Path is empty, so
         # * it's the root path
@@ -522,6 +522,9 @@ class FileSystem(base.FS):
         '''
 #        print >> sys.stderr, '*** Path2InodeName', repr(path)
         path = path.rpartition(os.sep)
-        inode = self.Get_Inode(path[0])
+        try:
+            inode = self.Get_Inode(path[0])
+        except ResourceNotFoundError:
+            raise ParentDirectoryMissingError(path[0])
 
         return inode, path[2]

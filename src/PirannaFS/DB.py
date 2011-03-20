@@ -40,6 +40,7 @@ class DB():
         self.__Create_Database()
 
 
+    # Python-FUSE
     def getattr(self, parent_dir, name):                                         # OK
         '''
         Get the stat info of a directory entry
@@ -63,6 +64,44 @@ class DB():
                     CAST(STRFTIME('%s',dir_entries.modification) AS INTEGER) AS st_mtime,
 
                     COALESCE(files.size,0) AS st_size
+
+                FROM dir_entries
+                    LEFT JOIN files
+                        ON dir_entries.inode == files.inode
+                    LEFT JOIN links
+                        ON dir_entries.inode == links.child_entry
+
+                WHERE dir_entries.inode == :inode
+
+                GROUP BY dir_entries.inode
+                LIMIT 1
+                ''',
+                inodeCreation).fetchone()
+
+    # PyFilesystem
+    def getinfo(self, parent_dir, name):                                         # OK
+        '''
+        Get the stat info of a directory entry
+        '''
+#        print >> sys.stderr, '*** DB.getattr', parent_dir,name
+
+        inodeCreation = self.__Get_InodeCreation(parent_dir, name)
+        if inodeCreation:
+            return self.connection.execute('''
+                SELECT
+                    0 AS st_dev,
+                    0 AS st_uid,
+                    0 AS st_gid,
+
+                    dir_entries.type         AS st_mode,
+                    dir_entries.inode        AS st_ino,
+                    COUNT(links.child_entry) AS st_nlink,
+
+                    :creation                                                AS st_ctime,
+                    CAST(STRFTIME('%s',dir_entries.access) AS INTEGER)       AS st_atime,
+                    CAST(STRFTIME('%s',dir_entries.modification) AS INTEGER) AS st_mtime,
+
+                    COALESCE(files.size,0) AS size
 
                 FROM dir_entries
                     LEFT JOIN files
@@ -442,9 +481,9 @@ class DB():
         # create initial row defining the root directory
         if not self.connection.execute('SELECT * FROM dir_entries LIMIT 1').fetchone():
             self.connection.execute('''
-                INSERT INTO dir_entries(inode)
-                VALUES(0)
-                ''')
+                INSERT INTO dir_entries(inode,type)
+                VALUES(0,?)
+                ''', (stat.S_IFDIR,))
             self.connection.execute('''
                 INSERT INTO directories(inode)
                 VALUES(0)

@@ -31,11 +31,11 @@ class Dir:
         :raises ResourceNotFoundError:       if the path is not found
         """
         try:
-            self.__inode = fs.Get_Inode(path[1:])
+            self.__inode = fs.Get_Inode(path)
         except ResourceError:
             self.__inode = None
         else:
-            # If inode is not of a dir, raise error
+            # If inode is not a dir, raise error
             if fs.db.Get_Mode(self.__inode) != stat.S_IFDIR:
                 raise ResourceInvalidError(path)
 
@@ -116,7 +116,7 @@ class Dir:
 
     def readlines(self):
         """Return a list of all lines in the file."""
-        return [ln for ln in self]
+        return [ln for ln in self.readline()]
 
     def remove(self, recursive=False, force=False):
         """Remove a directory from the filesystem

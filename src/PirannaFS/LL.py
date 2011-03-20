@@ -17,7 +17,7 @@ class LL:
             self.__file = file(drive, "r+b")
         else:
             self.__file = drive
-        self.__sector_size = sector_size
+        self.sector_size = sector_size
 
 
     def __del__(self):
@@ -40,7 +40,7 @@ class LL:
                                         chunk['length'])
 
             else:
-                data += '\0' * chunk['length'] * self.__sector_size
+                data += '\0' * chunk['length'] * self.sector_size
 
         return data
 
@@ -49,13 +49,13 @@ class LL:
         """
         Read a single chunk from the underlying device
         """
-        self.__file.seek(sector * self.__sector_size)
-        return self.__file.read(length * self.__sector_size)
+        self.__file.seek(sector * self.sector_size)
+        return self.__file.read(length * self.sector_size)
 
 
     def Write_Chunk(self, sector, data):
         """
         Write a single chunk in the underlying device
         """
-        self.__file.seek(sector * self.__sector_size)
+        self.__file.seek(sector * self.sector_size)
         self.__file.write(data)

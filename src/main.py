@@ -10,7 +10,7 @@ sys.stderr = open('../test/error.log', 'w')
 
 import sqlite3
 
-from PirannaFS import FileSystem
+from PirannaFS.pyfilesystem import FileSystem
 
 import plugins
 
