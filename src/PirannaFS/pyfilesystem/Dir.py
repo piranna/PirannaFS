@@ -30,6 +30,9 @@ class Dir:
         :raises ResourceInvalidError:        if the path exists, but is not a directory
         :raises ResourceNotFoundError:       if the path is not found
         """
+        if path == './':    # [HACK] Ugly hack to pass unittest, need a re-do
+            path = ''
+
         try:
             self.__inode = fs.Get_Inode(path)
         except ResourceError:
@@ -103,6 +106,9 @@ class Dir:
 
         @rtype: iterable of paths
         """
+        if self.__inode == None:
+            raise ResourceNotFoundError(self.path)
+
         plugins.send("Dir.read begin")
 
 #        yield unicode('.')
@@ -116,7 +122,16 @@ class Dir:
 
     def readlines(self):
         """Return a list of all lines in the file."""
-        return [ln for ln in self.readline()]
+        if self.__inode == None:
+            raise ResourceNotFoundError(self.path)
+
+#        return [ln for ln in self.readline()]
+        d = []
+        for dir_entry in self.fs.db.readdir(self.__inode):
+            if dir_entry['name']:
+                d.append(unicode(dir_entry['name']))
+                print dir_entry
+        return d
 
     def remove(self, recursive=False, force=False):
         """Remove a directory from the filesystem

@@ -8,7 +8,7 @@ import os
 import stat
 
 from fs.errors import DestinationExistsError
-from fs.errors import ResourceError, ResourceInvalidError, ResourceNotFoundError
+from fs.errors import ResourceInvalidError, ResourceNotFoundError
 from fs.errors import StorageSpaceError
 
 import plugins

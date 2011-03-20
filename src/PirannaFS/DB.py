@@ -524,4 +524,4 @@ class DB():
                 AND name == ?
             LIMIT 1
             ''',
-            (parent_dir, str(name))).fetchone()
+            (parent_dir, unicode(name))).fetchone()

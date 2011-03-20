@@ -112,8 +112,11 @@ class FileSystem(base.FS):
         """
         if self.dir_class:
             dir = self.dir_class(self, path)
-            return self._listdir_helper(path, dir.readlines(), wildcard, full,
+            d = self._listdir_helper(path, dir.readlines(), wildcard, full,
                                         absolute, dirs_only, files_only)
+            print d
+            print
+            return d
 
         raise UnsupportedError("list dir")
 
