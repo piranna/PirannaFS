@@ -9,7 +9,7 @@ import stat
 
 from fs.errors import DestinationExistsError, DirectoryNotEmptyError
 from fs.errors import ParentDirectoryMissingError
-from fs.errors import ResourceError, ResourceInvalidError
+from fs.errors import ResourceError, ResourceInvalidError, ResourceNotFoundError
 
 import plugins
 
@@ -126,12 +126,16 @@ class Dir:
         @param force: if True, any directory contents will be removed
         @type force: bool
 
-        @raises DirectoryNotEmptyError: if the directory is not empty and force is False
+        @raise DirectoryNotEmptyError: if the directory is not empty and force is False
+        @raise ResourceNotFoundError: if the directory not exists
         """
+        if not self.__inode:
+            raise ResourceNotFoundError(self.path)
+
         # Force dir deletion
         if force:
             for dir_entry in self.fs.db.readdir(self.__inode):
-                path = os.path.join(self.path, dir_entry)
+                path = os.path.join(self.path, dir_entry.name)
                 inode = self.fs.Get_Inode(path)
 
                 if self.fs.db.Get_Mode(inode) == stat.S_IFDIR:
@@ -155,7 +159,7 @@ class Dir:
             d = Dir(self.fs, path)
             try:
                 d.remove(True)
-            except DirectoryNotEmptyError:
+            except (DirectoryNotEmptyError, ResourceNotFoundError):
                 pass
 
         plugins.send("Dir.remove")

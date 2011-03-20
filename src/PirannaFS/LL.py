@@ -40,7 +40,7 @@ class LL:
                                         chunk['length'])
 
             else:
-                data += '\0' * chunk['length'] * self.sector_size
+                data += '\0' * (chunk.length + 1) * self.sector_size
 
         return data
 
@@ -50,7 +50,7 @@ class LL:
         Read a single chunk from the underlying device
         """
         self.__file.seek(sector * self.sector_size)
-        return self.__file.read(length * self.sector_size)
+        return self.__file.read((length + 1) * self.sector_size)
 
 
     def Write_Chunk(self, sector, data):

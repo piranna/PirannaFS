@@ -15,6 +15,13 @@ class DictObj(dict):
         except KeyError:
             raise AttributeError(name)
 
+    def __setattr__(self, name, value):
+        try:
+            self[name] = value
+        except KeyError:
+            raise AttributeError(name)
+
+
 def DictObj_factory(cursor, row):
     d = DictObj()
     for idx, col in enumerate(cursor.description):
@@ -201,13 +208,13 @@ class DB():
 
 
     def Free_Chunks(self, chunk):
+        """Free chunks whose offset is greather that new file size"""
         print >> sys.stderr, '*** Free_Chunks', chunk
 
-        # Free chunks whose offset is greather that new file size
         return self.connection.execute('''
             UPDATE chunks
             SET file = NULL, block = 0
-            WHERE file = :file AND block >= :block+:length
+            WHERE file = :file AND block > :block + :length
             ''',
             chunk)
 
@@ -220,7 +227,7 @@ class DB():
         return self.connection.execute('''
             SELECT * FROM chunks
             WHERE file = ?
-              AND block BETWEEN ? AND ?-length+1
+              AND block BETWEEN ? AND ?-length
             GROUP BY file,block
             ORDER BY block
             ''',
@@ -229,7 +236,7 @@ class DB():
 
     def Get_Chunks_Truncate(self, file, ceil):
         """
-        Get chunks whose offset+length is greather that new file size
+        Get chunks whose block+length is greather that new file size
         """
         return self.connection.execute('''
             SELECT file, block, ?-block AS length
@@ -240,9 +247,8 @@ class DB():
             (ceil, file, ceil))
 
 
-    def Get_FreeSpace(self, sectors_required, chunks):                           # OK
-        '''
-        Get the free space chunk that best fit to the requested space
+    def Get_FreeSpace(self, sectors_required, chunks):                          # OK
+        '''Get the free space chunk that best fit to the requested space
         or is the biggest space available and has not been get before
         '''
         return self.connection.execute('''
@@ -355,30 +361,29 @@ class DB():
         Split the chunks in the database in two (old-head and new-tail)
         based on it's defined length
         """
-        if chunk['length'] > 0:
-            cursor = self.connection.cursor()
+        cursor = self.connection.cursor()
 
-            # Create new chunks containing the tail sectors
+        # Create new chunks containing the tail sectors
+        cursor.execute('''
+            INSERT INTO chunks(file, block,           length,           sector)
+            SELECT             file, block+:length+1, length-:length-1, sector+:length+1
+                FROM chunks
+                WHERE file IS :file
+                  AND block = :block
+            ''',
+            chunk)
+
+        if cursor.rowcount > 0:
+            # Update the old chunks length to contain only the head sectors
             cursor.execute('''
-                INSERT INTO chunks(file, block,         length,         sector)
-                SELECT             file, block+:length, length-:length, sector+:length
-                    FROM chunks
-                    WHERE file IS :file
-                      AND block = :block
+                UPDATE chunks
+                SET length = :length
+                WHERE file IS :file
+                  AND block = :block
                 ''',
                 chunk)
 
-            if cursor.rowcount > 0:
-                # Update the old chunks length to contain only the head sectors
-                cursor.execute('''
-                    UPDATE chunks
-                    SET length = :length
-                    WHERE file IS :file
-                      AND block = :block
-                    ''',
-                    chunk)
-
-                return True
+            return True
 
 
     def __Create_Database(self):                                                # OK
@@ -501,7 +506,7 @@ class DB():
                 INSERT INTO chunks(file,block,length,sector)
                 VALUES(NULL,0,?,?)
                 ''',
-                (2048, 0))
+                (2047, 0))
 #            self.connection.execute("PRAGMA foreign_keys = ON")
 
 

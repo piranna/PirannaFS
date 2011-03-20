@@ -151,12 +151,12 @@ class File(object):
 
             # Check if we have get end of line
             try:
-                index = data.index(os.sep)
+                index = data.index('\n') + 1
 
             except ValueError:
                 # Calc next block required
                 readed += data
-                block += chunks[0].length
+                block += chunks[0].length + 1
                 remanent -= len(data)
 
             else:
@@ -192,13 +192,9 @@ class File(object):
         floor = self.__offset // self.fs.ll.sector_size
         ceil = (self.__offset + remanent) // self.fs.ll.sector_size
 
-#        print >> sys.stderr, "floor",floor, "ceil",ceil
-
         # Read chunks
         chunks = self.__Get_Chunks(self.__inode, floor, ceil)
         readed = self.fs.ll.Read(chunks)
-#        print >> sys.stderr, chunks
-#        print >> sys.stderr, repr(readed)
 
         # Set read query offset and cursor
         offset = self.__offset % self.fs.ll.sector_size
@@ -207,7 +203,6 @@ class File(object):
         return readed[offset:self.__offset]
 
 
-    @writeable
     def remove(self):
         """Remove a file from the filesystem.
 
@@ -215,20 +210,11 @@ class File(object):
         :raises ResourceInvalidError:        if the path is a directory or a parent path is an file
         :raises ResourceNotFoundError:       if the path is not found
         """
-        # Return error if triying to unlink root path of the filesystem
-        if self.path == os.sep:
-            raise ResourceError(self.path)
-
         # Get inode and name from path
-        inode, name = self.fs.Path2InodeName(self.path)
-
-        # If the dir entry is a directory
-        # raise error
-        if self.fs.db.Get_Mode(self.fs.Get_Inode(name, inode)) == stat.S_IFDIR:
-            raise ResourceInvalidError(self.path)
+        parent_inode, name = self.fs.Path2InodeName(self.path)
 
         # Unlink dir entry
-        self.fs.db.unlink(inode, name)
+        self.fs.db.unlink(parent_inode, name)
 
         self.__inode = None
         self.__offset = 0
@@ -299,7 +285,7 @@ class File(object):
         chunks = self.__Get_Chunks(self.__inode, floor, ceil)
         for chunk in chunks:
             if chunk['sector']:
-                sectors_required -= chunk['length']
+                sectors_required -= (chunk['length'] + 1)
 
         # Get more chunks from free space if they are required
         if sectors_required > 0:
@@ -320,7 +306,7 @@ class File(object):
             # If first sector was written before
             # get it's current value as base for new data
             if sector != None:
-                sector = self.fs.ll.Read([{"sector":sector, "length":1}])
+                sector = self.fs.ll.Read([{"sector":sector, "length":0}])
                 sector = sector[:offset]
 
             # If not,
@@ -345,9 +331,9 @@ class File(object):
         for chunk in chunks:
             # Split chunk if it's bigger that the required space
             data_offset = (block - floor) * self.fs.ll.sector_size
-            length = 1 + (data_size - data_offset) // self.fs.ll.sector_size
-            if chunk['length'] > length:
-                chunk['length'] = length
+            length = (data_size - data_offset) // self.fs.ll.sector_size
+            if chunk.length > length:
+                chunk.length = length
                 self.fs.db.Split_Chunks(chunk)
 
             # Add chunk to writable ones
@@ -357,7 +343,7 @@ class File(object):
             chunks_write.append(chunk)
 
             # Set next block
-            block += chunk['length']
+            block += chunk.length + 1
 
             if block >= ceil:
                 break
@@ -366,7 +352,7 @@ class File(object):
 #        print >> sys.stderr, "chunks_write",repr(chunks_write)
         for chunk in chunks_write:
             offset = (chunk['block'] - floor) * self.fs.ll.sector_size
-            d = data[offset:offset + chunk['length'] * self.fs.ll.sector_size]
+            d = data[offset:offset + (chunk.length + 1) * self.fs.ll.sector_size]
 
             self.fs.ll.Write_Chunk(chunk['sector'], d)
             plugins.send("File.write", chunk=chunk['id'], data=d)
@@ -442,7 +428,7 @@ class File(object):
 
             if chunk['block'] > floor:
 
-                chunk['length'] = chunk['block'] - floor
+                chunk.length = chunk['block'] - floor - 1
                 chunk['block'] = floor
                 chunk['drive'] = None
                 chunk['sector'] = None
@@ -452,19 +438,18 @@ class File(object):
             # Create last chunk if not stored
             chunk = DictObj(chunks[-1])
 
-            chunk['block'] += chunk['length']
-            if chunk['block'] - 1 < ceil:
-                chunk['length'] = ceil - chunk['block'] - 1
+            chunk['block'] += chunk.length
+            if  chunk['block'] < ceil:
+                chunk['block'] += 1
+                chunk.length = ceil - chunk['block']
 
-                if chunk['length'] > 0:
-                    chunk['drive'] = None
-                    chunk['sector'] = None
-                    chunks.extend([chunk, ])
+                chunk['drive'] = None
+                chunk['sector'] = None
+                chunks.extend([chunk, ])
 
         return chunks
 
     def __Get_FreeSpace(self, sectors_required):                                # OK
-#        print >> sys.stderr, '*** __Get_FreeSpace', sectors_required
         chunks = []
 
         while sectors_required > 0:
@@ -474,7 +459,7 @@ class File(object):
             if not chunk:
                 break
 
-            sectors_required -= chunk.length
+            sectors_required -= chunk.length + 1
             chunks.append(chunk)
 
         return chunks, sectors_required
