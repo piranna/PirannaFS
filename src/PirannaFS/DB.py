@@ -504,9 +504,9 @@ class DB():
 #            self.connection.execute("PRAGMA foreign_keys = OFF")
             self.connection.execute('''
                 INSERT INTO chunks(file,block,length,sector)
-                VALUES(NULL,0,?,?)
+                VALUES(NULL,0,?,0)
                 ''',
-                (2047, 0))
+                (2047,))
 #            self.connection.execute("PRAGMA foreign_keys = ON")
 
 

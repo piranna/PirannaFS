@@ -92,7 +92,7 @@ class File(object):
 
 
     def close(self):
-        pass
+        plugins.send("File.close")
 
     def flush(self):
         pass
@@ -185,12 +185,13 @@ class File(object):
         """
         # Adjust read size
         remanent = self.fs.db.Get_Size(self.__inode) - self.__offset
+        if remanent <= 0:
+            return ""
         if 0 <= size < remanent:
             remanent = size
 
         # Calc floor and ceil blocks required
-        floor = self.__offset // self.fs.ll.sector_size
-        ceil = (self.__offset + remanent) // self.fs.ll.sector_size
+        floor, ceil = self.__Calc_Bounds(remanent)
 
         # Read chunks
         chunks = self.__Get_Chunks(self.__inode, floor, ceil)
@@ -276,16 +277,15 @@ class File(object):
         file_size = self.__offset + data_size
 
         # Calc floor and ceil blocks required
-        floor = self.__offset // self.fs.ll.sector_size
-        ceil = file_size // self.fs.ll.sector_size
+        floor, ceil = self.__Calc_Bounds(data_size)
 
         sectors_required = 1 + ceil - floor
 
         # Discard chunks already in file from required
         chunks = self.__Get_Chunks(self.__inode, floor, ceil)
         for chunk in chunks:
-            if chunk['sector']:
-                sectors_required -= (chunk['length'] + 1)
+            if chunk.sector:
+                sectors_required -= chunk.length + 1
 
         # Get more chunks from free space if they are required
         if sectors_required > 0:
@@ -303,25 +303,18 @@ class File(object):
         if offset:
             sector = chunks[0]['sector']
 
-            # If first sector was written before
-            # get it's current value as base for new data
-            if sector != None:
+            # If first sector was not written before
+            # fill space with zeroes
+            if sector == None:
+                sector = '\0' * offset
+
+            # Else get it's current value as base for new data
+            else:
                 sector = self.fs.ll.Read([{"sector":sector, "length":0}])
                 sector = sector[:offset]
 
-            # If not,
-            # fill it with zeroes
-            else:
-                sector = '\0' * offset
-
             # Adapt data
             data = sector + data
-
-#        # Add remaining zeroes at end of the data
-#        # to align to self.fs.ll.sector_size (if neccesary)
-#        offset = len(data)%sector_size
-#        if offset:
-#            data += '\0'*(sector_size - offset)
 
         # Prepare chunks
 #        print >> sys.stderr, "chunks",repr(chunks)
@@ -337,8 +330,8 @@ class File(object):
                 self.fs.db.Split_Chunks(chunk)
 
             # Add chunk to writable ones
-            chunk['file'] = self.__inode
-            chunk['block'] = block
+            chunk.file = self.__inode
+            chunk.block = block
 
             chunks_write.append(chunk)
 
@@ -349,22 +342,26 @@ class File(object):
                 break
 
         # Write chunks
-#        print >> sys.stderr, "chunks_write",repr(chunks_write)
+        print "chunks_write", chunks_write
         for chunk in chunks_write:
-            offset = (chunk['block'] - floor) * self.fs.ll.sector_size
-            d = data[offset:offset + (chunk.length + 1) * self.fs.ll.sector_size]
-
-            self.fs.ll.Write_Chunk(chunk['sector'], d)
-            plugins.send("File.write", chunk=chunk['id'], data=d)
+            offset = (chunk.block - floor) * self.fs.ll.sector_size
+            self.fs.ll.Write_Chunk(chunk.sector,
+                data[offset:offset + (chunk.length + 1) * self.fs.ll.sector_size])
 
         self.fs.db.Put_Chunks(chunks_write)
-
-#        plugins.send("File.write", chunks_write=chunks_write, data=data)
 
         # Set new offset and new file size if neccesary
         self.__offset = file_size
         if self.fs.db.Get_Size(self.__inode) < file_size:
             self.fs.db.Set_Size(self.__inode, file_size)
+
+###
+#        returned = self.__Get_Chunks(self.__inode, floor, ceil)
+#        print "returned       ", returned
+        print
+###
+
+        plugins.send("File.write", chunks_write=chunks_write, data=data)
 
     @writeable
     def writelines(self, sequence):
@@ -408,6 +405,12 @@ class File(object):
 
     # Hide
 
+    def __Calc_Bounds(self, offset):
+        floor = self.__offset // self.fs.ll.sector_size
+        ceil = (self.__offset + offset) // self.fs.ll.sector_size
+
+        return floor, ceil
+
     def __Get_Chunks(self, file, floor, ceil=None):                             # OK
         '''
         Get sectors and use empty entries for not maped chunks (all zeroes)
@@ -419,6 +422,8 @@ class File(object):
 
         # Stored chunks
         chunks = self.fs.db.Get_Chunks(self.__inode, floor, ceil)
+        print "__Get_Chunks", chunks, floor, ceil
+        print "__Get_Chunks", self.fs.db.Get_Chunks(self.__inode, 0, 2047)
 
         #If there are chunks,
         # check their bounds
@@ -452,7 +457,7 @@ class File(object):
     def __Get_FreeSpace(self, sectors_required):                                # OK
         chunks = []
 
-        while sectors_required > 0:
+        while sectors_required >= 0:
             chunk = self.fs.db.Get_FreeSpace(sectors_required, chunks)
 
             # Not chunks available
