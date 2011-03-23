@@ -324,7 +324,7 @@ class File(object):
         for chunk in chunks:
             # Split chunk if it's bigger that the required space
             data_offset = (block - floor) * self.fs.ll.sector_size
-            length = (data_size - data_offset) // self.fs.ll.sector_size
+            length = (data_size - data_offset - 1) // self.fs.ll.sector_size
             if chunk.length > length:
                 chunk.length = length
                 self.fs.db.Split_Chunks(chunk)

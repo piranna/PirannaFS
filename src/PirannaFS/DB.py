@@ -46,6 +46,7 @@ class DB():
         self.connection.execute("PRAGMA foreign_keys = ON;")
 
         def Get_NumSectors():
+            # http://stackoverflow.com/questions/283707/size-of-an-open-file-object
             drive.seek(0, 2)
             end = drive.tell()
             drive.seek(0)
