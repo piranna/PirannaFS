@@ -34,7 +34,7 @@ class DB():
     classdocs
     '''
 
-    def __init__(self, connection):                                                # OK
+    def __init__(self, connection, drive, sector_size):                         # OK
         '''
         Constructor
         '''
@@ -44,7 +44,14 @@ class DB():
         self.connection.isolation_level = None
 
         self.connection.execute("PRAGMA foreign_keys = ON;")
-        self.__Create_Database()
+
+        def Get_NumSectors():
+            drive.seek(0, 2)
+            end = drive.tell()
+            drive.seek(0)
+            return (end - 1) // sector_size
+
+        self.__Create_Database(Get_NumSectors())
 
 
     # Python-FUSE
@@ -386,7 +393,7 @@ class DB():
             return True
 
 
-    def __Create_Database(self):                                                # OK
+    def __Create_Database(self, num_sectors, first_sector=0):                   # OK
         self.connection.executescript('''
             CREATE TABLE IF NOT EXISTS dir_entries
             (
@@ -504,9 +511,9 @@ class DB():
 #            self.connection.execute("PRAGMA foreign_keys = OFF")
             self.connection.execute('''
                 INSERT INTO chunks(file,block,length,sector)
-                VALUES(NULL,0,?,0)
+                VALUES(NULL,0,?,?)
                 ''',
-                (2047,))
+                (num_sectors, first_sector))
 #            self.connection.execute("PRAGMA foreign_keys = ON")
 
 

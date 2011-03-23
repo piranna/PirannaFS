@@ -407,7 +407,7 @@ class File(object):
 
     def __Calc_Bounds(self, offset):
         floor = self.__offset // self.fs.ll.sector_size
-        ceil = (self.__offset + offset) // self.fs.ll.sector_size
+        ceil = (self.__offset + offset - 1) // self.fs.ll.sector_size
 
         return floor, ceil
 

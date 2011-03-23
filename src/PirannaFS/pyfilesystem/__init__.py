@@ -23,7 +23,7 @@ class FileSystem(base.FS):
     def __init__(self, db, drive, sector_size=512):
         base.FS.__init__(self)
 
-        self.db = DB.DB(db)
+        self.db = DB.DB(db, drive, sector_size)
         self.ll = LL.LL(drive, sector_size)
 
         self.dir_class = Dir.Dir
