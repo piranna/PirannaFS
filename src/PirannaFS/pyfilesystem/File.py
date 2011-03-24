@@ -422,8 +422,8 @@ class File(object):
 
         # Stored chunks
         chunks = self.fs.db.Get_Chunks(self.__inode, floor, ceil)
-        print "__Get_Chunks", chunks, floor, ceil
-        print "__Get_Chunks", self.fs.db.Get_Chunks(self.__inode, 0, 2047)
+#        print "__Get_Chunks", chunks, floor, ceil
+#        print "__Get_Chunks", self.fs.db.Get_Chunks(self.__inode, 0, 2047)
 
         #If there are chunks,
         # check their bounds

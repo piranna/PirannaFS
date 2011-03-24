@@ -20,6 +20,10 @@ from .. import DB, LL
 
 
 class FileSystem(base.FS):
+    _meta = {"pickle_contents":False,
+             "thread_safe":False}
+
+
     def __init__(self, db, drive, sector_size=512):
         base.FS.__init__(self)
 

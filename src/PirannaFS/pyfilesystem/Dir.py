@@ -151,13 +151,22 @@ class Dir:
         if force:
             for dir_entry in self.fs.db.readdir(self.__inode):
                 path = os.path.join(self.path, dir_entry.name)
-                inode = self.fs.Get_Inode(path)
 
-                if self.fs.db.Get_Mode(inode) == stat.S_IFDIR:
-                    d = Dir(self.fs, path)
-                    d.remove(force=True)
+                try:
+                    inode = self.fs.Get_Inode(path)
+
+                # Path doesn't exist, probably because it was removed by another
+                # thead while we were getting the entries in this one. Since in
+                # any case we are removing it, we can ignore the exception
+                except ResourceNotFoundError:
+                    pass
+
                 else:
-                    self.fs.remove(path)
+                    if self.fs.db.Get_Mode(inode) == stat.S_IFDIR:
+                        d = Dir(self.fs, path)
+                        d.remove(force=True)
+                    else:
+                        self.fs.remove(path)
 
         # If dir is not empty raise error
         if self.fs.db.readdir(self.__inode):
