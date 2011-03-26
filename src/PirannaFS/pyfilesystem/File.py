@@ -270,32 +270,75 @@ class File(object):
     def write(self, data):
         if not data: return
 
-        # Get data size
+        # Initialize vars here to minimize database acess isolation
         data_size = len(data)
-
-        # Get file size
         file_size = self.__offset + data_size
-
-        # Calc floor and ceil blocks required
         floor, ceil = self.__Calc_Bounds(data_size)
+        sectors_required = ceil - floor
 
-        sectors_required = 1 + ceil - floor
-
-        # Discard chunks already in file from required
+### DB ###
+        # Get written chunks of the file
         chunks = self.__Get_Chunks(self.__inode, floor, ceil)
+
+        # Check if there's enought free space available
         for chunk in chunks:
-            if chunk.sector:
+            # Discard chunks already in file from required space
+            if chunk.sector != None:
                 sectors_required -= chunk.length + 1
 
-        # Get more chunks from free space if they are required
-        if sectors_required > 0:
-            chunks_free, sectors_required = self.__Get_FreeSpace(sectors_required)
-            chunks.extend(chunks_free)
+#        # [ToDo] Calc free space before start spliting free chunks in database
+#        # and fragment all the filesystem
+#        if sectors_required < 
+#            raise StorageSpaceError
 
-        # If more sectors are required
-        # return no space error
-        if sectors_required > 0:
-            raise StorageSpaceError
+#        print "sectors_required", sectors_required
+#        print "chunks antes", chunks
+
+        # Fill holes between written chunks (if any)
+        for chunk in chunks:
+#            print "chunks durante", chunks
+            if chunk.sector == None:
+                index = chunks.index(chunk)
+                block = chunk.block
+
+                while chunk.length >= 0:
+                    # Get the free chunk that best fit the hole
+                    free = self.fs.db.Get_FreeSpace(chunk.length,
+                                            [chunk.block for chunk in chunks])
+
+                    # If there's no more free space available, raise error
+                    if not free:
+                        raise StorageSpaceError
+
+                    # If free chunk is bigger that hole, split it
+                    if free.length > chunk.length:
+                        free.length = chunk.length
+                        self.fs.db.Split_Chunks(free)
+
+                    # Adapt free chunk
+                    free.file = self.__inode
+                    free.block = block
+
+                    # Add free chunk to the hole
+                    chunks.insert(index, free)
+                    index += 1
+
+                    # Increase block number for the next free chunk in the hole
+                    # and decrease length of hole
+                    block += free.length + 1
+                    chunk.length -= free.length + 1
+
+                # Remove hole chunk since we have filled it
+                chunks.pop(index)
+
+        # Put chunks in database
+#        print "chunks despues", chunks
+        self.fs.db.Put_Chunks(chunks)
+
+        # Set new file size if neccesary
+        if self.fs.db.Get_Size(self.__inode) < file_size:
+            self.fs.db.Set_Size(self.__inode, file_size)
+### DB ###
 
         # If there is an offset in the first sector
         # adapt data chunks
@@ -316,52 +359,16 @@ class File(object):
             # Adapt data
             data = sector + data
 
-        # Prepare chunks
-#        print >> sys.stderr, "chunks",repr(chunks)
-        chunks_write = []
-        block = floor
-
+        # Write chunks data to the drive
         for chunk in chunks:
-            # Split chunk if it's bigger that the required space
-            data_offset = (block - floor) * self.fs.ll.sector_size
-            length = (data_size - data_offset - 1) // self.fs.ll.sector_size
-            if chunk.length > length:
-                chunk.length = length
-                self.fs.db.Split_Chunks(chunk)
-
-            # Add chunk to writable ones
-            chunk.file = self.__inode
-            chunk.block = block
-
-            chunks_write.append(chunk)
-
-            # Set next block
-            block += chunk.length + 1
-
-            if block >= ceil:
-                break
-
-        # Write chunks
-        print "chunks_write", chunks_write
-        for chunk in chunks_write:
             offset = (chunk.block - floor) * self.fs.ll.sector_size
             self.fs.ll.Write_Chunk(chunk.sector,
                 data[offset:offset + (chunk.length + 1) * self.fs.ll.sector_size])
 
-        self.fs.db.Put_Chunks(chunks_write)
-
-        # Set new offset and new file size if neccesary
+        # Set new offset
         self.__offset = file_size
-        if self.fs.db.Get_Size(self.__inode) < file_size:
-            self.fs.db.Set_Size(self.__inode, file_size)
 
-###
-#        returned = self.__Get_Chunks(self.__inode, floor, ceil)
-#        print "returned       ", returned
-        print
-###
-
-        plugins.send("File.write", chunks_write=chunks_write, data=data)
+        plugins.send("File.write", chunks=chunks, data=data)
 
     @writeable
     def writelines(self, sequence):
@@ -425,8 +432,7 @@ class File(object):
 #        print "__Get_Chunks", chunks, floor, ceil
 #        print "__Get_Chunks", self.fs.db.Get_Chunks(self.__inode, 0, 2047)
 
-        #If there are chunks,
-        # check their bounds
+        #If there are chunks, check their bounds
         if chunks:
             # Create first chunk if not stored
             chunk = DictObj(chunks[0])
@@ -452,19 +458,17 @@ class File(object):
                 chunk['sector'] = None
                 chunks.extend([chunk, ])
 
-        return chunks
+        # There're no chunks for that file at this blocks, make a fake empty one
+        else:
+            # Create first chunk if not stored
+            chunk = DictObj()
 
-    def __Get_FreeSpace(self, sectors_required):                                # OK
-        chunks = []
+            chunk.length = ceil - floor
+            chunk.block = floor
+            chunk.drive = None
+            chunk.sector = None
 
-        while sectors_required >= 0:
-            chunk = self.fs.db.Get_FreeSpace(sectors_required, chunks)
-
-            # Not chunks available
-            if not chunk:
-                break
-
-            sectors_required -= chunk.length + 1
             chunks.append(chunk)
 
-        return chunks, sectors_required
+        # Return list of chunks
+        return chunks

@@ -263,30 +263,31 @@ class DB():
             (ceil, file, ceil))
 
 
-    def Get_FreeSpace(self, sectors_required, chunks):                          # OK
+    def Get_FreeSpace(self, sectors_required, blocks):                          # OK
         '''Get the free space chunk that best fit to the requested space
         or is the biggest space available and has not been get before
         '''
         return self.connection.execute('''
             SELECT * FROM chunks
             WHERE file IS NULL
+--                AND block NOT IN (:blocks)
                 AND length <= COALESCE
                               (
                                   (
                                       SELECT length FROM chunks
                                       WHERE file IS NULL
-                                          AND length >= ?
---                                          AND NOT IN ()
+--                                          AND block NOT IN (:blocks)
+                                          AND length >= :sectors_required
                                       ORDER BY length
                                       LIMIT 1
                                   ),
-                                  ?
+                                  :sectors_required
                               )
---                AND NOT IN ()
             ORDER BY length DESC
             LIMIT 1
             ''',
-            (sectors_required, sectors_required)).fetchone()
+            {"blocks":','.join([str(block) for block in blocks]),
+             "sectors_required":sectors_required}).fetchone()
 
 
     def Get_Inode(self, parent_dir, name):                                      # OK
