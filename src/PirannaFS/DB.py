@@ -432,7 +432,9 @@ class DB():
                     FOREIGN KEY(child_entry) REFERENCES dir_entries(inode)
                         ON DELETE CASCADE ON UPDATE CASCADE,
                     FOREIGN KEY(parent_dir) REFERENCES directories(inode)
-                        ON DELETE CASCADE ON UPDATE CASCADE
+                        ON DELETE CASCADE ON UPDATE CASCADE,
+
+                    UNIQUE(parent_dir,name)
                 );
 
                 CREATE TABLE IF NOT EXISTS files
@@ -455,7 +457,10 @@ class DB():
                     sector INTEGER NOT NULL,
 
                     FOREIGN KEY(file) REFERENCES files(inode)
-                        ON DELETE SET NULL ON UPDATE CASCADE
+                        ON DELETE SET NULL ON UPDATE CASCADE,
+
+                    UNIQUE(file,block),
+                    UNIQUE(file,sector)
                 );
 
     -- Triggers
