@@ -374,30 +374,28 @@ class DB():
         Split the chunks in the database in two (old-head and new-tail)
         based on it's defined length
         """
-        cursor = self.connection.cursor()
+        def ChunkConverted():
+            d = {}
+            for key, value in chunk.iteritems():
+                if value == None:
+                    d[key] = "NULL"
+                else:
+                    d[key] = value
+            return d
 
-        with self._lock:
-            # Create new chunks containing the tail sectors
-            cursor.execute('''
-                INSERT INTO chunks(file, block,           length,           sector)
-                SELECT             file, block+:length+1, length-:length-1, sector+:length+1
-                    FROM chunks
-                    WHERE file IS :file
-                      AND block = :block
-                ''',
-                chunk)
+        # Create new chunks containing the tail sectors and
+        # update the old chunks length to contain only the head sectors
+        self.connection.executescript('''
+            INSERT INTO chunks(file, block,              length,              sector)
+            SELECT             file, block+%(length)s+1, length-%(length)s-1, sector+%(length)s+1
+                FROM chunks
+                WHERE file IS %(file)s
+                  AND block = %(block)s;
 
-            if cursor.rowcount > 0:
-                # Update the old chunks length to contain only the head sectors
-                cursor.execute('''
-                    UPDATE chunks
-                    SET length = :length
-                    WHERE file IS :file
-                      AND block = :block
-                    ''',
-                    chunk)
-
-                return True
+                UPDATE chunks SET length  = %(length)s
+                WHERE file IS %(file)s
+                  AND block = %(block)s;
+            ''' % ChunkConverted())
 
 
     def __Create_Database(self, num_sectors, first_sector=0):                   # OK

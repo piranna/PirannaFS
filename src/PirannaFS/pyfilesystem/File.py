@@ -73,6 +73,7 @@ class File(object):
             if '+' in mode:
                 self._mode.add('r')
 
+#            print "self.__inode", self.__inode
             if self.__inode == None:
                 self.make()
             else:
@@ -92,10 +93,12 @@ class File(object):
 
 
     def close(self):
+        self.flush()
+        self.__inode = None
         plugins.send("File.close")
 
     def flush(self):
-        pass
+        self.fs.ll._file.flush()
 
     def make(self):
         # Check if dir_entry
@@ -251,15 +254,17 @@ class File(object):
     def truncate(self, size=0):
         size += self.__offset
 
-        ceil = divmod(size, self.fs.ll.sector_size)
-        if ceil[1]:
-            ceil = ceil[0] + 1
-        else:
-            ceil = ceil[0]
+        ceil = (size - 1) // self.fs.ll.sector_size
 
         # Split chunks whose offset+length is greather that new file size
-        for chunk in self.fs.db.Get_Chunks_Truncate(self.__inode, ceil):
-            if self.fs.db.Split_Chunks(chunk):
+        if ceil >= 0:
+            for chunk in self.fs.db.Get_Chunks_Truncate(self.__inode, ceil):
+                self.fs.db.Split_Chunks(chunk)
+                self._Free_Chunks(chunk)
+
+        # Free all chunks of the file
+        else:
+            for chunk in self.fs.db.Get_Chunks_Truncate(self.__inode, ceil):
                 self._Free_Chunks(chunk)
 
         # Set new file size
@@ -293,7 +298,30 @@ class File(object):
 
 #        print "sectors_required", sectors_required
 #        print "chunks antes", chunks
+### DB ###
 
+        # If there is an offset in the first sector
+        # adapt data chunks
+        offset = self.__offset % self.fs.ll.sector_size
+        if offset:
+            sector = chunks[0]['sector']
+#            print "sector:", sector, chunks
+
+            # If first sector was not written before
+            # fill space with zeroes
+            if sector == None:
+                sector = '\0' * offset
+
+            # Else get it's current value as base for new data
+            else:
+                sector = self.fs.ll.Read([{"sector":sector, "length":0}])
+                sector = sector[:offset]
+
+            # Adapt data
+            data = sector + data
+#            print "data:", repr(data)
+
+### DB ###
         # Fill holes between written chunks (if any)
         for chunk in chunks:
 #            print "chunks durante", chunks
@@ -339,25 +367,6 @@ class File(object):
         if self.fs.db.Get_Size(self.__inode) < file_size:
             self.fs.db.Set_Size(self.__inode, file_size)
 ### DB ###
-
-        # If there is an offset in the first sector
-        # adapt data chunks
-        offset = self.__offset % self.fs.ll.sector_size
-        if offset:
-            sector = chunks[0]['sector']
-
-            # If first sector was not written before
-            # fill space with zeroes
-            if sector == None:
-                sector = '\0' * offset
-
-            # Else get it's current value as base for new data
-            else:
-                sector = self.fs.ll.Read([{"sector":sector, "length":0}])
-                sector = sector[:offset]
-
-            # Adapt data
-            data = sector + data
 
         # Write chunks data to the drive
         for chunk in chunks:

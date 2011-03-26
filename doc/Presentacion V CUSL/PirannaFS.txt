@@ -60,6 +60,8 @@ Futuras mejoras
 		  Mayor rendimiento
 		  Mayor modularidad para los plugins
 		  Menor colixiones entre hilos
+		Usar referencias al objeto padre en lugar de la ruta entera
+		Desarrollar unidades de test propias y especializadas
 	Nuevos modulos
 		Auto-defragmentacion de metadatos al cerrar archivo
 		Auto-defragmentacion de datos durante bajo uso

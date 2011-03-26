@@ -68,8 +68,11 @@ class Dir:
         :raises DestinationExistsError: if the path is already a directory, and allow_recreate is False
         """
         # Check if dir_entry exist and we can recreate it if so happens
-        if self.__inode and not allow_recreate:
-            raise DestinationExistsError(self.path)
+        if self.__inode:
+            if allow_recreate:
+                return
+            else:
+                raise DestinationExistsError(self.path)
 
         # Get parent dir
         try:
