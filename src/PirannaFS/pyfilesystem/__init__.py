@@ -27,6 +27,8 @@ class FileSystem(base.FS):
     def __init__(self, db, drive, sector_size=512):
         base.FS.__init__(self)
 
+        self._freeSpace = None
+
         self.ll = LL.LL(drive, sector_size)
         self.db = DB.DB(db, self.ll._file, sector_size)
 
@@ -146,7 +148,7 @@ class FileSystem(base.FS):
 
         raise UnsupportedError("make dir")
 
-    def open(self, path, mode="r", **kwargs):
+    def open(self, path, mode='r'):
         """Open the given path as a file-like object.
 
         :param path: a path to the file that should be opened
@@ -164,7 +166,7 @@ class FileSystem(base.FS):
         :raises ResourceNotFoundError:       if the path is not found
         """
         if self.file_class:
-            return self.file_class(self, path, mode, **kwargs)
+            return self.file_class(self, path, mode)
 
         raise UnsupportedError("open file")
 
@@ -180,8 +182,8 @@ class FileSystem(base.FS):
         :raises ResourceNotFoundError:       if the path is not found
         """
         if self.file_class:
-            dir = self.file_class(self, path, 'r')
-            return dir.remove()
+            with self.file_class(self, path) as f:
+                return f.remove()
 
         raise UnsupportedError("remove file")
 
@@ -389,14 +391,19 @@ class FileSystem(base.FS):
 #        pass
 
 
-#    def getsize(self, path):
-#        """Returns the size (in bytes) of a resource.
-#
-#        :param path: a path to the resource
-#        :rtype: integer
-#        :returns: the size of the file
-#        """
-#        pass
+    def getsize(self, path):
+        """Returns the size (in bytes) of a resource.
+
+        :param path: a path to the resource
+
+        :rtype: integer
+        :returns: the size of the file
+        """
+        if self.file_class:
+            with self.file_class(self, path) as f:
+                return f.getsize()
+
+        raise UnsupportedError("getsize")
 
 
     def isdirempty(self, path):
@@ -406,11 +413,11 @@ class FileSystem(base.FS):
 
         @rtype: bool
         """
-        if self.file_class:
-            dir = self.file_class(self, path)
+        if self.dir_class:
+            dir = self.dir_class(self, path)
             return dir.isempty()
 
-        raise UnsupportedError("is empty dir")
+        raise UnsupportedError("isdirempty")
 
 
 #    def makeopendir(self, path, recursive=False):
@@ -481,6 +488,13 @@ class FileSystem(base.FS):
 #        :param ignore_errors: ignore any errors reading the directory
 #        """
 #        pass
+
+
+    def FreeSpace(self):
+        if self._freeSpace == None:
+            self._freeSpace = self.db.Get_FreeSpace()
+
+        return self._freeSpace
 
 
     def Get_Inode(self, path, inode=0):                                          # OK

@@ -14,7 +14,7 @@ def write(self, path,data,offset):
     ceil = (offset+size)//self.__sector_size
 
     # Get free space
-    chunks,sectors_required = self.__Get_FreeSpace(1 + ceil-floor)
+    chunks,sectors_required = self.__Get_FreeChunk_BestFit(1 + ceil-floor)
 
     # Get recicled sectors (if neccesary)
     if sectors_required > 0:
@@ -40,7 +40,7 @@ def write(self, path,data,offset):
             chunks.extend(chunks_recicled)
             chunks.sort(key=lambda chunk: str(chunk.drive)+":"+str(chunk.sector))
             if self.__Compact_FreeSpace(chunks):
-                chunks = self.__Get_FreeSpace(1 + ceil-floor)
+                chunks = self.__Get_FreeChunk_BestFit(1 + ceil-floor)
 
     # Adapt data chunks
     block = LL.Read([{"sector":,"length":1}])

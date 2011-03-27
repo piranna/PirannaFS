@@ -35,7 +35,7 @@ class File(object):
     '''
     classdocs
     '''
-    def __init__(self, fs, path, mode, **kwargs):
+    def __init__(self, fs, path, mode='r'):
         """
 
         @raise ParentDirectoryMissingError:
@@ -99,6 +99,18 @@ class File(object):
 
     def flush(self):
         self.fs.ll._file.flush()
+
+
+    def getsize(self):
+        """Returns the size (in bytes) of a resource.
+
+        :rtype: integer
+        :returns: the size of the file
+        """
+        if self.__inode != None:
+            return self.fs.db.Get_Size(self.__inode)
+        return 0
+
 
     def make(self):
         # Check if dir_entry
@@ -252,23 +264,25 @@ class File(object):
 
     @writeable
     def truncate(self, size=0):
+        def Free_Chunks(chunk):
+            self.fs.db.Free_Chunks(chunk)
+    #        self.__Compact_FreeSpace()
+
         size += self.__offset
 
         ceil = (size - 1) // self.fs.ll.sector_size
 
-        # Split chunks whose offset+length is greather that new file size
-        if ceil >= 0:
+        # If new file size if bigger than zero, plit chunks
+        if ceil > -1:
             for chunk in self.fs.db.Get_Chunks_Truncate(self.__inode, ceil):
                 self.fs.db.Split_Chunks(chunk)
-                self._Free_Chunks(chunk)
 
-        # Free all chunks of the file
-        else:
-            for chunk in self.fs.db.Get_Chunks_Truncate(self.__inode, ceil):
-                self._Free_Chunks(chunk)
+        # Free unwanted chunks from the file
+        for chunk in self.fs.db.Get_Chunks_Truncate(self.__inode, ceil):
+            Free_Chunks(chunk)
 
         # Set new file size
-        self.fs.db.Set_Size(self.__inode, size)
+        self.__Set_Size(size)
 
 
     @writeable
@@ -291,10 +305,9 @@ class File(object):
             if chunk.sector != None:
                 sectors_required -= chunk.length + 1
 
-#        # [ToDo] Calc free space before start spliting free chunks in database
-#        # and fragment all the filesystem
-#        if sectors_required < 
-#            raise StorageSpaceError
+        # Raise error if there's not enought free space available
+        if sectors_required > self.fs.FreeSpace() // self.fs.ll.sector_size:
+            raise StorageSpaceError
 
 #        print "sectors_required", sectors_required
 #        print "chunks antes", chunks
@@ -331,12 +344,8 @@ class File(object):
 
                 while chunk.length >= 0:
                     # Get the free chunk that best fit the hole
-                    free = self.fs.db.Get_FreeSpace(chunk.length,
+                    free = self.fs.db.Get_FreeChunk_BestFit(chunk.length,
                                             [chunk.block for chunk in chunks])
-
-                    # If there's no more free space available, raise error
-                    if not free:
-                        raise StorageSpaceError
 
                     # If free chunk is bigger that hole, split it
                     if free.length > chunk.length:
@@ -365,7 +374,7 @@ class File(object):
 
         # Set new file size if neccesary
         if self.fs.db.Get_Size(self.__inode) < file_size:
-            self.fs.db.Set_Size(self.__inode, file_size)
+            self.__Set_Size(file_size)
 ### DB ###
 
         # Write chunks data to the drive
@@ -384,8 +393,7 @@ class File(object):
         data = ""
         for line in sequence:
             data += line
-        if data:
-            self.write(data)
+        self.write(data)
 
 
     def __del__(self):
@@ -409,14 +417,6 @@ class File(object):
 #
 #    def __unicode__(self):
 #        return unicode(self.__str__())
-
-
-    # Don't show
-
-    def _Free_Chunks(self, chunk):
-#        plugins.send("File._Free_Chunks", chunk=chunk)
-        self.fs.db.Free_Chunks(chunk)
-#        self.__Compact_FreeSpace()
 
 
     # Hide
@@ -481,3 +481,9 @@ class File(object):
 
         # Return list of chunks
         return chunks
+
+
+    def __Set_Size(self, size):
+        """Set file size and reset filesystem free space counter"""
+        self.fs.db.Set_Size(self.__inode, size)
+        self.fs._freeSpace = None

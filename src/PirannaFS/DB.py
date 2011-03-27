@@ -56,6 +56,8 @@ class DB():
             drive.seek(0)
             return (end - 1) // sector_size
 
+        self.__sector_size = sector_size
+
         self.__Create_Database(Get_NumSectors())
 
 
@@ -263,9 +265,12 @@ class DB():
             (ceil, file, ceil))
 
 
-    def Get_FreeSpace(self, sectors_required, blocks):                          # OK
-        '''Get the free space chunk that best fit to the requested space
-        or is the biggest space available and has not been get before
+    def Get_FreeChunk_BestFit(self, sectors_required, blocks):                  # OK
+        '''Get the free chunk that best fit to the requested space.
+
+        'Best fit' here means that it's the smallest free chunk whose size is
+        equals-or-bigger or it's the biggest one that is smaller
+        that the requested size
         '''
         return self.connection.execute('''
             SELECT * FROM chunks
@@ -288,6 +293,15 @@ class DB():
             ''',
             {"blocks":','.join([str(block) for block in blocks]),
              "sectors_required":sectors_required}).fetchone()
+
+
+    def Get_FreeSpace(self):
+        """Get the free space available in the filesystem"""
+        return self.connection.execute('''
+            SELECT SUM(length+1) AS size
+            FROM chunks
+            WHERE file IS NULL
+            ''').fetchone()['size'] * self.__sector_size
 
 
     def Get_Inode(self, parent_dir, name):                                      # OK

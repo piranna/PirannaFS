@@ -62,6 +62,7 @@ Futuras mejoras
 		  Menor colixiones entre hilos
 		Usar referencias al objeto padre en lugar de la ruta entera
 		Desarrollar unidades de test propias y especializadas
+		Cambiar getters y setters por properties
 	Nuevos modulos
 		Auto-defragmentacion de metadatos al cerrar archivo
 		Auto-defragmentacion de datos durante bajo uso
