@@ -111,6 +111,8 @@ class File(object):
             return self.fs.db.Get_Size(self.__inode)
         return 0
 
+    isempty = getsize
+
 
     def make(self):
         # Check if dir_entry
@@ -161,7 +163,7 @@ class File(object):
 
         while remanent > 0:
             # Read chunk
-            chunks = self.__Get_Chunks(self.__inode, block)
+            chunks = self.__Get_Chunks(block)
             data = self.fs.ll.Read(chunks)
 
             # Check if we have get end of line
@@ -209,7 +211,7 @@ class File(object):
         floor, ceil = self.__Calc_Bounds(remanent)
 
         # Read chunks
-        chunks = self.__Get_Chunks(self.__inode, floor, ceil)
+        chunks = self.__Get_Chunks(floor, ceil)
         readed = self.fs.ll.Read(chunks)
 
         # Set read query offset and cursor
@@ -297,7 +299,7 @@ class File(object):
 
 ### DB ###
         # Get written chunks of the file
-        chunks = self.__Get_Chunks(self.__inode, floor, ceil)
+        chunks = self.__Get_Chunks(floor, ceil)
 
         # Check if there's enought free space available
         for chunk in chunks:
@@ -427,7 +429,7 @@ class File(object):
 
         return floor, ceil
 
-    def __Get_Chunks(self, file, floor, ceil=None):                             # OK
+    def __Get_Chunks(self, floor, ceil=None):                             # OK
         '''
         Get sectors and use empty entries for not maped chunks (all zeroes)
         '''
