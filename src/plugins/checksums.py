@@ -14,16 +14,13 @@ import plugins
 
 class checksums(plugins.Plugin):
     def __init__(self):
-        self.__db = None
-        self.__ll = None
-
-        plugins.connect(self.__Create,"FS.__init__")
+        plugins.connect(self.__Create, "FS.__init__")
 
         # Create
-        plugins.connect(self.__Write,"File.write")
+        plugins.connect(self.__Write, "File.write")
 
         # Update
-        plugins.connect(self.__Split_Chunks,"File.__Split_Chunks")
+        plugins.connect(self.__Split_Chunks, "File.__Split_Chunks")
 
 
     def __initialize(self, db, ll):
@@ -60,20 +57,20 @@ class checksums(plugins.Plugin):
 
     def __Split_Chunks(self, chunk):
         for chunk in self.__db.Get_Chunks(chunk['file'], chunk['block'],
-                                          chunk['block']+chunk['length']+1):
+                                          chunk['block'] + chunk['length'] + 1):
             self.__Write(chunk['id'], self.__ll.Read_Chunk(chunk))
 
 
-    def __Write(self, chunk,data):
+    def __Write(self, chunk, data):
         '''
         Calculate the checksum of the data and link it's value to the chunk.
         If the checksum exist previously (for example, a truncate or a split
         chunks have been done) the checksum is replaced.
         '''
-        print >> sys.stderr, '*** checksum', chunk,data
+        print >> sys.stderr, '*** checksum', chunk, data
 
         return self.__db.connection.execute('''
             REPLACE INTO checksums(chunk,checksum)
             VALUES(?,?)
             ''',
-            (chunk,zlib.crc32(data)))
+            (chunk, zlib.crc32(data)))

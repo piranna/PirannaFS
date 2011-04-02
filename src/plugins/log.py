@@ -13,10 +13,7 @@ import plugins
 class log(plugins.Plugin):
     def __init__(self):
 #        print >> sys.stderr, '*** log.__init__'
-
-        self.__db = None
-
-        plugins.connect(self.create,"FS.__init__")
+        plugins.connect(self.create, "FS.__init__")
         plugins.connect(self.log)
 
 
@@ -54,7 +51,7 @@ class log(plugins.Plugin):
 
         frame = sys._getframe(3)
 
-        what  = frame.f_code.co_name
+        what = frame.f_code.co_name
         where = frame.f_locals['self'].__class__.__name__
 
         how = dict(frame.f_locals)
@@ -74,4 +71,4 @@ class log(plugins.Plugin):
             INSERT INTO log('what','where','how')
             VALUES(?,?,?)
             ''',
-            (what,where,str(how)))
+            (what, where, str(how)))

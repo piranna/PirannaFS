@@ -4,18 +4,16 @@ Created on 20/09/2010
 @author: piranna
 '''
 
-import stat,sys
+import stat, sys
 
 import plugins
 
 
 class symlinks(plugins.Plugin):
     def __init__(self):
-        self.__db = None
-
-        plugins.connect(self.create,"FS.__init__")
-        plugins.connect(self.symlink,"FS.symlink")
-        plugins.connect(self.readlink,"FS.readlink")
+        plugins.connect(self.create, "FS.__init__")
+        plugins.connect(self.symlink, "FS.symlink")
+        plugins.connect(self.readlink, "FS.readlink")
 
 
     def create(self, db):
@@ -61,7 +59,7 @@ class symlinks(plugins.Plugin):
 
         raise ResourceInvalidError(path)
 
-    def symlink(self, sender, targetPath,linkPath):
+    def symlink(self, sender, targetPath, linkPath):
         '''
         Make a symlink to a file
         symlink is only called if there isn't already another object
@@ -75,7 +73,7 @@ class symlinks(plugins.Plugin):
             raise ResourceNotFoundError(path)
 
         # Get parent dir of linkPath
-        link_parentInode,name = sender.Path2InodeName(linkPath[1:])
+        link_parentInode, name = sender.Path2InodeName(linkPath[1:])
 
         # Check if exist a file, dir or symlink with the same name in this dir
         if sender.Get_Inode(name, link_parentInode) >= 0:
@@ -87,9 +85,9 @@ class symlinks(plugins.Plugin):
             INSERT INTO symlinks(inode,target)
             VALUES(?,?)
             ''',
-            (inode,targetPath))
+            (inode, targetPath))
 
-        self.__db.link(link_parentInode,name,inode)
+        self.__db.link(link_parentInode, name, inode)
 
 
 if __name__ == '__main__':

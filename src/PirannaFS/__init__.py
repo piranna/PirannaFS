@@ -1,0 +1,88 @@
+'''
+Created on 02/04/2011
+
+@author: piranna
+'''
+
+import os
+import stat
+
+# Errors are imported from PyFilesystem doing it system dependent
+# maybe in the future i use my own implementation
+from fs.errors import *
+
+from DB import DB
+from LL import LL
+
+
+class BaseFS(object):
+    '''
+    classdocs
+    '''
+
+    def __init__(self, db, drive, sector_size=512):
+        self.ll = LL(drive, sector_size)
+        self.db = DB(db, self.ll._file, sector_size)
+
+        self._freeSpace = None
+
+
+    def FreeSpace(self):
+        if self._freeSpace == None:
+            self._freeSpace = self.db.Get_FreeSpace()
+
+        return self._freeSpace
+
+
+    def Get_Inode(self, path, inode=0):                                          # OK
+        '''
+        Get the inode of a path
+        '''
+#        print >> sys.stderr, '*** Get_Inode', repr(path),inode
+
+        # If there are path elements
+        # get their inodes
+        if path:
+            path = path.partition(os.sep)
+
+            # Get inode of the dir entry
+            inode = self.db.Get_Inode(inode, path[0])
+
+            # If there's no such dir entry, raise the adecuate exception
+            # depending of it's related to the resource we are looking for
+            # or to one of it's parents
+            if inode == None:
+                if os.sep in path:
+                    raise ParentDirectoryMissingError(path[0])
+                else:
+                    raise ResourceNotFoundError(path[0])
+
+            # If the dir entry is a directory
+            # get child inode
+            if self.db.Get_Mode(inode) == stat.S_IFDIR:
+                return self.Get_Inode(path[2], inode)
+
+            # If is not a directory and is not the last path element
+            # return error
+            if path[2]:
+                raise ResourceInvalidError(path[0])
+
+        # Path is empty, so
+        # * it's the root path
+        # * or we consumed it
+        # * or it's not a directory and it's the last path element
+        # so return computed inode
+        return inode
+
+    def Path2InodeName(self, path):                                             # OK
+        '''
+        Get the parent dir inode and the name of a dir entry defined by path
+        '''
+#        print >> sys.stderr, '*** Path2InodeName', repr(path)
+        path = path.rpartition(os.sep)
+        try:
+            inode = self.Get_Inode(path[0])
+        except ResourceNotFoundError:
+            raise ParentDirectoryMissingError(path[0])
+
+        return inode, path[2]

@@ -10,7 +10,7 @@ sys.stderr = open('../test/error.log', 'w')
 
 import sqlite3
 
-from PirannaFS.pyfilesystem import FileSystem
+from PirannaFS.pyfilesystem import Filesystem
 
 import plugins
 
@@ -20,6 +20,6 @@ pm.Load_Dir("./plugins")
 
 db = sqlite3.connect('../test/db.sqlite')
 
-fs = FileSystem(db, '../test/disk_part.img', 512)
+fs = Filesystem(db, '../test/disk_part.img', 512)
 fs.multithreaded = False
 fs.main()

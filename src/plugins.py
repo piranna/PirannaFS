@@ -7,7 +7,7 @@ Created on 22/09/2010
 # Based on code from http://wiki.python.org/moin/ModulesAsPlugins
 
 
-import imp,inspect,os
+import imp, inspect, os
 
 import louie
 
@@ -15,7 +15,7 @@ import sys
 
 
 connect = louie.connect
-send    = louie.send
+send = louie.send
 
 #def connect(receiver, signal=louie.All, sender=louie.Any, weak=True):
 #    print >> sys.stderr, '*** connect', receiver, signal, sender, weak
@@ -29,33 +29,30 @@ send    = louie.send
 
 class Plugin:
     dependencies = ()
-    replaces     = ()
+    replaces = ()
 
 
 class Manager:
     def __init__(self):
-        """
-        Constructor
-        """
+        """Constructor"""
         self.__loaded = {}
         self.__pending = set()
 
 
     def Load_Dir(self, path):
-        """
-        Load python modules from a defined path
-        """
+        """Load python modules from a defined path"""
 #        print >> sys.stderr, '*** Load_Dir', path
 
         for name in self.__Find_Modules(path):
             self.Load_Module(name, [path])
 
 
-    def Load_Module(self, name, path=["."]):
-        """
-        Load a named module found in a given path.
-        """
+    def Load_Module(self, name, path='.'):
+        """Load a named module found in a given path."""
 #        print >> sys.stderr, '*** Load_Module', name, path
+
+        if isinstance(path, basestring):
+            path = [path]
 
         # Load module
         (file, pathname, description) = imp.find_module(name, path)
@@ -72,8 +69,7 @@ class Manager:
 
 
     def Load_Plugin(self, plugin):
-        """
-        Load a new plugin if it's a valid one.
+        """Load a new plugin if it's a valid one.
 
         If it has all it's dependencies satisfacted it is loaded and is checked
         the pending ones, if not it is added to the pending ones.
@@ -103,8 +99,7 @@ class Manager:
 
 
     def __Find_Modules(self, path="."):
-        """
-        Return names of modules in a directory.
+        """Return names of modules in a directory.
 
         Returns module names in a list. Filenames that end in ".py" or
         ".pyc" are considered to be modules. The extension is not included
@@ -113,23 +108,16 @@ class Manager:
         modules = set()
 
         for filename in os.listdir(path):
-            module = None
+            filename = os.path.splitext(filename)
 
-            # Set module to filename if it's from a python module
-            if filename.endswith(".py"):
-                module = filename[:-3]
-            elif filename.endswith(".pyc"):
-                module = filename[:-4]
-
-            if module:
-                modules.add(module)
+            if filename[1] in (".py", ".pyc"):
+                modules.add(filename[0])
 
         return list(modules)
 
 
     def __Load_Plugin(self, plugin):
-        """
-        Private version of Load_Plugin.
+        """Private version of Load_Plugin.
 
         Load effectively the plugin and check if pending ones can be loaded now.
         """

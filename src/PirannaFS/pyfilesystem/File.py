@@ -13,7 +13,7 @@ from fs.errors import StorageSpaceError
 
 import plugins
 
-from ..DB import DictObj
+from ..File import BaseFile
 
 
 def readable(method):
@@ -31,7 +31,7 @@ def writeable(method):
     return wrapper
 
 
-class File(object):
+class File(BaseFile):
     '''
     classdocs
     '''
@@ -42,17 +42,17 @@ class File(object):
         @raise ResourceNotFoundError:
         @raise ResourceInvalidError:
         """
+        BaseFile.__init__(self, fs)
+
         try:
-            self.__inode = fs.Get_Inode(path)
+            self._inode = fs.Get_Inode(path)
         except ResourceNotFoundError:
-            self.__inode = None
+            self._inode = None
         else:
             # If inode is a dir, raise error
-            if fs.db.Get_Mode(self.__inode) == stat.S_IFDIR:
+            if fs.db.Get_Mode(self._inode) == stat.S_IFDIR:
                 raise ResourceInvalidError(path)
 
-        self.__offset = 0
-        self.fs = fs
         self.path = path
 
         # Based on code from filelike.py
@@ -64,7 +64,7 @@ class File(object):
             if '+' in mode:
                 self._mode.add('w')
 
-            if self.__inode == None:
+            if self._inode == None:
                 raise ResourceNotFoundError(path)
 
         elif 'w' in mode:
@@ -73,8 +73,8 @@ class File(object):
             if '+' in mode:
                 self._mode.add('r')
 
-#            print "self.__inode", self.__inode
-            if self.__inode == None:
+#            print "inode", inode
+            if self._inode == None:
                 self.make()
             else:
                 self.truncate()
@@ -86,7 +86,7 @@ class File(object):
             if '+' in mode:
                 self._mode.add('r')
 
-            if self.__inode == None:
+            if self._inode == None:
                 self.make()
             else:
                 self.seek(0, os.SEEK_END)
@@ -94,37 +94,24 @@ class File(object):
 
     def close(self):
         self.flush()
-        self.__inode = None
+        self._inode = None
         plugins.send("File.close")
 
     def flush(self):
         self.fs.ll._file.flush()
 
 
-    def getsize(self):
-        """Returns the size (in bytes) of a resource.
-
-        :rtype: integer
-        :returns: the size of the file
-        """
-        if self.__inode != None:
-            return self.fs.db.Get_Size(self.__inode)
-        return 0
-
-    isempty = getsize
-
-
     def make(self):
         # Check if dir_entry
-        if self.__inode:
+        if self._inode:
             raise DestinationExistsError(self.path)
 
         # Get parent dir
         parent_dir_inode, name = self.fs.Path2InodeName(self.path)
 
         # Make file
-        self.__inode = self.fs.db.mknod()
-        self.fs.db.link(parent_dir_inode, name, self.__inode)
+        self._inode = self.fs.db.mknod()
+        self.fs.db.link(parent_dir_inode, name, self._inode)
 
     def next(self):
         data = self.readline()
@@ -151,19 +138,19 @@ class File(object):
         plugins.send("File.readline begin")
 
         # Adjust read size
-        remanent = self.fs.db.Get_Size(self.__inode) - self.__offset
+        remanent = self.fs.db.Get_Size(self._inode) - self._offset
         if 0 <= size < remanent:
             remanent = size
 
         # Calc floor required
-        floor = self.__offset // self.fs.ll.sector_size
+        floor = self._offset // self.fs.ll.sector_size
 
         block = floor
         readed = ""
 
         while remanent > 0:
             # Read chunk
-            chunks = self.__Get_Chunks(block)
+            chunks = self._Get_Chunks(block)
             data = self.fs.ll.Read(chunks)
 
             # Check if we have get end of line
@@ -181,12 +168,12 @@ class File(object):
                 break
 
         # Set read query offset and cursor
-        offset = self.__offset - floor * self.fs.ll.sector_size
-        self.__offset += len(readed)
+        offset = self._offset - floor * self.fs.ll.sector_size
+        self._offset += len(readed)
 
         plugins.send("File.readline end")
 
-        return readed[offset:self.__offset]
+        return readed[offset:self._offset]
 
     @readable
     def readlines(self, sizehint= -1):
@@ -197,47 +184,6 @@ class File(object):
         plugins.send("File.readlines end")
         return data
 
-    def _read(self, size):
-        """
-        """
-        # Adjust read size
-        remanent = self.fs.db.Get_Size(self.__inode) - self.__offset
-        if remanent <= 0:
-            return ""
-        if 0 <= size < remanent:
-            remanent = size
-
-        # Calc floor and ceil blocks required
-        floor, ceil = self.__Calc_Bounds(remanent)
-
-        # Read chunks
-        chunks = self.__Get_Chunks(floor, ceil)
-        readed = self.fs.ll.Read(chunks)
-
-        # Set read query offset and cursor
-        offset = self.__offset % self.fs.ll.sector_size
-        self.__offset += remanent
-
-        return readed[offset:self.__offset]
-
-
-    def remove(self):
-        """Remove a file from the filesystem.
-
-        :raises ParentDirectoryMissingError: if a containing directory is missing and recursive is False
-        :raises ResourceInvalidError:        if the path is a directory or a parent path is an file
-        :raises ResourceNotFoundError:       if the path is not found
-        """
-        # Get inode and name from path
-        parent_inode, name = self.fs.Path2InodeName(self.path)
-
-        # Unlink dir entry
-        self.fs.db.unlink(parent_inode, name)
-
-        self.__inode = None
-        self.__offset = 0
-
-
     def seek(self, offset, whence=os.SEEK_SET):
         """
         """
@@ -247,12 +193,12 @@ class File(object):
 
         # Set whence
         if   whence == os.SEEK_SET: whence = 0
-        elif whence == os.SEEK_CUR: whence = self.__offset
-        elif whence == os.SEEK_END: whence = self.fs.db.Get_Size(self.__inode)
+        elif whence == os.SEEK_CUR: whence = self._offset
+        elif whence == os.SEEK_END: whence = self.fs.db.Get_Size(self._inode)
         else:                       raise ResourceInvalidError(self.__path)
 
         # Readjust offset
-        self.__offset = whence + offset
+        self._offset = whence + offset
 
         plugins.send("File.seeked")
 
@@ -261,7 +207,7 @@ class File(object):
 
         @return: integer
         """
-        return self.__offset
+        return self._offset
 
 
     @writeable
@@ -270,21 +216,21 @@ class File(object):
             self.fs.db.Free_Chunks(chunk)
     #        self.__Compact_FreeSpace()
 
-        size += self.__offset
+        size += self._offset
 
         ceil = (size - 1) // self.fs.ll.sector_size
 
         # If new file size if bigger than zero, plit chunks
         if ceil > -1:
-            for chunk in self.fs.db.Get_Chunks_Truncate(self.__inode, ceil):
+            for chunk in self.fs.db.Get_Chunks_Truncate(self._inode, ceil):
                 self.fs.db.Split_Chunks(chunk)
 
         # Free unwanted chunks from the file
-        for chunk in self.fs.db.Get_Chunks_Truncate(self.__inode, ceil):
+        for chunk in self.fs.db.Get_Chunks_Truncate(self._inode, ceil):
             Free_Chunks(chunk)
 
         # Set new file size
-        self.__Set_Size(size)
+        self._Set_Size(size)
 
 
     @writeable
@@ -293,13 +239,13 @@ class File(object):
 
         # Initialize vars here to minimize database acess isolation
         data_size = len(data)
-        file_size = self.__offset + data_size
-        floor, ceil = self.__Calc_Bounds(data_size)
+        file_size = self._offset + data_size
+        floor, ceil = self._Calc_Bounds(data_size)
         sectors_required = ceil - floor
 
 ### DB ###
         # Get written chunks of the file
-        chunks = self.__Get_Chunks(floor, ceil)
+        chunks = self._Get_Chunks(floor, ceil)
 
         # Check if there's enought free space available
         for chunk in chunks:
@@ -317,7 +263,7 @@ class File(object):
 
         # If there is an offset in the first sector
         # adapt data chunks
-        offset = self.__offset % self.fs.ll.sector_size
+        offset = self._offset % self.fs.ll.sector_size
         if offset:
             sector = chunks[0]['sector']
 #            print "sector:", sector, chunks
@@ -355,7 +301,7 @@ class File(object):
                         self.fs.db.Split_Chunks(free)
 
                     # Adapt free chunk
-                    free.file = self.__inode
+                    free.file = self._inode
                     free.block = block
 
                     # Add free chunk to the hole
@@ -375,8 +321,8 @@ class File(object):
         self.fs.db.Put_Chunks(chunks)
 
         # Set new file size if neccesary
-        if self.fs.db.Get_Size(self.__inode) < file_size:
-            self.__Set_Size(file_size)
+        if self.fs.db.Get_Size(self._inode) < file_size:
+            self._Set_Size(file_size)
 ### DB ###
 
         # Write chunks data to the drive
@@ -386,7 +332,7 @@ class File(object):
                 data[offset:offset + (chunk.length + 1) * self.fs.ll.sector_size])
 
         # Set new offset
-        self.__offset = file_size
+        self._offset = file_size
 
         plugins.send("File.write", chunks=chunks, data=data)
 
@@ -419,73 +365,3 @@ class File(object):
 #
 #    def __unicode__(self):
 #        return unicode(self.__str__())
-
-
-    # Hide
-
-    def __Calc_Bounds(self, offset):
-        floor = self.__offset // self.fs.ll.sector_size
-        ceil = (self.__offset + offset - 1) // self.fs.ll.sector_size
-
-        return floor, ceil
-
-    def __Get_Chunks(self, floor, ceil=None):                             # OK
-        '''
-        Get sectors and use empty entries for not maped chunks (all zeroes)
-        '''
-#        print >> sys.stderr, '\tGet_Chunks', file,floor,ceil
-
-        # Adjust ceil if we want only one chunk
-        if ceil == None: ceil = floor
-
-        # Stored chunks
-        chunks = self.fs.db.Get_Chunks(self.__inode, floor, ceil)
-#        print "__Get_Chunks", chunks, floor, ceil
-#        print "__Get_Chunks", self.fs.db.Get_Chunks(self.__inode, 0, 2047)
-
-        #If there are chunks, check their bounds
-        if chunks:
-            # Create first chunk if not stored
-            chunk = DictObj(chunks[0])
-
-            if chunk['block'] > floor:
-
-                chunk.length = chunk['block'] - floor - 1
-                chunk['block'] = floor
-                chunk['drive'] = None
-                chunk['sector'] = None
-
-                chunks = [chunk, ].extend(chunks)
-
-            # Create last chunk if not stored
-            chunk = DictObj(chunks[-1])
-
-            chunk['block'] += chunk.length
-            if  chunk['block'] < ceil:
-                chunk['block'] += 1
-                chunk.length = ceil - chunk['block']
-
-                chunk['drive'] = None
-                chunk['sector'] = None
-                chunks.extend([chunk, ])
-
-        # There're no chunks for that file at this blocks, make a fake empty one
-        else:
-            # Create first chunk if not stored
-            chunk = DictObj()
-
-            chunk.length = ceil - floor
-            chunk.block = floor
-            chunk.drive = None
-            chunk.sector = None
-
-            chunks.append(chunk)
-
-        # Return list of chunks
-        return chunks
-
-
-    def __Set_Size(self, size):
-        """Set file size and reset filesystem free space counter"""
-        self.fs.db.Set_Size(self.__inode, size)
-        self.fs._freeSpace = None

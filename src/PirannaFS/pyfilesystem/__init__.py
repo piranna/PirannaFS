@@ -16,21 +16,17 @@ import File
 
 import plugins
 
-from .. import DB, LL
+from .. import BaseFS
 
 
-class FileSystem(base.FS):
+class Filesystem(BaseFS, base.FS):
     _meta = {"pickle_contents":False,
              "thread_safe":False}
 
 
-    def __init__(self, db, drive, sector_size=512):
+    def __init__(self, db, drive, sector_size):
+        BaseFS.__init__(self, db, drive, sector_size)
         base.FS.__init__(self)
-
-        self._freeSpace = None
-
-        self.ll = LL.LL(drive, sector_size)
-        self.db = DB.DB(db, self.ll._file, sector_size)
 
         self.dir_class = Dir.Dir
         self.file_class = File.File
@@ -117,12 +113,12 @@ class FileSystem(base.FS):
         :raises ResourceNotFoundError:       if the path is not found
         """
         if self.dir_class:
-            dir = self.dir_class(self, path)
-            d = self._listdir_helper(path, dir.readlines(), wildcard, full,
-                                        absolute, dirs_only, files_only)
-            print d
-            print
-            return d
+            with self.dir_class(self, path) as d:
+                try:
+                    return self._listdir_helper(path, d.readlines(), wildcard, full,
+                                                absolute, dirs_only, files_only)
+                except AttributeError:
+                    pass
 
         raise UnsupportedError("list dir")
 
@@ -143,8 +139,11 @@ class FileSystem(base.FS):
         :raises ResourceNotFoundError:       if the path is not found
         """
         if self.dir_class:
-            dir = self.dir_class(self, path)
-            return dir.make(recursive, allow_recreate)
+            with self.dir_class(self, path) as d:
+                try:
+                    return d.make(recursive, allow_recreate)
+                except AttributeError:
+                    pass
 
         raise UnsupportedError("make dir")
 
@@ -183,7 +182,10 @@ class FileSystem(base.FS):
         """
         if self.file_class:
             with self.file_class(self, path) as f:
-                return f.remove()
+                try:
+                    return f.remove()
+                except AttributeError:
+                    pass
 
         raise UnsupportedError("remove file")
 
@@ -204,8 +206,11 @@ class FileSystem(base.FS):
         :raises ResourceNotFoundError:       if the path is not found
         """
         if self.dir_class:
-            dir = self.dir_class(self, path)
-            return dir.remove(recursive, force)
+            with self.dir_class(self, path) as d:
+                try:
+                    return d.remove(recursive, force)
+                except AttributeError:
+                    pass
 
         raise UnsupportedError("remove dir")
 
@@ -401,7 +406,10 @@ class FileSystem(base.FS):
         """
         if self.file_class:
             with self.file_class(self, path) as f:
-                return f.getsize()
+                try:
+                    return f.getsize()
+                except AttributeError:
+                    pass
 
         raise UnsupportedError("getsize")
 
@@ -414,8 +422,11 @@ class FileSystem(base.FS):
         @rtype: bool
         """
         if self.dir_class:
-            dir = self.dir_class(self, path)
-            return dir.isempty()
+            with self.dir_class(self, path) as d:
+                try:
+                    return d.isempty()
+                except AttributeError:
+                    pass
 
         raise UnsupportedError("isdirempty")
 
@@ -488,64 +499,3 @@ class FileSystem(base.FS):
 #        :param ignore_errors: ignore any errors reading the directory
 #        """
 #        pass
-
-
-    def FreeSpace(self):
-        if self._freeSpace == None:
-            self._freeSpace = self.db.Get_FreeSpace()
-
-        return self._freeSpace
-
-
-    def Get_Inode(self, path, inode=0):                                          # OK
-        '''
-        Get the inode of a path
-        '''
-#        print >> sys.stderr, '*** Get_Inode', repr(path),inode
-
-        # If there are path elements
-        # get their inodes
-        if path:
-            path = path.partition(os.sep)
-
-            # Get inode of the dir entry
-            inode = self.db.Get_Inode(inode, path[0])
-
-            # If there's no such dir entry, raise the adecuate exception
-            # depending of it's related to the resource we are looking for
-            # or to one of it's parents
-            if inode == None:
-                if os.sep in path:
-                    raise ParentDirectoryMissingError(path[0])
-                else:
-                    raise ResourceNotFoundError(path[0])
-
-            # If the dir entry is a directory
-            # get child inode
-            if self.db.Get_Mode(inode) == stat.S_IFDIR:
-                return self.Get_Inode(path[2], inode)
-
-            # If is not a directory and is not the last path element
-            # return error
-            if path[2]:
-                raise ResourceInvalidError(path[0])
-
-        # Path is empty, so
-        # * it's the root path
-        # * or we consumed it
-        # * or it's not a directory and it's the last path element
-        # so return computed inode
-        return inode
-
-    def Path2InodeName(self, path):                                             # OK
-        '''
-        Get the parent dir inode and the name of a dir entry defined by path
-        '''
-#        print >> sys.stderr, '*** Path2InodeName', repr(path)
-        path = path.rpartition(os.sep)
-        try:
-            inode = self.Get_Inode(path[0])
-        except ResourceNotFoundError:
-            raise ParentDirectoryMissingError(path[0])
-
-        return inode, path[2]

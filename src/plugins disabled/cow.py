@@ -21,7 +21,7 @@ def write(self, path,data,offset):
         chunks_recicled = []
         timestamp = None
 
-        for chunk in self.__db.Get_Recicled():
+        for chunk in self._db.Get_Recicled():
             chunks_recicled.append(chunk)
 
             if timestamp:
@@ -36,7 +36,7 @@ def write(self, path,data,offset):
             return -errno.ENOSPC
 
         else:
-            self.__db.Free_Recicled(chunks_recicled)
+            self._db.Free_Recicled(chunks_recicled)
             chunks.extend(chunks_recicled)
             chunks.sort(key=lambda chunk: str(chunk.drive)+":"+str(chunk.sector))
             if self.__Compact_FreeSpace(chunks):
@@ -62,7 +62,7 @@ def write(self, path,data,offset):
             if iguales:
                 if length:
                     if sector < chunk['length']-1:
-                        self.__db.Split_Chunks(file,chunk.block,length)
+                        self._db.Split_Chunks(file,chunk.block,length)
 
                     chunks_write.append((file,block,length,timestamp,
                                          chunk['drive'],chunk['sector']))
@@ -78,13 +78,13 @@ def write(self, path,data,offset):
 
     # Write chunks
     LL.Write(chunks_write,data)
-    self.__db.Put_Chunks(chunks_write)
+    self._db.Put_Chunks(chunks_write)
 
     # Return size of the written data
     return size
 
     
-    return self.__db.write(self.Get_Inode(path),data,offset)
+    return self._db.write(self.Get_Inode(path),data,offset)
 
 
 
@@ -150,7 +150,7 @@ def write(self, path,data,offset):
 
             for chunk2 in chunks[1:]:
                 if chunk1.sector+chunk1.length = chunk2.sector:
-                    self.__db.Compact_FreeSpace(chunk1,chunk2)
+                    self._db.Compact_FreeSpace(chunk1,chunk2)
                     chunk1.length += chunk2.length
 
                     compacted = True

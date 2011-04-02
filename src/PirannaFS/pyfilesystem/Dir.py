@@ -13,8 +13,10 @@ from fs.errors import ResourceError, ResourceInvalidError, ResourceNotFoundError
 
 import plugins
 
+from ..Dir import BaseDir
 
-class Dir:
+
+class Dir(BaseDir):
     '''
     http://pubs.opengroup.org/onlinepubs/007908799/xsh/dirent.h.html
     '''
@@ -30,32 +32,26 @@ class Dir:
         :raises ResourceInvalidError:        if the path exists, but is not a directory
         :raises ResourceNotFoundError:       if the path is not found
         """
+        BaseDir.__init__(self, fs)
+
         if path == './':    # [HACK] Ugly hack to pass unittest, need a re-do
             path = ''
 
         try:
-            self.__inode = fs.Get_Inode(path)
+            self._inode = fs.Get_Inode(path)
         except ResourceError:
-            self.__inode = None
+            self._inode = None
         else:
             # If inode is not a dir, raise error
-            if fs.db.Get_Mode(self.__inode) != stat.S_IFDIR:
+            if fs.db.Get_Mode(self._inode) != stat.S_IFDIR:
                 raise ResourceInvalidError(path)
 
-        self.fs = fs
         self.path = path
 
 
     def close(self):
         pass
 
-
-    def isempty(self):
-        """Check if a directory is empty (contains no files or sub-directories)
-
-        @rtype: bool
-        """
-        return self.fs.db.readdir(self.__inode, 1)
 
     def make(self, recursive=False, allow_recreate=False):
         """Make a directory on the filesystem.
@@ -68,7 +64,7 @@ class Dir:
         :raises DestinationExistsError: if the path is already a directory, and allow_recreate is False
         """
         # Check if dir_entry exist and we can recreate it if so happens
-        if self.__inode:
+        if self._inode:
             if allow_recreate:
                 return
             else:
@@ -87,11 +83,11 @@ class Dir:
             path, _, name = self.path.rpartition(os.sep)
             d = Dir(self.fs, path)
             d.make(path, recursive)
-            parent_dir_inode = d.__inode
+            parent_dir_inode = d._inode
 
         # Make directory
-        self.__inode = self.fs.db.mkdir()
-        self.fs.db.link(parent_dir_inode, name, self.__inode)
+        self._inode = self.fs.db.mkdir()
+        self.fs.db.link(parent_dir_inode, name, self._inode)
 
         plugins.send("Dir.make")
 
@@ -109,7 +105,7 @@ class Dir:
 
         @rtype: iterable of paths
         """
-        if self.__inode == None:
+        if self._inode == None:
             raise ResourceNotFoundError(self.path)
 
         plugins.send("Dir.read begin")
@@ -117,7 +113,7 @@ class Dir:
 #        yield unicode('.')
 #        yield unicode('..')
 
-        for dir_entry in self.fs.db.readdir(self.__inode):
+        for dir_entry in self.fs.db.readdir(self._inode):
             if dir_entry['name']:
                 yield unicode(dir_entry['name'])
 
@@ -125,12 +121,12 @@ class Dir:
 
     def readlines(self):
         """Return a list of all lines in the file."""
-        if self.__inode == None:
+        if self._inode == None:
             raise ResourceNotFoundError(self.path)
 
 #        return [ln for ln in self.readline()]
         d = []
-        for dir_entry in self.fs.db.readdir(self.__inode):
+        for dir_entry in self.fs.db.readdir(self._inode):
             if dir_entry['name']:
                 d.append(unicode(dir_entry['name']))
                 print dir_entry
@@ -147,12 +143,12 @@ class Dir:
         @raise DirectoryNotEmptyError: if the directory is not empty and force is False
         @raise ResourceNotFoundError: if the directory not exists
         """
-        if not self.__inode:
+        if not self._inode:
             raise ResourceNotFoundError(self.path)
 
         # Force dir deletion
         if force:
-            for dir_entry in self.fs.db.readdir(self.__inode):
+            for dir_entry in self.fs.db.readdir(self._inode):
                 path = os.path.join(self.path, dir_entry.name)
 
                 try:
@@ -172,13 +168,13 @@ class Dir:
                         self.fs.remove(path)
 
         # If dir is not empty raise error
-        if self.fs.db.readdir(self.__inode):
+        if self.fs.db.readdir(self._inode):
             raise DirectoryNotEmptyError(self.path)
 
         # Removed directory
         parent_dir_inode, name = self.fs.Path2InodeName(self.path)
         self.fs.db.unlink(parent_dir_inode, name)
-        self.__inode = None
+        self._inode = None
 
         # Delete parent dirs recursively if empty
         if recursive:

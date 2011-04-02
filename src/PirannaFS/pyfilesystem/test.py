@@ -4,7 +4,7 @@ import unittest
 from fs.filelike import StringIO
 from fs.tests import FSTestCases, ThreadingTestCases
 
-from PirannaFS.pyfilesystem import FileSystem
+from PirannaFS.pyfilesystem import Filesystem
 
 
 #class TestPirannaFS(unittest.TestCase, FSTestCases):
@@ -18,7 +18,7 @@ class TestPirannaFS(unittest.TestCase, FSTestCases, ThreadingTestCases):
 #        drive = StringIO("\0" * 3 * 1024 * 1024)
         sector_size = 512
 
-        self.fs = FileSystem(db, drive, sector_size)
+        self.fs = Filesystem(db, drive, sector_size)
 
 
 if __name__ == '__main__':
