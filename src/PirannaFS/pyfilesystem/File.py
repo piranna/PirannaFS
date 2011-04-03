@@ -98,7 +98,8 @@ class File(BaseFile):
         plugins.send("File.close")
 
     def flush(self):
-        self.ll._file.flush()
+        pass
+#        self.ll._file.flush()
 
 
     def make(self):

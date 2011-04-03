@@ -258,11 +258,14 @@ class DB():
 
     def Get_FreeSpace(self):
         """Get the free space available in the filesystem"""
-        return self.connection.execute('''
+        result = self.connection.execute('''
             SELECT SUM(length+1) AS size
             FROM chunks
             WHERE file IS NULL
-            ''').fetchone()['size'] * self.__sector_size
+            ''').fetchone()
+        if result:
+            return result['size'] * self.__sector_size
+        return 0
 
 
     def Get_Inode(self, parent_dir, name):                                      # OK
@@ -340,7 +343,6 @@ class DB():
             UPDATE files
             SET size = ?
             WHERE inode = ?
-            LIMIT 1
             ''',
             (length, inode))
 
