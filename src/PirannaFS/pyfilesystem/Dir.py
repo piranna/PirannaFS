@@ -86,8 +86,8 @@ class Dir(BaseDir):
             parent_dir_inode = d._inode
 
         # Make directory
-        self._inode = self.fs.db.mkdir()
-        self.fs.db.link(parent_dir_inode, name, self._inode)
+        self._inode = self.db.mkdir()
+        self.db.link(parent_dir_inode, name, self._inode)
 
         plugins.send("Dir.make")
 
@@ -113,7 +113,7 @@ class Dir(BaseDir):
 #        yield unicode('.')
 #        yield unicode('..')
 
-        for dir_entry in self.fs.db.readdir(self._inode):
+        for dir_entry in self.db.readdir(self._inode):
             if dir_entry['name']:
                 yield unicode(dir_entry['name'])
 
@@ -126,7 +126,7 @@ class Dir(BaseDir):
 
 #        return [ln for ln in self.readline()]
         d = []
-        for dir_entry in self.fs.db.readdir(self._inode):
+        for dir_entry in self.db.readdir(self._inode):
             if dir_entry['name']:
                 d.append(unicode(dir_entry['name']))
                 print dir_entry
@@ -148,7 +148,7 @@ class Dir(BaseDir):
 
         # Force dir deletion
         if force:
-            for dir_entry in self.fs.db.readdir(self._inode):
+            for dir_entry in self.db.readdir(self._inode):
                 path = os.path.join(self.path, dir_entry.name)
 
                 try:
@@ -161,19 +161,19 @@ class Dir(BaseDir):
                     pass
 
                 else:
-                    if self.fs.db.Get_Mode(inode) == stat.S_IFDIR:
+                    if self.db.Get_Mode(inode) == stat.S_IFDIR:
                         d = Dir(self.fs, path)
                         d.remove(force=True)
                     else:
                         self.fs.remove(path)
 
         # If dir is not empty raise error
-        if self.fs.db.readdir(self._inode):
+        if self.db.readdir(self._inode):
             raise DirectoryNotEmptyError(self.path)
 
         # Removed directory
         parent_dir_inode, name = self.fs.Path2InodeName(self.path)
-        self.fs.db.unlink(parent_dir_inode, name)
+        self.db.unlink(parent_dir_inode, name)
         self._inode = None
 
         # Delete parent dirs recursively if empty

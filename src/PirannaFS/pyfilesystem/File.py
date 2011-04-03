@@ -98,7 +98,7 @@ class File(BaseFile):
         plugins.send("File.close")
 
     def flush(self):
-        self.fs.ll._file.flush()
+        self.ll._file.flush()
 
 
     def make(self):
@@ -110,8 +110,8 @@ class File(BaseFile):
         parent_dir_inode, name = self.fs.Path2InodeName(self.path)
 
         # Make file
-        self._inode = self.fs.db.mknod()
-        self.fs.db.link(parent_dir_inode, name, self._inode)
+        self._inode = self.db.mknod()
+        self.db.link(parent_dir_inode, name, self._inode)
 
     def next(self):
         data = self.readline()
@@ -138,12 +138,12 @@ class File(BaseFile):
         plugins.send("File.readline begin")
 
         # Adjust read size
-        remanent = self.fs.db.Get_Size(self._inode) - self._offset
+        remanent = self.db.Get_Size(self._inode) - self._offset
         if 0 <= size < remanent:
             remanent = size
 
         # Calc floor required
-        floor = self._offset // self.fs.ll.sector_size
+        floor = self._offset // self.ll.sector_size
 
         block = floor
         readed = ""
@@ -151,7 +151,7 @@ class File(BaseFile):
         while remanent > 0:
             # Read chunk
             chunks = self._Get_Chunks(block)
-            data = self.fs.ll.Read(chunks)
+            data = self.ll.Read(chunks)
 
             # Check if we have get end of line
             try:
@@ -168,7 +168,7 @@ class File(BaseFile):
                 break
 
         # Set read query offset and cursor
-        offset = self._offset - floor * self.fs.ll.sector_size
+        offset = self._offset - floor * self.ll.sector_size
         self._offset += len(readed)
 
         plugins.send("File.readline end")
@@ -194,7 +194,7 @@ class File(BaseFile):
         # Set whence
         if   whence == os.SEEK_SET: whence = 0
         elif whence == os.SEEK_CUR: whence = self._offset
-        elif whence == os.SEEK_END: whence = self.fs.db.Get_Size(self._inode)
+        elif whence == os.SEEK_END: whence = self.db.Get_Size(self._inode)
         else:                       raise ResourceInvalidError(self.__path)
 
         # Readjust offset
@@ -213,20 +213,20 @@ class File(BaseFile):
     @writeable
     def truncate(self, size=0):
         def Free_Chunks(chunk):
-            self.fs.db.Free_Chunks(chunk)
+            self.db.Free_Chunks(chunk)
     #        self.__Compact_FreeSpace()
 
         size += self._offset
 
-        ceil = (size - 1) // self.fs.ll.sector_size
+        ceil = (size - 1) // self.ll.sector_size
 
         # If new file size if bigger than zero, plit chunks
         if ceil > -1:
-            for chunk in self.fs.db.Get_Chunks_Truncate(self._inode, ceil):
-                self.fs.db.Split_Chunks(chunk)
+            for chunk in self.db.Get_Chunks_Truncate(self._inode, ceil):
+                self.db.Split_Chunks(chunk)
 
         # Free unwanted chunks from the file
-        for chunk in self.fs.db.Get_Chunks_Truncate(self._inode, ceil):
+        for chunk in self.db.Get_Chunks_Truncate(self._inode, ceil):
             Free_Chunks(chunk)
 
         # Set new file size
@@ -254,7 +254,7 @@ class File(BaseFile):
                 sectors_required -= chunk.length + 1
 
         # Raise error if there's not enought free space available
-        if sectors_required > self.fs.FreeSpace() // self.fs.ll.sector_size:
+        if sectors_required > self.fs.FreeSpace() // self.ll.sector_size:
             raise StorageSpaceError
 
 #        print "sectors_required", sectors_required
@@ -263,7 +263,7 @@ class File(BaseFile):
 
         # If there is an offset in the first sector
         # adapt data chunks
-        offset = self._offset % self.fs.ll.sector_size
+        offset = self._offset % self.ll.sector_size
         if offset:
             sector = chunks[0]['sector']
 #            print "sector:", sector, chunks
@@ -275,7 +275,7 @@ class File(BaseFile):
 
             # Else get it's current value as base for new data
             else:
-                sector = self.fs.ll.Read([{"sector":sector, "length":0}])
+                sector = self.ll.Read([{"sector":sector, "length":0}])
                 sector = sector[:offset]
 
             # Adapt data
@@ -292,13 +292,13 @@ class File(BaseFile):
 
                 while chunk.length >= 0:
                     # Get the free chunk that best fit the hole
-                    free = self.fs.db.Get_FreeChunk_BestFit(chunk.length,
+                    free = self.db.Get_FreeChunk_BestFit(chunk.length,
                                             [chunk.block for chunk in chunks])
 
                     # If free chunk is bigger that hole, split it
                     if free.length > chunk.length:
                         free.length = chunk.length
-                        self.fs.db.Split_Chunks(free)
+                        self.db.Split_Chunks(free)
 
                     # Adapt free chunk
                     free.file = self._inode
@@ -318,18 +318,18 @@ class File(BaseFile):
 
         # Put chunks in database
 #        print "chunks despues", chunks
-        self.fs.db.Put_Chunks(chunks)
+        self.db.Put_Chunks(chunks)
 
         # Set new file size if neccesary
-        if self.fs.db.Get_Size(self._inode) < file_size:
+        if self.db.Get_Size(self._inode) < file_size:
             self._Set_Size(file_size)
 ### DB ###
 
         # Write chunks data to the drive
         for chunk in chunks:
-            offset = (chunk.block - floor) * self.fs.ll.sector_size
-            self.fs.ll.Write_Chunk(chunk.sector,
-                data[offset:offset + (chunk.length + 1) * self.fs.ll.sector_size])
+            offset = (chunk.block - floor) * self.ll.sector_size
+            self.ll.Write_Chunk(chunk.sector,
+                data[offset:offset + (chunk.length + 1) * self.ll.sector_size])
 
         # Set new offset
         self._offset = file_size

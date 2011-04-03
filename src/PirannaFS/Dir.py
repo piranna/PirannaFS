@@ -15,6 +15,7 @@ class BaseDir:
         Constructor
         '''
         self.fs = fs
+        self.db = fs.db
 
 
     def isempty(self):
@@ -22,4 +23,4 @@ class BaseDir:
 
         @rtype: bool
         """
-        return self.fs.db.readdir(self._inode, 1)
+        return self.db.readdir(self._inode, 1)

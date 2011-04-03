@@ -18,6 +18,8 @@ class BaseFile:
         Constructor
         '''
         self.fs = fs
+        self.db = fs.db
+        self.ll = fs.ll
 
         self._offset = 0
 
@@ -29,7 +31,7 @@ class BaseFile:
         :returns: the size of the file
         """
         if self._inode != None:
-            return self.fs.db.Get_Size(self._inode)
+            return self.db.Get_Size(self._inode)
         return 0
 
     isempty = getsize
@@ -46,7 +48,7 @@ class BaseFile:
         parent_inode, name = self.fs.Path2InodeName(self.path)
 
         # Unlink dir entry
-        self.fs.db.unlink(parent_inode, name)
+        self.db.unlink(parent_inode, name)
 
         self._inode = None
         self._offset = 0
@@ -56,7 +58,7 @@ class BaseFile:
         """
         """
         # Adjust read size
-        remanent = self.fs.db.Get_Size(self._inode) - self._offset
+        remanent = self.db.Get_Size(self._inode) - self._offset
         if remanent <= 0:
             return ""
         if 0 <= size < remanent:
@@ -67,18 +69,18 @@ class BaseFile:
 
         # Read chunks
         chunks = self._Get_Chunks(floor, ceil)
-        readed = self.fs.ll.Read(chunks)
+        readed = self.ll.Read(chunks)
 
         # Set read query offset and cursor
-        offset = self._offset % self.fs.ll.sector_size
+        offset = self._offset % self.ll.sector_size
         self._offset += remanent
 
         return readed[offset:self._offset]
 
 
     def _Calc_Bounds(self, offset):
-        floor = self._offset // self.fs.ll.sector_size
-        ceil = (self._offset + offset - 1) // self.fs.ll.sector_size
+        floor = self._offset // self.ll.sector_size
+        ceil = (self._offset + offset - 1) // self.ll.sector_size
 
         return floor, ceil
 
@@ -92,9 +94,9 @@ class BaseFile:
         if ceil == None: ceil = floor
 
         # Stored chunks
-        chunks = self.fs.db.Get_Chunks(self._inode, floor, ceil)
+        chunks = self.db.Get_Chunks(self._inode, floor, ceil)
 #        print "_Get_Chunks", chunks, floor, ceil
-#        print "_Get_Chunks", self.fs.db.Get_Chunks(self._inode, 0, 2047)
+#        print "_Get_Chunks", self.db.Get_Chunks(self._inode, 0, 2047)
 
         #If there are chunks, check their bounds
         if chunks:
@@ -139,5 +141,5 @@ class BaseFile:
 
     def _Set_Size(self, size):
         """Set file size and reset filesystem free space counter"""
-        self.fs.db.Set_Size(self._inode, size)
+        self.db.Set_Size(self._inode, size)
         self.fs._freeSpace = None

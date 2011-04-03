@@ -340,6 +340,7 @@ class DB():
             UPDATE files
             SET size = ?
             WHERE inode = ?
+            LIMIT 1
             ''',
             (length, inode))
 
