@@ -1,0 +1,86 @@
+Que es un sistema de archivos
+	Como se me ocurrio la idea
+	Porque usar una base de datos
+		B-Tree
+		Transacciones
+		Simplicidad de dise�o
+		Constrains
+
+Que es PirannaFS
+	Moderno (base de datos: BeFS, WinFS, Spotlight, Ext4...)
+	Posix (FUSE)
+	Modular
+		Metadatos (Mp3, librerias multimedia)
+		"Archivos invisibles"
+			Colaboracion con KeyFace (http://keyface.wordpress.com/)
+	Nucleo minimalista
+		Problemas con eFAT
+	Ampliable (¿en ejecucion?)
+		Copy-on-Write
+			Versionado
+		Log
+		Undelete
+		Checksum
+		Sistema de archivos "sin archivos"
+
+Que lo hace funcionar
+	Python (> 2.5 - mirar compatibilidad 2.4 y 3.x)
+	SQLite (> 3.6.19)
+	FUSE
+	PyFilesystem (> 0.4)
+	louie
+	Diferencias entre FUSE y PyFilesystem
+
+Como funciona - Datos tecnicos (Zzzz...)
+	Estadisticas
+		2^63 sectores/disco = 2^72 bytes = 4 ZiB = 4*2^30TiB (4.000.000.000 de TiB)
+		(2^63 discos/sistema de archivo = 2^126 sectores/sistema de archivo)
+		2^63 bloques/archivo
+		2^63 sectores/chunk
+		2^126 sectores/archivo?
+		2^63 archivos y directorios por sistema de archivos
+	Estructura de clases
+	Chunks
+	Estructura de tablas
+	Plugins
+
+Demo
+
+Futuras mejoras
+	Mejoras tecnicas
+		Interfaz de bajo nivel file-like
+		Unificar codigo PyFilesystem y FUSE
+		Mejorar PyFilesystem
+		Conexiones a SQLite independientes por hilo (mas seguridad multihilo) �al crear hilo? �en llamada?
+		Cursores explicitos (compatibilidad con otras bases de datos)
+		indices unsigned integer (2^64)
+			Error cuando se alcance el tama�o maximo de la base de datos (SQLITE_FULL)
+		agregar indices a la base de datos
+		Usar archivos externos para almacenar las funciones SQL
+		Usar varios archivos de base de datos enlazados
+		  Mayor rendimiento
+		  Mayor modularidad para los plugins
+		  Menor colixiones entre hilos
+		Usar referencias al objeto padre en lugar de la ruta entera
+		Desarrollar unidades de test propias y especializadas
+		Cambiar getters y setters por properties
+	Nuevos modulos
+		Auto-defragmentacion de metadatos al cerrar archivo
+		Auto-defragmentacion de datos durante bajo uso
+		Undelete
+		Versionado de archivos
+		Archivos y directorios (Sistema de archivos "sin archivos" y eliminacion de la tabla 'directories')
+	Nuevas caracteristicas
+		Soporte de varios dispositivos
+		Tail packing
+		medio y largo plazo
+			Autocontenido
+			Arranque
+
+Bibliografia
+	Tannembaum
+	webs FUSE y PyFilesystem
+
+Agradecimientos
+	Dani
+	Jennifer
