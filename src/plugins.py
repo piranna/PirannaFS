@@ -11,8 +11,6 @@ import imp, inspect, os
 
 import louie
 
-import sys
-
 
 connect = louie.connect
 send = louie.send
@@ -28,11 +26,13 @@ send = louie.send
 
 
 class Plugin:
+    """Base class for plugins"""
     dependencies = ()
     replaces = ()
 
 
 class Manager:
+    """Class to manage the plugins load and dependencies"""
     def __init__(self):
         """Constructor"""
         self.__loaded = {}
@@ -40,7 +40,11 @@ class Manager:
 
 
     def Load_Dir(self, path):
-        """Load python modules from a defined path"""
+        """Load python modules from a defined path
+
+        @param path: path of the dir containing the modules to load
+        @type path: string
+        """
 #        print >> sys.stderr, '*** Load_Dir', path
 
         for name in self.__Find_Modules(path):
@@ -48,7 +52,13 @@ class Manager:
 
 
     def Load_Module(self, name, path='.'):
-        """Load a named module found in a given path."""
+        """Load a named module found in a given path.
+
+        @param name: name of the module to load from a path
+        @type name: string
+        @param path: path or group of paths where to search the module to load
+        @type path: string or iterable of strings
+        """
 #        print >> sys.stderr, '*** Load_Module', name, path
 
         if isinstance(path, basestring):
@@ -71,31 +81,24 @@ class Manager:
     def Load_Plugin(self, plugin):
         """Load a new plugin if it's a valid one.
 
-        If it has all it's dependencies satisfacted it is loaded and is checked
-        the pending ones, if not it is added to the pending ones.
+        If the plugin has all it's dependencies satisfacted it is loaded and the
+        pending ones are checked, else it is added to the pending ones.
+
+        @param plugin: plugin to be loaded
+        @type plugin: Plugin class
         """
 #        print >> sys.stderr, '*** Load_Plugin', plugin
 
 #        plugin.dependencies = set(plugin.dependencies)
 #        plugin.replaces = set(plugin.replaces)
 
-        # Plugin has dependencies
-        if plugin.dependencies:
-#            print >> sys.stderr, '1'
-            # Plugin has all its dependencies loaded - load it
-            if plugin.dependencies.issubset(self.__loaded):
-#                print >> sys.stderr, '1.1'
-                self.__Load_Plugin(plugin)
-
-            # Plugin has some dependencies pending - load it later
-            else:
-#                print >> sys.stderr, '1.2'
-                self.__pending.add(plugin)
-
-        # Plugin has not dependencies - load directly
-        else:
-#            print >> sys.stderr, '2'
+        # Plugin has not dependencies or they are all loaded - load it now
+        if plugin.dependencies.issubset(self.__loaded):
             self.__Load_Plugin(plugin)
+
+        # Plugin has some dependencies pending - load it later
+        else:
+            self.__pending.add(plugin)
 
 
     def __Find_Modules(self, path="."):
@@ -104,6 +107,9 @@ class Manager:
         Returns module names in a list. Filenames that end in ".py" or
         ".pyc" are considered to be modules. The extension is not included
         in the returned list.
+
+        @param path: path of the dir with the modules
+        @type path: string
         """
         modules = set()
 
@@ -120,6 +126,9 @@ class Manager:
         """Private version of Load_Plugin.
 
         Load effectively the plugin and check if pending ones can be loaded now.
+
+        @param plugin: plugin to be loaded
+        @type plugin: Plugin class
         """
 #        print >> sys.stderr, '*** __Load_Plugin', plugin
 

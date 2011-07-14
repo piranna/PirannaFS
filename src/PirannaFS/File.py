@@ -6,20 +6,24 @@ Created on 02/04/2011
 
 from DB import DictObj
 
+from fs.errors import ResourceNotFoundError
 
-class BaseFile:
+
+class BaseFile(object):
     '''
     classdocs
     '''
 
 
-    def __init__(self, fs):
+    def __init__(self, fs, path):
         '''
         Constructor
         '''
         self.fs = fs
         self.db = fs.db
         self.ll = fs.ll
+
+        self.path = path
 
         self._offset = 0
 
@@ -44,6 +48,9 @@ class BaseFile:
         :raises ResourceInvalidError:        if the path is a directory or a parent path is an file
         :raises ResourceNotFoundError:       if the path is not found
         """
+        if self._inode == None:
+            raise ResourceNotFoundError(self.path)
+
         # Get inode and name from path
         parent_inode, name = self.fs.Path2InodeName(self.path)
 
