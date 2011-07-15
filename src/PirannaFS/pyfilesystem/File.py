@@ -20,6 +20,7 @@ def readable(method):
     def wrapper(self, *args, **kwargs):
         if 'r' in self._mode:
             return method(self, *args, **kwargs)
+        raise IOError("File not opened for reading")
     return wrapper
 
 def writeable(method):
@@ -28,6 +29,7 @@ def writeable(method):
             if 'a' in self._mode:
                 self.seek(0, os.SEEK_END)
             return method(self, *args, **kwargs)
+        raise IOError("File not opened for writting")
     return wrapper
 
 
@@ -35,15 +37,14 @@ class File(BaseFile):
     '''
     classdocs
     '''
-    def __init__(self, fs, path, mode='r'):
+    def __init__(self, fs, path):
         """
 
         @raise ParentDirectoryMissingError:
         @raise ResourceNotFoundError:
         @raise ResourceInvalidError:
         """
-        BaseFile.__init__(self, fs)
-
+        # Get file inode or raise exception
         try:
             self._inode = fs.Get_Inode(path)
         except ResourceNotFoundError:
@@ -53,48 +54,19 @@ class File(BaseFile):
             if fs.db.Get_Mode(self._inode) == stat.S_IFDIR:
                 raise ResourceInvalidError(path)
 
-        self.path = path
+        # Init base class
+        BaseFile.__init__(self, fs, path)
 
-        # Based on code from filelike.py
-        self._mode = set()
+        self._mode = frozenset()
 
-        if 'r' in mode:
-            # Mode
-            self._mode.add('r')
-            if '+' in mode:
-                self._mode.add('w')
-
-            if self._inode == None:
-                raise ResourceNotFoundError(path)
-
-        elif 'w' in mode:
-            # Mode
-            self._mode.add('w')
-            if '+' in mode:
-                self._mode.add('r')
-
-#            print "inode", inode
-            if self._inode == None:
-                self.make()
-            else:
-                self.truncate()
-
-        elif 'a' in mode:
-            # Mode
-            self._mode.add('w')
-            self._mode.add('a')
-            if '+' in mode:
-                self._mode.add('r')
-
-            if self._inode == None:
-                self.make()
-            else:
-                self.seek(0, os.SEEK_END)
+    def __del__(self):
+        self.close()
 
 
     def close(self):
         self.flush()
-        self._inode = None
+#        self._mode = frozenset()
+
         plugins.send("File.close")
 
     def flush(self):
@@ -119,6 +91,59 @@ class File(BaseFile):
         if data:
             return data
         raise StopIteration
+
+
+    def open(self, mode="r", **kwargs):
+        def CalcMode():
+            # Based on code from filelike.py
+
+            # Set `self._mode` as a set so we can modify it.
+            # Needed to truncate the file while processing the mode
+            self._mode = set()
+
+            # Calc the mode and perform the corresponding initialization actions
+            if 'r' in mode:
+                # Action
+                if self._inode == None:
+                    raise ResourceNotFoundError(self.path)
+
+                # Set mode
+                self._mode.add('r')
+                if '+' in mode:
+                    self._mode.add('w')
+
+            elif 'w' in mode:
+                # Set mode
+                self._mode.add('w')
+                if '+' in mode:
+                    self._mode.add('r')
+
+                # Action
+#                print "inode", inode
+                if self._inode == None:
+                    self.make()
+                else:
+                    self.truncate()
+
+            elif 'a' in mode:
+                # Action
+                if self._inode == None:
+                    self.make()
+                else:
+                    self.seek(0, os.SEEK_END)
+
+                # Set mode
+                self._mode.add('w')
+                self._mode.add('a')
+                if '+' in mode:
+                    self._mode.add('r')
+
+            # Re-set `self._mode` as an inmutable frozenset.
+            self._mode = frozenset(self._mode)
+
+        CalcMode()
+
+        return self
 
 
     @readable
@@ -344,9 +369,6 @@ class File(BaseFile):
             data += line
         self.write(data)
 
-
-    def __del__(self):
-        self.close()
 
     def __enter__(self):
         return self

@@ -4,7 +4,7 @@ Created on 02/04/2011
 @author: piranna
 '''
 
-class BaseDir:
+class BaseDir(object):
     '''
     classdocs
     '''
@@ -23,4 +23,5 @@ class BaseDir:
 
         @rtype: bool
         """
+        print "BaseDir.isempty"
         return self.db.readdir(self._inode, 1)

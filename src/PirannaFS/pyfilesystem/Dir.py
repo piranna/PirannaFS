@@ -53,6 +53,17 @@ class Dir(BaseDir):
         pass
 
 
+#    def ilist(self, wildcard=None,
+#              full=False, absolute=False, dirs_only=False, files_only=False):
+#        return self.readline()
+
+
+    def list(self, wildcard=None,
+             full=False, absolute=False, dirs_only=False, files_only=False):
+        return self.fs._listdir_helper(self.path, self.readlines(), wildcard,
+                                       full, absolute, dirs_only, files_only)
+
+
     def make(self, recursive=False, allow_recreate=False):
         """Make a directory on the filesystem.
 
@@ -108,7 +119,7 @@ class Dir(BaseDir):
         if self._inode == None:
             raise ResourceNotFoundError(self.path)
 
-        plugins.send("Dir.read begin")
+        plugins.send("Dir.readline begin")
 
 #        yield unicode('.')
 #        yield unicode('..')
@@ -117,20 +128,25 @@ class Dir(BaseDir):
             if dir_entry['name']:
                 yield unicode(dir_entry['name'])
 
-        plugins.send("Dir.read end")
+        plugins.send("Dir.readline end")
 
     def readlines(self):
         """Return a list of all lines in the file."""
         if self._inode == None:
             raise ResourceNotFoundError(self.path)
 
+        plugins.send("Dir.readlines begin")
+
 #        return [ln for ln in self.readline()]
         d = []
         for dir_entry in self.db.readdir(self._inode):
             if dir_entry['name']:
                 d.append(unicode(dir_entry['name']))
-                print dir_entry
+
+        plugins.send("Dir.readlines end")
+
         return d
+
 
     def remove(self, recursive=False, force=False):
         """Remove a directory from the filesystem
