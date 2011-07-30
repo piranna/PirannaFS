@@ -7,3 +7,8 @@ the user wants.
 
 This project won the first prize at the Madrid edition and the first honorable
 mention at the V Free Software University Championship, Spain 2011.
+
+=Dependencies=
+* Python (>= 2.5)
+* Louie (>= 1.0)
+* Python-FUSE (>= 0.2) or PyFilesystem (>= 0.4 SVN)

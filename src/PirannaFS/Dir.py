@@ -4,6 +4,11 @@ Created on 02/04/2011
 @author: piranna
 '''
 
+from os.path import split
+
+from fs.errors import ParentDirectoryMissingError, ResourceNotFoundError
+
+
 class BaseDir(object):
     '''
     classdocs
@@ -18,6 +23,12 @@ class BaseDir(object):
         self.db = fs.db
 
         self.path = path
+        path, self.name = split(path)
+
+        try:
+            self.parent = fs.Get_Inode(path)
+        except (ParentDirectoryMissingError, ResourceNotFoundError):
+            self.parent = path
 
 
     def isempty(self):

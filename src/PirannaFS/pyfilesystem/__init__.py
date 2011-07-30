@@ -52,8 +52,8 @@ class Filesystem(BaseFS, base.FS):
 
     def _delegate_methods(self, klass, class_map):
         """Method that looks inside class `klass` and its ancestors for some
-        methods to delegate from the base filesystem class according to `class_map`
-
+        methods to delegate from the base filesystem class according to
+        `class_map`
         """
         if klass:
             # Get the `klass` and its ancestors methods resolved in MRO
@@ -71,15 +71,16 @@ class Filesystem(BaseFS, base.FS):
                     # and call the delegated method
                     if class_method == method_name:
                         # [Hack] reference to the function to circunvalate the
-                        # fact that `method_func` is common for delegated methods.
-                        # Really it should be possible to assign it without
-                        # `applyMethod` function...
+                        # fact that `method_func` is common for delegated
+                        # methods. Really it should be possible to assign it
+                        # without `applyMethod` function...
                         def applyMethod(func):
                             def method(self, path="", *args, **kwargs):
-                                with klass(self, path) as dir:
-                                    return func(dir, *args, **kwargs)
+                                with klass(self, path) as obj:
+                                    return func(obj, *args, **kwargs)
 
-                            # Set the delegated method to the one we have just created
+                            # Set the delegated method to the one we have just
+                            # created
                             setattr(self.__class__, fs_method, method)
 
                         applyMethod(method_func)
@@ -100,7 +101,7 @@ class Filesystem(BaseFS, base.FS):
     # Essential methods
     #
 
-    def getinfo(self, path):                                                    # OK
+    def getinfo(self, path):                                                # OK
         """Returns information for a path as a dictionary. The exact content of
         this dictionary will vary depending on the implementation, but will
         likely include a few common values.
@@ -115,13 +116,14 @@ class Filesystem(BaseFS, base.FS):
         """
         parent_dir, name = self.Path2InodeName(path)
 
-        if self.db.Get_Inode(parent_dir, name) == None:
+        inode = self.db.Get_Inode(parent_dir, name)
+        if inode == None:
             raise ResourceNotFoundError(path)
 
         return self.db.getinfo(parent_dir, name)
 
 
-    def isdir(self, path):                                                      # OK
+    def isdir(self, path):                                                  # OK
         """Check if a path references a directory.
 
         :param path: a path in the filesystem
@@ -130,11 +132,12 @@ class Filesystem(BaseFS, base.FS):
         """
         try:
             inode = self.Get_Inode(path)
-        except (ParentDirectoryMissingError, ResourceInvalidError, ResourceNotFoundError):
+        except (ParentDirectoryMissingError, ResourceInvalidError,
+                ResourceNotFoundError):
             return False
         return self.db.Get_Mode(inode) == stat.S_IFDIR
 
-    def isfile(self, path):                                                     # OK
+    def isfile(self, path):                                                 # OK
         """Check if a path references a file.
 
         :param path: a path in the filessystem
@@ -143,22 +146,24 @@ class Filesystem(BaseFS, base.FS):
         """
         try:
             inode = self.Get_Inode(path)
-        except (ParentDirectoryMissingError, ResourceInvalidError, ResourceNotFoundError):
+        except (ParentDirectoryMissingError, ResourceInvalidError,
+                ResourceNotFoundError):
             return False
         return self.db.Get_Mode(inode) != stat.S_IFDIR
 
 
-    def rename(self, src, dst):                                                 # OK
+    def rename(self, src, dst):                                             # OK
         """Renames a file or directory
 
         :param src: path to rename
         :param dst: new name
 
-        :raises ParentDirectoryMissingError: if a containing directory is missing
-        :raises ResourceInvalidError:        if the path or a parent path is not a directory
-                                             or src is a parent of dst
-                                             or one of src or dst is a dir and the other not 
-        :raises ResourceNotFoundError:       if the src path does not exist
+        :raises ParentDirectoryMissingError: if a containing directory is
+            missing
+        :raises ResourceInvalidError: if the path or a parent path is not a
+            directory or src is a parent of dst or one of src or dst is a dir
+            and the other not 
+        :raises ResourceNotFoundError: if the src path does not exist
         """
         if src == dst:
             return
@@ -173,8 +178,10 @@ class Filesystem(BaseFS, base.FS):
         # If dst exist, unlink it before rename src link
         if self.db.Get_Inode(parent_inode_new, name_new) != None:
             # If old path type is different from new path type then raise error
-            type_old = self.db.Get_Mode(self.Get_Inode(name_old, parent_inode_old))
-            type_new = self.db.Get_Mode(self.Get_Inode(name_new, parent_inode_new))
+            type_old = self.db.Get_Mode(self.Get_Inode(name_old,
+                                                       parent_inode_old))
+            type_new = self.db.Get_Mode(self.Get_Inode(name_new,
+                                                       parent_inode_new))
 
             if type_old != type_new:
                 raise ResourceInvalidError(src)
@@ -195,6 +202,7 @@ class Filesystem(BaseFS, base.FS):
 #        """A convenience method to create a new file from a string.
 #
 #        :param path: a path of the file to create
-#        :param data: a string or a file-like object containing the contents for the new file
+#        :param data: a string or a file-like object containing the contents for
+#            the new file
 #        """
 #        pass

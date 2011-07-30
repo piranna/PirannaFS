@@ -4,7 +4,8 @@ Created on 02/04/2011
 @author: piranna
 '''
 
-import os
+from os import SEEK_END
+from os.path import split
 
 from DB import DictObj
 
@@ -22,7 +23,7 @@ def writeable(method):
     def wrapper(self, *args, **kwargs):
         if 'w' in self._mode:
             if 'a' in self._mode:
-                self.seek(0, os.SEEK_END)
+                self.seek(0, SEEK_END)
             return method(self, *args, **kwargs)
         raise IOError("File not opened for writting")
     return wrapper
@@ -43,6 +44,8 @@ class BaseFile(object):
         self.ll = fs.ll     # Low level implementation
 
         self.path = path
+        path, self.name = split(path)
+        self.parent = fs.Get_Inode(path)
 
         self._offset = 0
 
@@ -67,14 +70,13 @@ class BaseFile(object):
         :raises ResourceInvalidError:        if the path is a directory or a parent path is an file
         :raises ResourceNotFoundError:       if the path is not found
         """
+#        # Get inode and name from path
+
         if self._inode == None:
             raise ResourceNotFoundError(self.path)
 
-        # Get inode and name from path
-        parent_inode, name = self.fs.Path2InodeName(self.path)
-
         # Unlink dir entry
-        self.db.unlink(parent_inode, name)
+        self.db.unlink(self.parent, self.name)
 
         self._inode = None
         self._offset = 0

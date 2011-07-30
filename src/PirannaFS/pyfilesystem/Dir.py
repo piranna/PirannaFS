@@ -105,6 +105,8 @@ class Dir(BaseDir):
         :raises DestinationExistsError: if the path is already a directory, and
             allow_recreate is False
         """
+        plugins.send("Dir.make.begin")
+
         # Check if dir_entry exist and we can recreate it if so happens
         if self._inode:
             if allow_recreate:
@@ -113,25 +115,21 @@ class Dir(BaseDir):
                 raise DestinationExistsError(self.path)
 
         # Get parent dir
-        try:
-            parent_dir_inode, name = self.fs.Path2InodeName(self.path)
-
-        except ParentDirectoryMissingError:
+        if isinstance(self.parent, basestring):
             if not recursive:
                 raise
 
             # Parents doesn't exist, they are the Three Wise men ;-)
             # but we want to create them anyway to get their inode
-            path, _, name = self.path.rpartition(os.sep)
-            d = Dir(self.fs, path)
-            d.make(path, recursive)
-            parent_dir_inode = d._inode
+            d = Dir(self.fs, self.parent)
+            d.make(True)
+            self.parent = d._inode
 
         # Make directory
         self._inode = self.db.mkdir()
-        self.db.link(parent_dir_inode, name, self._inode)
+        self.db.link(self.parent, self.name, self._inode)
 
-        plugins.send("Dir.make")
+        plugins.send("Dir.make.end")
 
 
     def remove(self, recursive=False, force=False):
@@ -175,8 +173,7 @@ class Dir(BaseDir):
             raise DirectoryNotEmptyError(self.path)
 
         # Removed directory
-        parent_dir_inode, name = self.fs.Path2InodeName(self.path)
-        self.db.unlink(parent_dir_inode, name)
+        self.db.unlink(self.parent, self.name)
         self._inode = None
 
         # Delete parent dirs recursively if empty

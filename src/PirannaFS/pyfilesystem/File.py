@@ -62,12 +62,9 @@ class File(BaseFile):
         if self._inode:
             raise DestinationExistsError(self.path)
 
-        # Get parent dir
-        parent_dir_inode, name = self.fs.Path2InodeName(self.path)
-
         # Make file
         self._inode = self.db.mknod()
-        self.db.link(parent_dir_inode, name, self._inode)
+        self.db.link(self.parent, self.name, self._inode)
 
     def next(self):
         data = self.readline()
@@ -92,7 +89,7 @@ class File(BaseFile):
 
                 # Set mode
                 self._mode.add('r')
-                if '+' in mode:    @readable
+                if '+' in mode:
 
                     self._mode.add('w')
 
