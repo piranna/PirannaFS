@@ -12,21 +12,30 @@ import fuse
 
 import plugins
 
+from ..Dir import BaseDir
 
 
-class Dir:
+class Dir(BaseDir):
     '''
     classdocs
     '''
 
-    def __init__(self, fs, path):                                               # OK
+    def __init__(self, fs, path):                                           # OK
         '''
         Constructor
         '''
 #        print >> sys.stderr, '*** Dir __init__',fs, path
 
-        self.__inode = fs.Get_Inode(path[1:])
-        self.__db = fs.db
+        BaseDir.__init__(self, fs, path)
+
+        try:
+            self._inode = fs.Get_Inode(path[1:])
+        except ResourceError:
+            self._inode = None
+        else:
+            # If inode is not a dir, raise error
+            if fs.db.Get_Mode(self._inode) != stat.S_IFDIR:
+                raise ResourceInvalidError(path)
 
 
     # Overloaded
@@ -43,16 +52,22 @@ class Dir:
 #        return -errno.ENOSYS
 
 
-    def readdir(self, offset=None):                                             # OK
+    def readdir(self, offset=None):                                         # OK
 #        print >> sys.stderr, '*** readdir', offset
+        if self._inode == None:
+            raise ResourceNotFoundError(self.path)
+
+        plugins.send("Dir.list.begin")
+
 #        yield fuse.Direntry('.')
 #        yield fuse.Direntry('..')
 
-        for dir_entry in self.__db.readdir(self.__inode):
+        for dir_entry in self.db.readdir(self._inode):
             if dir_entry['name']:
-                yield fuse.Direntry(str(dir_entry['name']))
+                yield fuse.Direntry(unicode(dir_entry['name']))
+#                yield fuse.Direntry(str(dir_entry['name']))
 
-        plugins.send("DIR.readdir")
+        plugins.send("DIR.list.end")
 
 
 #    def releasedir(self):

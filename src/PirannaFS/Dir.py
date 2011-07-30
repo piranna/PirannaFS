@@ -10,12 +10,14 @@ class BaseDir(object):
     '''
 
 
-    def __init__(self, fs):
+    def __init__(self, fs, path):
         '''
         Constructor
         '''
         self.fs = fs
         self.db = fs.db
+
+        self.path = path
 
 
     def isempty(self):
@@ -25,3 +27,19 @@ class BaseDir(object):
         """
         print "BaseDir.isempty"
         return self.db.readdir(self._inode, 1)
+
+
+    #
+    # File-like interface
+    #
+
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
+        return False
+
+    def __iter__(self):
+        return self

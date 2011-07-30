@@ -13,24 +13,7 @@ from fs.errors import StorageSpaceError
 
 import plugins
 
-from ..File import BaseFile
-
-
-def readable(method):
-    def wrapper(self, *args, **kwargs):
-        if 'r' in self._mode:
-            return method(self, *args, **kwargs)
-        raise IOError("File not opened for reading")
-    return wrapper
-
-def writeable(method):
-    def wrapper(self, *args, **kwargs):
-        if 'w' in self._mode:
-            if 'a' in self._mode:
-                self.seek(0, os.SEEK_END)
-            return method(self, *args, **kwargs)
-        raise IOError("File not opened for writting")
-    return wrapper
+from ..File import BaseFile, readable, writeable
 
 
 class File(BaseFile):
@@ -109,7 +92,8 @@ class File(BaseFile):
 
                 # Set mode
                 self._mode.add('r')
-                if '+' in mode:
+                if '+' in mode:    @readable
+
                     self._mode.add('w')
 
             elif 'w' in mode:

@@ -4,9 +4,28 @@ Created on 02/04/2011
 @author: piranna
 '''
 
+import os
+
 from DB import DictObj
 
 from fs.errors import ResourceNotFoundError
+
+
+def readable(method):
+    def wrapper(self, *args, **kwargs):
+        if 'r' in self._mode:
+            return method(self, *args, **kwargs)
+        raise IOError("File not opened for reading")
+    return wrapper
+
+def writeable(method):
+    def wrapper(self, *args, **kwargs):
+        if 'w' in self._mode:
+            if 'a' in self._mode:
+                self.seek(0, os.SEEK_END)
+            return method(self, *args, **kwargs)
+        raise IOError("File not opened for writting")
+    return wrapper
 
 
 class BaseFile(object):
@@ -19,9 +38,9 @@ class BaseFile(object):
         '''
         Constructor
         '''
-        self.fs = fs
-        self.db = fs.db
-        self.ll = fs.ll
+        self.fs = fs        # Filesystem
+        self.db = fs.db     # Database
+        self.ll = fs.ll     # Low level implementation
 
         self.path = path
 
