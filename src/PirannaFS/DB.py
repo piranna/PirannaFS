@@ -7,6 +7,9 @@ Created on 04/08/2010
 import stat
 import sys
 
+from os import listdir
+from os.path import join, splitext
+
 from multiprocessing import Lock
 
 
@@ -36,7 +39,7 @@ class DB():
     classdocs
     '''
 
-    def __init__(self, connection, drive, sector_size):                         # OK
+    def __init__(self, connection, drive, sector_size):                     # OK
         '''
         Constructor
         '''
@@ -59,10 +62,11 @@ class DB():
 
         self.__sector_size = sector_size
 
+        self.__queries = self.__LoadQueries('/home/piranna/Proyectos/FUSE/PirannaFS/src/sql')
         self.__Create_Database(Get_NumSectors())
 
 
-    def getinfo(self, parent_dir, name):                                        # OK
+    def getinfo(self, parent_dir, name):                                    # OK
         '''
         Get the stat info of a directory entry
         '''
@@ -71,7 +75,7 @@ class DB():
         with self._lock:
             inodeCreation = self.__Get_InodeCreation(parent_dir, name)
             if inodeCreation:
-                return self.connection.execute(sql['getinfo'],
+                return self.connection.execute(self.__queries['getinfo'],
                     inodeCreation).fetchone()
 
 
@@ -79,53 +83,53 @@ class DB():
 #        print >> sys.stderr, '*** link', parent_dir,name,child_entry
 
         cursor = self.connection.cursor()
-        cursor.execute(sql['link'],
+        cursor.execute(self.__queries['link'],
             {"parent_dir":parent_dir, "name":name, "child_entry":child_entry})
 
         return cursor.lastrowid
 
 
-    def mkdir(self):                                                            # OK
+    def mkdir(self):                                                        # OK
         '''
         Make a new directory
         '''
         with self._lock:
             inode = self.Make_DirEntry(stat.S_IFDIR)
-            self.connection.execute(sql['mkdir'],
+            self.connection.execute(self.__queries['dir.make'],
                 {"inode":inode})
 
         return inode
 
 
-    def mknod(self):                                                            # OK
+    def mknod(self):                                                        # OK
         '''
         Make a new file
         '''
         with self._lock:
             inode = self.Make_DirEntry(stat.S_IFREG)
-            self.connection.execute(sql['mknod'],
+            self.connection.execute(self.__queries['mknod'],
                 {"inode":inode})
 
         return inode
 
 
-    def readdir(self, parent, limit=None):                                      # OK
-        sql = sql['dir.read']
+    def readdir(self, parent, limit=None):                                  # OK
+        sql = self.__queries['dir.read']
         if limit:
             sql += "LIMIT %" % limit
 
         return self.connection.execute(sql, {"parent_dir":parent}).fetchall()
 
 
-    def rename(self, parent_old, name_old, parent_new, name_new):               # OK
-        return self.connection.execute(sql['rename'],
+    def rename(self, parent_old, name_old, parent_new, name_new):           # OK
+        return self.connection.execute(self.__queries['rename'],
             {"parent_new":parent_new, "name_new":name_new,
              "parent_old":parent_old, "name_new":name_old})
 
 
-    def unlink(self, parent_dir_inode, name):                                   # OK
+    def unlink(self, parent_dir_inode, name):                               # OK
 #        print >> sys.stderr, '\t', parent_dir_inode,name
-        return self.connection.execute(sql['unlink'],
+        return self.connection.execute(self.__queries['unlink'],
             {"parent_dir":parent_dir_inode, "name":name})
 
 
@@ -133,7 +137,7 @@ class DB():
         if ts_acc == None:  ts_acc = "now"
         if ts_mod == None:  ts_mod = "now"
 
-        return self.connection.execute(sql['utimens'],
+        return self.connection.execute(self.__queries['utimens'],
             {"access":ts_acc, "modification":ts_mod, "inode":inode})
 
 
@@ -141,16 +145,16 @@ class DB():
         """Free chunks whose offset is greather that new file size"""
         print >> sys.stderr, '*** Free_Chunks', chunk
 
-        return self.connection.execute(sql['Free_Chunks'],
+        return self.connection.execute(self.__queries['Free_Chunks'],
             chunk)
 
 
-    def Get_Chunks(self, file, floor, ceil):                                    # OK
+    def Get_Chunks(self, file, floor, ceil):                                # OK
         '''
         Get chunks of the required file that are content between the
         defined floor and ceil
         '''
-        return self.connection.execute(sql['Get_Chunks'],
+        return self.connection.execute(self.__queries['Get_Chunks'],
             {"file":file, "floor":floor, "ceil":ceil}).fetchall()
 
 
@@ -158,31 +162,31 @@ class DB():
         """
         Get chunks whose block+length is greather that new file size
         """
-        return self.connection.execute(sql['Get_Chunks_Truncate'],
+        return self.connection.execute(self.__queries['Get_Chunks_Truncate'],
             {"ceil":ceil, "file":file})
 
 
-    def Get_FreeChunk_BestFit(self, sectors_required, blocks):                  # OK
+    def Get_FreeChunk_BestFit(self, sectors_required, blocks):              # OK
         '''Get the free chunk that best fit to the requested space.
 
         'Best fit' here means that it's the smallest free chunk whose size is
         equals-or-bigger or it's the biggest one that is smaller
         that the requested size
         '''
-        return self.connection.execute(sql['Get_FreeChunk_BestFit'],
+        return self.connection.execute(self.__queries['Get_FreeChunk_BestFit'],
             {"blocks":','.join([str(block) for block in blocks]),
              "sectors_required":sectors_required}).fetchone()
 
 
     def Get_FreeSpace(self):
         """Get the free space available in the filesystem"""
-        result = self.connection.execute(sql['Get_FreeSpace']).fetchone()
+        result = self.connection.execute(self.__queries['Get_FreeSpace']).fetchone()
         if result:
             return result['size'] * self.__sector_size
         return 0
 
 
-    def Get_Inode(self, parent_dir, name):                                      # OK
+    def Get_Inode(self, parent_dir, name):                                  # OK
         '''
         Get the inode of a dir entry
         from a given parent directory inode and a dir entry name
@@ -192,53 +196,53 @@ class DB():
             return inode['inode']
 
 
-    def Get_Mode(self, inode):                                                  # OK
+    def Get_Mode(self, inode):                                              # OK
         '''
         Get the mode of a file
         from a given file inode
         '''
-        inode = self.connection.execute(sql['Get_Mode'],
+        inode = self.connection.execute(self.__queries['Get_Mode'],
             {"inode":inode}).fetchone()
 
         if inode:
             return inode['type']
 
 
-    def Get_Size(self, inode):                                                  # OK
+    def Get_Size(self, inode):                                              # OK
         '''
         Get the size of a file
         from a given file inode
         '''
-        inode = self.connection.execute(sql['Get_Size'],
+        inode = self.connection.execute(self.__queries['Get_Size'],
             {"inode":inode}).fetchone()
 
         if inode:
             return inode['size']
 
 
-    def Make_DirEntry(self, type):                                              # OK
+    def Make_DirEntry(self, type):                                          # OK
         '''
         Make a new dir entry
         and return its inode
         '''
         cursor = self.connection.cursor()
-        cursor.execute(sql['Make_DirEntry'],
+        cursor.execute(self.__queries['Make_DirEntry'],
             {"type":type})
 
         return cursor.lastrowid
 
 
-    def Put_Chunks(self, chunks):                                               # OK
-        return self.connection.executemany(sql['Put_Chunks'],
+    def Put_Chunks(self, chunks):                                           # OK
+        return self.connection.executemany(self.__queries['Put_Chunks'],
             chunks)
 
 
-    def Set_Size(self, inode, length):                                          # OK
-        return self.connection.execute(sql['Set_Size'],
+    def Set_Size(self, inode, length):                                      # OK
+        return self.connection.execute(self.__queries['Set_Size'],
             {"size":length, "inode":inode})
 
 
-    def Split_Chunks(self, chunk):                                              # OK
+    def Split_Chunks(self, chunk):                                          # OK
         """
         Split the chunks in the database in two (old-head and new-tail)
         based on it's defined length
@@ -254,12 +258,12 @@ class DB():
 
         # Create new chunks containing the tail sectors and
         # update the old chunks length to contain only the head sectors
-        self.connection.executescript(sql['Split_Chunks'] % ChunkConverted())
+        self.connection.executescript(self.__queries['Split_Chunks'] % ChunkConverted())
 
 
-    def __Create_Database(self, num_sectors, first_sector=0):                   # OK
+    def __Create_Database(self, num_sectors, first_sector=0):               # OK
         with self._lock:
-            self.connection.executescript(sql['__Create_Database'])
+            self.connection.executescript(self.__queries['__Create_Database'])
 
             # If directories table is empty (table has just been created)
             # create initial row defining the root directory
@@ -289,10 +293,20 @@ class DB():
     #            self.connection.execute("PRAGMA foreign_keys = ON")
 
 
-    def __Get_InodeCreation(self, parent_dir, name):                             # OK
+    def __Get_InodeCreation(self, parent_dir, name):                        # OK
         '''
         Get the inode and the creation date of a dir entry
         from a given parent directory inode and a dir entry name
         '''
-        return self.connection.execute(sql['__Get_InodeCreation'],
+        return self.connection.execute(self.__queries['__Get_InodeCreation'],
             (parent_dir, unicode(name))).fetchone()
+
+
+    def __LoadQueries(self, dirPath):
+        result = {}
+
+        for filename in listdir(dirPath):
+            with open(join(dirPath, filename)) as f:
+                result[splitext(filename)[0]] = f.read()
+
+        return result
