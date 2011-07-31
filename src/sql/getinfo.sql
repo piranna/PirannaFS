@@ -7,9 +7,12 @@ SELECT
     dir_entries.inode        AS st_ino,
     COUNT(links.child_entry) AS st_nlink,
 
-    :creation                                                AS st_ctime,
-    CAST(STRFTIME('%s',dir_entries.access)       AS INTEGER) AS st_atime,
-    CAST(STRFTIME('%s',dir_entries.modification) AS INTEGER) AS st_mtime,
+    :creation                AS st_ctime,
+    dir_entries.access       AS st_atime,
+    dir_entries.modification AS st_mtime,
+--    :creation                                                AS st_ctime,
+--    CAST(STRFTIME('%s',dir_entries.access)       AS INTEGER) AS st_atime,
+--    CAST(STRFTIME('%s',dir_entries.modification) AS INTEGER) AS st_mtime,
 
     COALESCE(files.size,0) AS st_size, -- Python-FUSE
     COALESCE(files.size,0) AS size     -- PyFilesystem

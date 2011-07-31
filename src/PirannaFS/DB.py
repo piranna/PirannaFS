@@ -48,6 +48,13 @@ class DB():
         self.connection.row_factory = DictObj_factory
         self.connection.isolation_level = None
 
+        # Store data in UNIX timestamp instead ISO format (sqlite default)
+        import datetime, time
+        import sqlite3
+        def adapt_datetime(ts):
+            return time.mktime(ts.timetuple())
+        sqlite3.register_adapter(datetime.datetime, adapt_datetime)
+
         # Force enable foreign keys check
         self.connection.execute("PRAGMA foreign_keys = ON;")
 
@@ -124,7 +131,7 @@ class DB():
     def rename(self, parent_old, name_old, parent_new, name_new):           # OK
         return self.connection.execute(self.__queries['rename'],
             {"parent_new":parent_new, "name_new":name_new,
-             "parent_old":parent_old, "name_new":name_old})
+             "parent_old":parent_old, "name_old":name_old})
 
 
     def unlink(self, parent_dir_inode, name):                               # OK
@@ -248,12 +255,13 @@ class DB():
         based on it's defined length
         """
         def ChunkConverted():
+            """[Hack] None objects get stringed to 'None' while SQLite queries
+            expect 'NULL' instead. This function return a newly dict with
+            all None objects converted to 'NULL' valued strings.
+            """
             d = {}
             for key, value in chunk.iteritems():
-                if value == None:
-                    d[key] = "NULL"
-                else:
-                    d[key] = value
+                d[key] = "NULL" if value == None else value
             return d
 
         # Create new chunks containing the tail sectors and

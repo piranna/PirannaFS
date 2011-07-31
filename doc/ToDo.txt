@@ -17,12 +17,12 @@ Modificar base de datos
     Usar principio y final en lugar de principio y longitud (bug critico)
     Aumentar velocidad de acceso (cache y similares)
     [2010-08-30] Size y timestamp en tabla files
-    Almacenar fechas como UNIX timestamp (INTEGER), no como texto
+    [2011-07-31] Almacenar fechas como UNIX timestamp (INTEGER), no como texto
 [2011-07-30] Añadir inodo al directorio padre en Dir y File
 
 0.4
 ===
-* Sacar sentencias SQL a archivos independientes en lugar de estar hardcodeadas
+[2011-07-31] Sacar sentencias SQL a archivos independientes en lugar de estar hardcodeadas
 plugins
     (soporte)
     log
