@@ -80,7 +80,7 @@ class symlinks(plugins.Plugin):
             raise DestinationExistsError(linkPath)
 
         # Make symlink
-        inode = self.__db.Make_DirEntry(stat.S_IFLNK)
+        inode = self.__db.__Make_DirEntry(stat.S_IFLNK)
         self.__db.connection.execute('''
             INSERT INTO symlinks(inode,target)
             VALUES(?,?)

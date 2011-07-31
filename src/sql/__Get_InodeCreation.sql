@@ -1,6 +1,4 @@
-SELECT
-    child_entry                              AS inode,
-    CAST(STRFTIME('%s',creation) AS INTEGER) AS creation
+SELECT child_entry AS inode, creation
 FROM links
-WHERE parent_dir == ? AND name == ?
+WHERE parent_dir == :parent_dir AND name == :name
 LIMIT 1
