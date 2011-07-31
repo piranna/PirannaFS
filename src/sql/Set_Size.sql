@@ -1,3 +1,3 @@
 UPDATE files
-            SET size = ?
-            WHERE inode = ?
+SET size = :size
+WHERE inode = :inode

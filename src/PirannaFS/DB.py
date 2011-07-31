@@ -45,7 +45,7 @@ class DB():
         self.connection.row_factory = DictObj_factory
         self.connection.isolation_level = None
 
-        # Enable foreign keys check
+        # Force enable foreign keys check
         self.connection.execute("PRAGMA foreign_keys = ON;")
 
         self._lock = Lock()
@@ -75,12 +75,12 @@ class DB():
                     inodeCreation).fetchone()
 
 
-    def link(self, parent_dir_inode, name, child_entry_inode):                  # OK
-#        print >> sys.stderr, '*** link', parent_dir_inode,name,child_entry_inode
+    def link(self, parent_dir, name, child_entry):                          # OK
+#        print >> sys.stderr, '*** link', parent_dir,name,child_entry
 
         cursor = self.connection.cursor()
         cursor.execute(sql['link'],
-            (parent_dir_inode, name, child_entry_inode))
+            {"parent_dir":parent_dir, "name":name, "child_entry":child_entry})
 
         return cursor.lastrowid
 
@@ -92,7 +92,7 @@ class DB():
         with self._lock:
             inode = self.Make_DirEntry(stat.S_IFDIR)
             self.connection.execute(sql['mkdir'],
-                (inode,))
+                {"inode":inode})
 
         return inode
 
@@ -104,29 +104,29 @@ class DB():
         with self._lock:
             inode = self.Make_DirEntry(stat.S_IFREG)
             self.connection.execute(sql['mknod'],
-                (inode,))
+                {"inode":inode})
 
         return inode
 
 
     def readdir(self, parent, limit=None):                                      # OK
-        sql = sql['readdir']
+        sql = sql['dir.read']
         if limit:
             sql += "LIMIT %" % limit
 
-        return self.connection.execute(sql, (parent,)).fetchall()
+        return self.connection.execute(sql, {"parent_dir":parent}).fetchall()
 
 
     def rename(self, parent_old, name_old, parent_new, name_new):               # OK
         return self.connection.execute(sql['rename'],
-            (parent_new, name_new,
-             parent_old, name_old))
+            {"parent_new":parent_new, "name_new":name_new,
+             "parent_old":parent_old, "name_new":name_old})
 
 
     def unlink(self, parent_dir_inode, name):                                   # OK
 #        print >> sys.stderr, '\t', parent_dir_inode,name
         return self.connection.execute(sql['unlink'],
-            (parent_dir_inode, name))
+            {"parent_dir":parent_dir_inode, "name":name})
 
 
     def utimens(self, inode, ts_acc, ts_mod):
@@ -134,7 +134,7 @@ class DB():
         if ts_mod == None:  ts_mod = "now"
 
         return self.connection.execute(sql['utimens'],
-            (ts_acc, ts_mod, inode))
+            {"access":ts_acc, "modification":ts_mod, "inode":inode})
 
 
     def Free_Chunks(self, chunk):
@@ -151,7 +151,7 @@ class DB():
         defined floor and ceil
         '''
         return self.connection.execute(sql['Get_Chunks'],
-            (file, floor, ceil)).fetchall()
+            {"file":file, "floor":floor, "ceil":ceil}).fetchall()
 
 
     def Get_Chunks_Truncate(self, file, ceil):
@@ -159,7 +159,7 @@ class DB():
         Get chunks whose block+length is greather that new file size
         """
         return self.connection.execute(sql['Get_Chunks_Truncate'],
-            (ceil, file, ceil))
+            {"ceil":ceil, "file":file})
 
 
     def Get_FreeChunk_BestFit(self, sectors_required, blocks):                  # OK
@@ -198,7 +198,7 @@ class DB():
         from a given file inode
         '''
         inode = self.connection.execute(sql['Get_Mode'],
-            (inode,)).fetchone()
+            {"inode":inode}).fetchone()
 
         if inode:
             return inode['type']
@@ -210,7 +210,7 @@ class DB():
         from a given file inode
         '''
         inode = self.connection.execute(sql['Get_Size'],
-            (inode,)).fetchone()
+            {"inode":inode}).fetchone()
 
         if inode:
             return inode['size']
@@ -223,7 +223,7 @@ class DB():
         '''
         cursor = self.connection.cursor()
         cursor.execute(sql['Make_DirEntry'],
-            (type,))
+            {"type":type})
 
         return cursor.lastrowid
 
@@ -235,7 +235,7 @@ class DB():
 
     def Set_Size(self, inode, length):                                          # OK
         return self.connection.execute(sql['Set_Size'],
-            (length, inode))
+            {"size":length, "inode":inode})
 
 
     def Split_Chunks(self, chunk):                                              # OK

@@ -1,2 +1,2 @@
 INSERT INTO files(inode)
-VALUES(?)
+          VALUES(:inode)

@@ -19,8 +19,8 @@ import FS
 
 
 class FileSystem(FS.FileSystem, fuse.Fuse):
-    def __init__(self, *args,**kw):
-        fuse.Fuse.__init__(self, *args,**kw)
+    def __init__(self, *args, **kw):
+        fuse.Fuse.__init__(self, *args, **kw)
 
         # This thing that is like a ugly hack it seems that is the correct way
         # to pass parameters to the FUSE core as it's explained at
@@ -51,27 +51,28 @@ class FileSystem(FS.FileSystem, fuse.Fuse):
         # http://old.nabble.com/Python:-Pass-parameters-to-file_class-td18301066.html
 
         class wrapped_dir_class(Dir.Dir):
-            def __init__(self2, *a,**kw):
-                Dir.Dir.__init__(self2, self, *a,**kw)
+            def __init__(self2, *a, **kw):
+                Dir.Dir.__init__(self2, self, *a, **kw)
 
         class wrapped_file_class(File.File):
-            def __init__(self2, *a,**kw):
-                File.File.__init__(self2, self, *a,**kw)
+            def __init__(self2, *a, **kw):
+                File.File.__init__(self2, self, *a, **kw)
 
         self.dir_class = wrapped_dir_class
         self.file_class = wrapped_file_class
 
-        FS.FileSystem.__init__(self, self.db,self.drive,self.sector)
+        FS.FileSystem.__init__(self, self.db, self.drive, self.sector)
 
 
     # Overloaded
-    def access(self, path,mode):
+    def access(self, path, mode):
         print >> sys.stderr, '*** access'
         return -errno.ENOSYS
 
 
 #    def bmap(self):
 #        print >> sys.stderr, '*** bmap'
+
 #        return -errno.ENOSYS
 
 

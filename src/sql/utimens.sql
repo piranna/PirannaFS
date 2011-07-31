@@ -1,3 +1,3 @@
 UPDATE dir_entries
-            SET access = ?, modification = ?
-            WHERE inode = ?
+SET access = :access, modification = :modification
+WHERE inode = :inode

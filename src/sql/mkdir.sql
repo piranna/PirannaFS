@@ -1,2 +1,2 @@
 INSERT INTO directories(inode)
-    VALUES(?)
+                VALUES(:inode)

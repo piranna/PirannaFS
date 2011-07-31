@@ -1,2 +1,2 @@
 INSERT INTO dir_entries(type)
-            VALUES(?)
+                VALUES(:type)

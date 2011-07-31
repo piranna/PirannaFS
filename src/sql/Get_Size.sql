@@ -1,4 +1,4 @@
 SELECT size
-            FROM files
-            WHERE inode == ?
-            LIMIT 1
+FROM files
+WHERE inode == :inode
+LIMIT 1

@@ -1,4 +1,4 @@
 SELECT type
-            FROM dir_entries
-            WHERE inode == ?
-            LIMIT 1
+FROM dir_entries
+WHERE inode == :inode
+LIMIT 1
