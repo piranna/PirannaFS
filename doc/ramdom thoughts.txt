@@ -1,3 +1,5 @@
 Plugin system with dependencies
 
 Group of signals
+
+http://web.utk.edu/~jplyon/sqlite/SQLite_optimization_FAQ.html

@@ -55,6 +55,10 @@ class DB():
             return time.mktime(ts.timetuple())
         sqlite3.register_adapter(datetime.datetime, adapt_datetime)
 
+        # SQLite tune-ups
+        self.connection.execute("PRAGMA synchronous = OFF;")
+        self.connection.execute("PRAGMA temp_store = MEMORY;")  # Not so much
+
         # Force enable foreign keys check
         self.connection.execute("PRAGMA foreign_keys = ON;")
 
