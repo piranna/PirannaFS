@@ -1,6 +1,6 @@
--- Get the smaller free space chunk that it's bigger than the required number of
--- sectors or if there's no one available get the bigger one that's smaller than
--- the required number of sectors
+-- Get the smaller free space chunk that's equal or bigger than the required
+-- number of sectors or if there's no one available get the bigger one that's
+-- smaller than the required number of sectors
 
 SELECT * FROM chunks
 WHERE file IS NULL

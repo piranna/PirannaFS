@@ -1,0 +1,3 @@
+Cada plugin tiene su propia conexion a la base de datos.
+Dicha conexion solo contiene las tablas que necesita.
+Las tablas que necesita las obtiene a los plugins de los que depende.

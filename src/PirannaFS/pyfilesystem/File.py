@@ -299,8 +299,9 @@ class File(BaseFile):
 
                 while chunk.length >= 0:
                     # Get the free chunk that best fit the hole
+
                     free = self.db.Get_FreeChunk_BestFit(chunk.length,
-                                            [chunk.block for chunk in chunks])
+                            ','.join([str(chunk.block) for chunk in chunks]))
 
                     # If free chunk is bigger that hole, split it
                     if free.length > chunk.length:

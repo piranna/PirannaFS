@@ -15,7 +15,7 @@
 Hacer parches de delegacion de objetos para PyFilesystem
 Modificar base de datos
     Usar principio y final en lugar de principio y longitud (bug critico)
-    Aumentar velocidad de acceso (cache y similares)
+    * Aumentar velocidad de acceso (cache y similares)
     [2010-08-30] Size y timestamp en tabla files
     [2011-07-31] Almacenar fechas como UNIX timestamp (INTEGER), no como texto
 [2011-07-30] Añadir inodo al directorio padre en Dir y File

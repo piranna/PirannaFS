@@ -7,10 +7,10 @@ SELECT
     dir_entries.inode        AS st_ino,
     COUNT(links.child_entry) AS st_nlink,
 
-    :creation                AS st_ctime,
+    links.creation           AS st_ctime,
     dir_entries.access       AS st_atime,
     dir_entries.modification AS st_mtime,
---    :creation                                                AS st_ctime,
+--    links.creation                                           AS st_ctime,
 --    CAST(STRFTIME('%s',dir_entries.access)       AS INTEGER) AS st_atime,
 --    CAST(STRFTIME('%s',dir_entries.modification) AS INTEGER) AS st_mtime,
 
@@ -23,7 +23,7 @@ FROM dir_entries
     LEFT JOIN links
         ON dir_entries.inode == links.child_entry
 
-WHERE dir_entries.inode == :inode
+WHERE parent_dir == :parent_dir AND name == :name
 
 GROUP BY dir_entries.inode
 LIMIT 1

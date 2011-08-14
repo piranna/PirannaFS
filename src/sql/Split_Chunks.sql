@@ -1,3 +1,5 @@
+-- type: script
+
 INSERT INTO chunks(file, block,              length,              sector)
 SELECT             file, block+%(length)s+1, length-%(length)s-1, sector+%(length)s+1
     FROM chunks

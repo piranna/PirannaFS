@@ -149,7 +149,7 @@ class Dir(BaseDir):
 
         # Force dir deletion
         if force:
-            for dir_entry in self.db.readdir(self._inode):
+            for dir_entry in self.db.readdir(self._inode, -1):
                 path = os.path.join(self.path, dir_entry.name)
 
                 try:
@@ -169,7 +169,7 @@ class Dir(BaseDir):
                         self.fs.remove(path)
 
         # If dir is not empty raise error
-        if self.db.readdir(self._inode):
+        if self.db.readdir(self._inode, -1):
             raise DirectoryNotEmptyError(self.path)
 
         # Removed directory
@@ -232,7 +232,7 @@ class Dir(BaseDir):
 
 #        d = [ln for ln in self.readline()]
         d = []
-        for dir_entry in self.db.readdir(self._inode):
+        for dir_entry in self.db.readdir(self._inode, -1):
             if dir_entry['name']:
                 d.append(unicode(dir_entry['name']))
 

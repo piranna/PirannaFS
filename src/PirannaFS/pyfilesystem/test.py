@@ -10,8 +10,8 @@ import plugins
 from PirannaFS.pyfilesystem import Filesystem
 
 
-#class TestPirannaFS(unittest.TestCase, FSTestCases):
-class TestPirannaFS(unittest.TestCase, ThreadingTestCases):
+class TestPirannaFS(unittest.TestCase, FSTestCases):
+#class TestPirannaFS(unittest.TestCase, ThreadingTestCases):
 #class TestPirannaFS(unittest.TestCase, FSTestCases, ThreadingTestCases):
 
     test_id = 1

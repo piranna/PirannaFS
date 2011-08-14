@@ -133,6 +133,8 @@ class FileSystem(FS.FileSystem, fuse.Fuse):
 #        if inode < 0:
 #            return inode
 #
+#        if ts_acc == None: ts_acc = "now"
+#        if ts_mod == None: ts_mod = "now"
 #        self.db.utimens(inode, ts_acc,ts_mod)
 #
 #        return 0
