@@ -9,6 +9,7 @@ from sqlparse.engine import FilterStack
 from sqlparse.filters import ColumnsSelect, IncludeStatement, Limit
 from sqlparse.filters import StripComments, SerializerUnicode
 from sqlparse.filters import StripWhitespaceFilter
+from sqlparse.tokens import Keyword, Whitespace
 
 
 def Compact(sql, includePath="sql"):
@@ -43,6 +44,25 @@ def GetColumns(sql):
     stack.preprocess.append(ColumnsSelect())
 
     return list(stack.run(sql))
+
+
+class IsType():
+    def __init__(self, type):
+        self.type = type
+
+    def process(self, stack, stream):
+        for token_type, value in stream:
+            if token_type in Whitespace: continue
+            return token_type in Keyword and value == self.type
+
+
+def FirstIsInsert(sql):
+    """Function that return is the statement is a SELECT query"""
+    stack = FilterStack()
+
+    stack.preprocess.append(IsType('INSERT'))
+
+    return stack.run(sql)
 
 
 if __name__ == '__main__':

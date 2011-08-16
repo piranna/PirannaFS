@@ -57,7 +57,7 @@ class BaseFile(object):
         :returns: the size of the file
         """
         if self._inode != None:
-            return self.db.Get_Size(self._inode)
+            return self.db.Get_Size(inode=self._inode)
         return 0
 
     isempty = getsize
@@ -76,7 +76,7 @@ class BaseFile(object):
             raise ResourceNotFoundError(self.path)
 
         # Unlink dir entry
-        self.db.unlink(self.parent, self.name)
+        self.db.unlink(parent_dir=self.parent, name=self.name)
 
         self._inode = None
         self._offset = 0
@@ -86,7 +86,7 @@ class BaseFile(object):
         """
         """
         # Adjust read size
-        remanent = self.db.Get_Size(self._inode) - self._offset
+        remanent = self.db.Get_Size(inode=self._inode) - self._offset
         if remanent <= 0:
             return ""
         if 0 <= size < remanent:
@@ -122,9 +122,9 @@ class BaseFile(object):
         if ceil == None: ceil = floor
 
         # Stored chunks
-        chunks = self.db.Get_Chunks(self._inode, floor, ceil)
+        chunks = self.db.Get_Chunks(file=self._inode, floor=floor, ceil=ceil)
 #        print "_Get_Chunks", chunks, floor, ceil
-#        print "_Get_Chunks", self.db.Get_Chunks(self._inode, 0, 2047)
+#        print "_Get_Chunks", self.db.Get_Chunks(file=self._inode, floor=0, ceil=2047)
 
         #If there are chunks, check their bounds
         if chunks:
@@ -169,5 +169,5 @@ class BaseFile(object):
 
     def _Set_Size(self, size):
         """Set file size and reset filesystem free space counter"""
-        self.db.Set_Size(self._inode, size)
+        self.db.Set_Size(inode=self._inode, size=size)
         self.fs._freeSpace = None

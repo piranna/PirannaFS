@@ -135,6 +135,6 @@ class FileSystem(FS.FileSystem, fuse.Fuse):
 #
 #        if ts_acc == None: ts_acc = "now"
 #        if ts_mod == None: ts_mod = "now"
-#        self.db.utimens(inode, ts_acc,ts_mod)
+#        self.db.utimens(inode=inode, access=ts_acc,modification=ts_mod)
 #
 #        return 0

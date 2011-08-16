@@ -56,8 +56,9 @@ class checksums(plugins.Plugin):
 
 
     def __Split_Chunks(self, chunk):
-        for chunk in self.__db.Get_Chunks(chunk['file'], chunk['block'],
-                                          chunk['block'] + chunk['length'] + 1):
+        chunk['ceil'] = chunk['block'] + chunk['length'] + 1
+
+        for chunk in self.__db.Get_Chunks(chunk):
             self.__Write(chunk['id'], self.__ll.Read_Chunk(chunk))
 
 

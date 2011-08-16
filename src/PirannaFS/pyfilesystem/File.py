@@ -13,6 +13,7 @@ from fs.errors import StorageSpaceError
 
 import plugins
 
+from ..DB import ChunkConverted
 from ..File import BaseFile, readable, writeable
 
 
@@ -34,7 +35,7 @@ class File(BaseFile):
             self._inode = None
         else:
             # If inode is a dir, raise error
-            if fs.db.Get_Mode(self._inode) == stat.S_IFDIR:
+            if fs.db.Get_Mode(inode=self._inode) == stat.S_IFDIR:
                 raise ResourceInvalidError(path)
 
         # Init base class
@@ -63,8 +64,9 @@ class File(BaseFile):
             raise DestinationExistsError(self.path)
 
         # Make file
-        self._inode = self.db.mknod()
-        self.db.link(self.parent, self.name, self._inode)
+        self._inode = self.db.mknod(type=stat.S_IFREG)
+        self.db.link(parent_dir=self.parent, name=self.name,
+                     child_entry=self._inode)
 
     def next(self):
         data = self.readline()
@@ -145,7 +147,7 @@ class File(BaseFile):
         plugins.send("File.readline begin")
 
         # Adjust read size
-        remanent = self.db.Get_Size(self._inode) - self._offset
+        remanent = self.db.Get_Size(inode=self._inode) - self._offset
         if 0 <= size < remanent:
             remanent = size
 
@@ -201,7 +203,7 @@ class File(BaseFile):
         # Set whence
         if   whence == os.SEEK_SET: whence = 0
         elif whence == os.SEEK_CUR: whence = self._offset
-        elif whence == os.SEEK_END: whence = self.db.Get_Size(self._inode)
+        elif whence == os.SEEK_END: whence = self.db.Get_Size(inode=self._inode)
         else:                       raise ResourceInvalidError(self.__path)
 
         # Readjust offset
@@ -220,7 +222,7 @@ class File(BaseFile):
     @writeable
     def truncate(self, size=0):
         def Free_Chunks(chunk):
-            self.db.Free_Chunks(chunk)
+            self.db.Free_Chunks(**chunk)
     #        self.__Compact_FreeSpace()
 
         size += self._offset
@@ -229,11 +231,11 @@ class File(BaseFile):
 
         # If new file size if bigger than zero, plit chunks
         if ceil > -1:
-            for chunk in self.db.Get_Chunks_Truncate(self._inode, ceil):
-                self.db.Split_Chunks(chunk)
+            for chunk in self.db.Get_Chunks_Truncate(file=self._inode, ceil=ceil):
+                self.db.Split_Chunks(**ChunkConverted(chunk))
 
         # Free unwanted chunks from the file
-        for chunk in self.db.Get_Chunks_Truncate(self._inode, ceil):
+        for chunk in self.db.Get_Chunks_Truncate(file=self._inode, ceil=ceil):
             Free_Chunks(chunk)
 
         # Set new file size
@@ -300,13 +302,13 @@ class File(BaseFile):
                 while chunk.length >= 0:
                     # Get the free chunk that best fit the hole
 
-                    free = self.db.Get_FreeChunk_BestFit(chunk.length,
-                            ','.join([str(chunk.block) for chunk in chunks]))
+                    free = self.db.Get_FreeChunk_BestFit(sectors_required=chunk.length,
+                            blocks=','.join([str(chunk.block) for chunk in chunks]))
 
                     # If free chunk is bigger that hole, split it
                     if free.length > chunk.length:
                         free.length = chunk.length
-                        self.db.Split_Chunks(free)
+                        self.db.Split_Chunks(**ChunkConverted(free))
 
                     # Adapt free chunk
                     free.file = self._inode
@@ -329,7 +331,7 @@ class File(BaseFile):
         self.db.Put_Chunks(chunks)
 
         # Set new file size if neccesary
-        if self.db.Get_Size(self._inode) < file_size:
+        if self.db.Get_Size(inode=self._inode) < file_size:
             self._Set_Size(file_size)
 ### DB ###
 

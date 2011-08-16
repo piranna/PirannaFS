@@ -34,7 +34,7 @@ class Dir(BaseDir):
             self._inode = None
         else:
             # If inode is not a dir, raise error
-            if fs.db.Get_Mode(self._inode) != stat.S_IFDIR:
+            if fs.db.Get_Mode(inode=self._inode) != stat.S_IFDIR:
                 raise ResourceInvalidError(path)
 
 
@@ -62,7 +62,7 @@ class Dir(BaseDir):
 #        yield fuse.Direntry('.')
 #        yield fuse.Direntry('..')
 
-        for dir_entry in self.db.readdir(self._inode):
+        for dir_entry in self.db.readdir(parent_dir=self._inode, limit= -1):
             if dir_entry['name']:
                 yield fuse.Direntry(unicode(dir_entry['name']))
 #                yield fuse.Direntry(str(dir_entry['name']))

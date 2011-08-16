@@ -45,7 +45,7 @@ class Dir(BaseDir):
             self._inode = None
         else:
             # If inode is not a dir, raise error
-            if fs.db.Get_Mode(self._inode) != stat.S_IFDIR:
+            if fs.db.Get_Mode(inode=self._inode) != stat.S_IFDIR:
                 raise ResourceInvalidError(path)
 
 
@@ -126,8 +126,9 @@ class Dir(BaseDir):
             self.parent = d._inode
 
         # Make directory
-        self._inode = self.db.mkdir()
-        self.db.link(self.parent, self.name, self._inode)
+        self._inode = self.db.mkdir(type=stat.S_IFDIR)
+        self.db.link(parent_dir=self.parent, name=self.name,
+                     child_entry=self._inode)
 
         plugins.send("Dir.make.end")
 
@@ -149,7 +150,7 @@ class Dir(BaseDir):
 
         # Force dir deletion
         if force:
-            for dir_entry in self.db.readdir(self._inode, -1):
+            for dir_entry in self.db.readdir(parent_dir=self._inode, limit= -1):
                 path = os.path.join(self.path, dir_entry.name)
 
                 try:
@@ -162,18 +163,18 @@ class Dir(BaseDir):
                     pass
 
                 else:
-                    if self.db.Get_Mode(inode) == stat.S_IFDIR:
+                    if self.db.Get_Mode(inode=inode) == stat.S_IFDIR:
                         d = Dir(self.fs, path)
                         d.remove(force=True)
                     else:
                         self.fs.remove(path)
 
         # If dir is not empty raise error
-        if self.db.readdir(self._inode, -1):
+        if self.db.readdir(parent_dir=self._inode, limit= -1):
             raise DirectoryNotEmptyError(self.path)
 
         # Removed directory
-        self.db.unlink(self.parent, self.name)
+        self.db.unlink(parent_dir=self.parent, name=self.name)
         self._inode = None
 
         # Delete parent dirs recursively if empty
@@ -217,7 +218,7 @@ class Dir(BaseDir):
 #        yield unicode('.')
 #        yield unicode('..')
 
-        for dir_entry in self.db.readdir(self._inode):
+        for dir_entry in self.db.readdir(parent_dir=self._inode, limit= -1):
             if dir_entry['name']:
                 yield unicode(dir_entry['name'])
 
@@ -232,7 +233,7 @@ class Dir(BaseDir):
 
 #        d = [ln for ln in self.readline()]
         d = []
-        for dir_entry in self.db.readdir(self._inode, -1):
+        for dir_entry in self.db.readdir(parent_dir=self._inode, limit= -1):
             if dir_entry['name']:
                 d.append(unicode(dir_entry['name']))
 

@@ -9,7 +9,7 @@ import errno
 
 import plugins
 
-from DB import DictObj
+from DB import DictObj, ChunkConverted
 
 from ..File import BaseFile, readable, writeable
 
@@ -112,12 +112,12 @@ class File(BaseFile):
             ceil = ceil[0]
 
         # Split chunks whose offset+length is greather that new file size
-        for chunk in self.db.Get_Chunks_Truncate(self.__inode, ceil):
+        for chunk in self.db.Get_Chunks_Truncate(file=self.__inode, ceil=ceil):
             if self.__Split_Chunks(chunk):
                 self._Free_Chunks(chunk)
 
         # Set new file size
-        self.db.Set_Size(inode, length)
+        self.db.Set_Size(inode=inode, size=length)
 
         return 0
 
@@ -138,7 +138,7 @@ class File(BaseFile):
             return -errno.EINVAL
 
         # Get file size
-        size = self.db.Get_Size(self.__inode)
+        size = self.db.Get_Size(inode=self.__inode)
 
         # If offset required is greather or equals that file size
         # return EOF
@@ -280,8 +280,8 @@ class File(BaseFile):
 #        plugins.send("File.write", chunks_write=chunks_write, data=data)
 
         # Set new file size if neccesary
-        if file_size > self.db.Get_Size(self.__inode):
-            self.db.Set_Size(self.__inode, file_size)
+        if file_size > self.db.Get_Size(inode=self.__inode):
+            self.db.Set_Size(inode=self.__inode, size=file_size)
 
         # Return size of the written data
         return data_size
@@ -302,7 +302,7 @@ class File(BaseFile):
 #        print >> sys.stderr, '\tGet_Chunks', file,floor,ceil
 
         # Stored chunks
-        chunks = self.db.Get_Chunks(self.__inode, floor, ceil)
+        chunks = self.db.Get_Chunks(file=self.__inode, floor=floor, ceil=ceil)
 
         #If there are chunks,
         # check their bounds
@@ -339,7 +339,7 @@ class File(BaseFile):
         chunks = []
 
         while sectors_required > 0:
-            chunk = self.db.Get_FreeSpace(sectors_required, chunks)
+            chunk = self.db.Get_FreeSpace(sectors_required, chunks) * self.__sector_size
 
             # Not chunks available
             if not chunk:
@@ -352,7 +352,7 @@ class File(BaseFile):
 
 
     def __Split_Chunks(self, chunk):
-        if self.db.Split_Chunks(chunk):
+        if self.db.Split_Chunks(ChunkConverted(chunk)):
             plugins.send("File.__Split_Chunks", chunk=chunk)
 
             return True

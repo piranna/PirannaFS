@@ -27,11 +27,12 @@ class BaseFS(object):
         self.db = DB(db, self.ll._file, sector_size)
 
         self._freeSpace = None
+        self.__sector_size = sector_size
 
 
     def FreeSpace(self):
         if self._freeSpace == None:
-            self._freeSpace = self.db.Get_FreeSpace()
+            self._freeSpace = self.db.Get_FreeSpace()*self.__sector_size
 
         return self._freeSpace
 
@@ -48,7 +49,7 @@ class BaseFS(object):
             parent, _, path = path.partition(os.sep)
 
             # Get inode of the dir entry
-            inode = self.db.Get_Inode(inode, parent)
+            inode = self.db.Get_Inode(parent_dir=inode, name=parent)
 
             # If there's no such dir entry, raise the adecuate exception
             # depending of it's related to the resource we are looking for
@@ -61,7 +62,7 @@ class BaseFS(object):
 
             # If the dir entry is a directory
             # get child inode
-            if self.db.Get_Mode(inode) == stat.S_IFDIR:
+            if self.db.Get_Mode(inode=inode) == stat.S_IFDIR:
                 return self.Get_Inode(path, inode)
 
             # If is not a directory and is not the last path element

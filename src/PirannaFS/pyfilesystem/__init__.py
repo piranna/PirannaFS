@@ -116,11 +116,11 @@ class Filesystem(BaseFS, base.FS):
         """
         parent_dir, name = self.Path2InodeName(path)
 
-        inode = self.db.Get_Inode(parent_dir, name)
+        inode = self.db.Get_Inode(parent_dir=parent_dir, name=name)
         if inode == None:
             raise ResourceNotFoundError(path)
 
-        return self.db.getinfo(parent_dir, name)
+        return self.db.getinfo(parent_dir=parent_dir, name=name)
 
 
     def isdir(self, path):                                                  # OK
@@ -135,7 +135,7 @@ class Filesystem(BaseFS, base.FS):
         except (ParentDirectoryMissingError, ResourceInvalidError,
                 ResourceNotFoundError):
             return False
-        return self.db.Get_Mode(inode) == stat.S_IFDIR
+        return self.db.Get_Mode(inode=inode) == stat.S_IFDIR
 
     def isfile(self, path):                                                 # OK
         """Check if a path references a file.
@@ -149,7 +149,7 @@ class Filesystem(BaseFS, base.FS):
         except (ParentDirectoryMissingError, ResourceInvalidError,
                 ResourceNotFoundError):
             return False
-        return self.db.Get_Mode(inode) != stat.S_IFDIR
+        return self.db.Get_Mode(inode=inode) != stat.S_IFDIR
 
 
     def rename(self, src, dst):                                             # OK
@@ -176,22 +176,22 @@ class Filesystem(BaseFS, base.FS):
         parent_inode_new, name_new = self.Path2InodeName(dst)
 
         # If dst exist, unlink it before rename src link
-        if self.db.Get_Inode(parent_inode_new, name_new) != None:
+        if self.db.Get_Inode(parent_dir=parent_inode_new, name=name_new) != None:
             # If old path type is different from new path type then raise error
-            type_old = self.db.Get_Mode(self.Get_Inode(name_old,
-                                                       parent_inode_old))
-            type_new = self.db.Get_Mode(self.Get_Inode(name_new,
-                                                       parent_inode_new))
+            type_old = self.db.Get_Mode(inode=self.Get_Inode(name_old,
+                                                             parent_inode_old))
+            type_new = self.db.Get_Mode(inode=self.Get_Inode(name_new,
+                                                             parent_inode_new))
 
             if type_old != type_new:
                 raise ResourceInvalidError(src)
 
             # Unlink new path and rename old path to new
-            self.db.unlink(parent_inode_new, name_new)
+            self.db.unlink(parent_dir=parent_inode_new, name=name_new)
 
         # Rename old link
-        self.db.rename(parent_inode_old, name_old,
-                       parent_inode_new, name_new)
+        self.db.rename(parent_old=parent_inode_old, name_old=name_old,
+                       parent_new=parent_inode_new, name_new=name_new)
 
 
     #

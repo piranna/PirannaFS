@@ -1,3 +1,5 @@
+-- Tables
+
 CREATE TABLE IF NOT EXISTS dir_entries
 (
     inode        INTEGER   PRIMARY KEY,
@@ -58,6 +60,7 @@ CREATE TABLE IF NOT EXISTS chunks
     UNIQUE(file,sector)
 );
 
+
 -- Triggers
 
 CREATE TRIGGER IF NOT EXISTS remove_if_it_was_the_last_file_link
@@ -102,3 +105,27 @@ BEGIN
     SET modification = CURRENT_TIMESTAMP
     WHERE dir_entries.inode = OLD.parent_dir;
 END;
+
+
+-- If directories table is empty (table has just been created)
+-- create initial row defining the root directory
+
+INSERT INTO dir_entries(inode, type)
+                 SELECT 0,   %(type)s
+                 WHERE NOT EXISTS(SELECT * FROM dir_entries LIMIT 1);
+
+INSERT INTO directories(inode)
+                 SELECT 0
+                 WHERE NOT EXISTS(SELECT * FROM directories LIMIT 1);
+
+INSERT INTO links(id, child_entry, parent_dir, name)
+           SELECT 0,  0,           0,          ''
+           WHERE NOT EXISTS(SELECT * FROM links LIMIT 1);
+
+
+-- If chunks table is empty (table has just been created)
+-- create initial row defining all the partition as free
+
+INSERT INTO chunks(file, block, length, sector)
+            SELECT NULL, 0, %(length)s, %(sector)s
+            WHERE NOT EXISTS(SELECT * FROM chunks LIMIT 1);

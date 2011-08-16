@@ -37,7 +37,7 @@ class BaseDir(object):
         @rtype: bool
         """
         print "BaseDir.isempty"
-        return self.db.readdir(self._inode, 1)
+        return self.db.readdir(parent_dir=self._inode, limit=1)
 
 
     #
