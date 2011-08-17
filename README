@@ -16,5 +16,5 @@ Spain 2011.
 * sqlparse (>= 0.1.3.20110812)
 
 ==Interfaces (only one is needed)==
-* Python-FUSE  (>= 0.2)
-* PyFilesystem (>= 0.4 SVN)
+* Python-FUSE  (>= 0.2)     Legacy, work in integration
+* PyFilesystem (>= 0.4 SVN) Current standard

@@ -11,9 +11,7 @@
 
 0.3
 ===
-* Unificar codigo e interfaces FUSE y PyFilesystem
-Hacer parches de delegacion de objetos para PyFilesystem
-Modificar base de datos
+* Modificar base de datos
     Usar principio y final en lugar de principio y longitud (bug critico)
     * Aumentar velocidad de acceso (cache y similares)
     [2010-08-30] Size y timestamp en tabla files
@@ -22,6 +20,8 @@ Modificar base de datos
 
 0.4
 ===
+* Unificar codigo e interfaces FUSE y PyFilesystem
+Hacer parches de delegacion de objetos para PyFilesystem
 [2011-07-31] Sacar sentencias SQL a archivos independientes en lugar de estar hardcodeadas
 plugins
     (soporte)

@@ -9,10 +9,9 @@ import stat
 from os      import listdir
 from os.path import join, splitext
 
-from sqlparse import split2
-from sqlparse.filters import Tokens2Unicode
+from sqlparse import split
 
-from sql2 import Compact, GetColumns, GetLimit, IsType
+from sql import Compact, GetColumns, GetLimit, FirstIsInsert
 
 
 # Store data in UNIX timestamp instead ISO format (sqlite default)
@@ -71,11 +70,11 @@ class DB():
             methodName = splitext(filename)[0]
 
             with open(join(dirPath, filename)) as f:
-                stream = Compact(f.read(), dirPath)
+                sql = Compact(f.read(), dirPath)
 
             # Insert statement (last row id)
-            if IsType('INSERT')(stream):
-                stmts = split2(stream)
+            if FirstIsInsert(sql):
+                stmts = split(sql)
 
                 if len(stmts) == 1:
                     def applyMethod(sql, methodName):
@@ -86,17 +85,17 @@ class DB():
 
                         setattr(self.__class__, methodName, method)
 
-                    applyMethod(unicode(stmts[0]), methodName)
+                    applyMethod(stmts[0], methodName)
 
                 else:
                     def applyMethod(stmts, methodName):
                         def method(self, **kwargs):
                             cursor = self.connection.cursor()
-                            cursor.execute(unicode(stmts[0]) % kwargs)
+                            cursor.execute(stmts[0] % kwargs)
                             rowid = cursor.lastrowid
 
                             for stmt in stmts[1:]:
-                                cursor.execute(unicode(stmt) % kwargs)
+                                cursor.execute(stmt % kwargs)
 
                             return rowid
 
@@ -105,10 +104,10 @@ class DB():
                     applyMethod(stmts, methodName)
 
             # One statement query
-            elif len(split2(stream)) == 1:
+            elif len(split(sql)) == 1:
                 # One-value function
-                if GetLimit(stream) == 1:
-                    columns = GetColumns(stream)
+                if GetLimit(sql) == 1:
+                    columns = GetColumns(sql)
 
                     # Value function
                     if len(columns) == 1 and columns[0] != '*':
@@ -121,7 +120,7 @@ class DB():
 
                             setattr(self.__class__, methodName, method)
 
-                        applyMethod(Tokens2Unicode(stream), methodName, columns[0])
+                        applyMethod(sql, methodName, columns[0])
 
                     # Register function
                     else:
@@ -132,7 +131,7 @@ class DB():
 
                             setattr(self.__class__, methodName, method)
 
-                        applyMethod(Tokens2Unicode(stream), methodName)
+                        applyMethod(sql, methodName)
 
                 # Table function
                 else:
@@ -143,7 +142,7 @@ class DB():
 
                         setattr(self.__class__, methodName, method)
 
-                    applyMethod(Tokens2Unicode(stream), methodName)
+                    applyMethod(sql, methodName)
 
             # Multiple statement query
             else:
@@ -153,7 +152,7 @@ class DB():
 
                     setattr(self.__class__, methodName, method)
 
-                applyMethod(Tokens2Unicode(stream), methodName)
+                applyMethod(sql, methodName)
 
 
     def __init__(self, connection, drive, sector_size):                     # OK
