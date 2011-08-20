@@ -11,29 +11,29 @@ import plugins
 
 class symlinks(plugins.Plugin):
     def __init__(self):
-        plugins.connect(self.create, "FS.__init__")
+#        plugins.connect(self.create, "FS.__init__")
         plugins.connect(self.symlink, "FS.symlink")
         plugins.connect(self.readlink, "FS.readlink")
 
 
-    def create(self, db):
-        '''
-        Create the log table in the database
-        '''
-#        print >> sys.stderr, '*** create', db
-
-        self.__db = db
-        self.__db.connection.execute('''
-            CREATE TABLE IF NOT EXISTS symlinks
-            (
-                inode  INTEGER PRIMARY KEY,
-
-                target TEXT    NOT NULL,
-
-                FOREIGN KEY(inode) REFERENCES dir_entries(inode)
-                    ON DELETE CASCADE ON UPDATE CASCADE
-            )
-        ''')
+#    def create(self, db):
+#        '''
+#        Create the log table in the database
+#        '''
+##        print >> sys.stderr, '*** create', db
+#
+#        self.__db = db
+#        self.__db.connection.execute('''
+#            CREATE TABLE IF NOT EXISTS symlinks
+#            (
+#                inode  INTEGER PRIMARY KEY,
+#
+#                target TEXT    NOT NULL,
+#
+#                FOREIGN KEY(inode) REFERENCES dir_entries(inode)
+#                    ON DELETE CASCADE ON UPDATE CASCADE
+#            )
+#        ''')
 
     def readlink(self, sender, path):
         '''

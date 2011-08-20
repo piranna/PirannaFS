@@ -8,38 +8,17 @@ import sys
 
 import plugins
 
+from DB import DB
 
 
 class log(plugins.Plugin):
     def __init__(self):
-        print '*** log.__init__'
-        plugins.connect(self.create, "FS.__init__")
+#        print '*** log.__init__'
+
+        self.db = DB('/home/piranna/Proyectos/FUSE/PirannaFS/TestPirannaFS_1.sqlite')
+
+#        plugins.connect(self.create, "FS.__init__")
         plugins.connect(self.log)
-
-
-    def create(self, db):
-        '''
-        Create the log table in the database
-        '''
-#        print >> sys.stderr, '*** create', db
-
-        self.__db = db
-        self.__db.connection.execute('''
-            CREATE TABLE IF NOT EXISTS log
-            (
-                'who'   TEXT      NULL,                      --User
-                'what'  TEXT      NOT NULL,                  --Action / Caller.Action?
-                'where' TEXT      NOT NULL,                  --Caller / GPS?    # http://live.gnome.org/action/show/GnomeActivityJournal
-                'when'  timestamp DEFAULT CURRENT_TIMESTAMP, --Timestamp
-                'why'   TEXT      NULL,
-                'how'   TEXT      NOT NULL,                  --Parameters
-                'whom'  INTEGER   NULL,                      --Inode
-                'for'   TEXT      NULL,
-
-                FOREIGN KEY('whom') REFERENCES dir_entries(inode)
-                    ON UPDATE CASCADE
-            )
-        ''')
 
 
 #    def log(self, **named):
@@ -47,7 +26,7 @@ class log(plugins.Plugin):
         '''
         Make a log entry in the database
         '''
-#        print >> sys.stderr, '*** log', named
+#        print '*** log'
 
         frame = sys._getframe(3)
 
@@ -67,8 +46,4 @@ class log(plugins.Plugin):
     #    print >> sys.stderr, 'for\t'
     #    print
 
-        return self.__db.connection.execute('''
-            INSERT INTO log('what','where','how')
-            VALUES(?,?,?)
-            ''',
-            (what, where, str(how)))
+        return self.db.insert(what=what, where=where, how=str(how))

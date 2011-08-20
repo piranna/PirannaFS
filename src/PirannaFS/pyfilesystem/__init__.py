@@ -94,7 +94,8 @@ class Filesystem(BaseFS, base.FS):
         self._delegate_methods(self.dir_class, self._dir_class_map)
         self._delegate_methods(self.file_class, self._file_class_map)
 
-        plugins.send("FS.__init__", db=self.db, ll=self.ll)
+        plugins.send("FS.__init__", ll=self.ll)
+#        plugins.send("FS.__init__", db=self.db, ll=self.ll)
 
 
     #

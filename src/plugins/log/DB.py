@@ -1,13 +1,13 @@
 '''
-Created on 04/08/2010
+Created on 20/08/2011
 
 @author: piranna
 '''
 
-import stat
-
 from os      import listdir
-from os.path import join, splitext
+from os.path import dirname, join, splitext
+
+import sqlite3
 
 from sqlparse import split2
 from sqlparse.filters import Tokens2Unicode
@@ -15,57 +15,10 @@ from sqlparse.filters import Tokens2Unicode
 from sql2 import Compact, GetColumns, GetLimit, IsType
 
 
-# Store data in UNIX timestamp instead ISO format (sqlite default)
-# and None objects as 'NULL' strings
-import datetime, time
-import sqlite3
-
-def adapt_datetime(ts):
-    return time.mktime(ts.timetuple())
-sqlite3.register_adapter(datetime.datetime, adapt_datetime)
-
-#def adapt_None(_):
-#    return 'NULL'
-#sqlite3.register_adapter(None, adapt_None)
-
-
-class DictObj(dict):
-    def __getattr__(self, name):
-        try:
-            return self[name]
-        except KeyError:
-            raise AttributeError(name)
-
-    def __setattr__(self, name, value):
-        try:
-            self[name] = value
-        except KeyError:
-            raise AttributeError(name)
-
-
-def DictObj_factory(cursor, row):
-    d = DictObj()
-    for idx, col in enumerate(cursor.description):
-        d[col[0]] = row[idx]
-    return d
-
-
-def ChunkConverted(chunk):
-    """[Hack] None objects get converted to 'None' while SQLite queries
-    expect 'NULL' instead. This function return a newly dict with
-    all None objects converted to 'NULL' valued strings.
-    """
-    d = {}
-    for key, value in chunk.iteritems():
-        d[key] = "NULL" if value == None else value
-    return d
-
-
-class DB():
+class DB:
     '''
     classdocs
     '''
-    db_file = ""
 
 
     def _parseFunctions(self, dirPath):
@@ -158,35 +111,14 @@ class DB():
                 applyMethod(Tokens2Unicode(stream), methodName)
 
 
-    def __init__(self, db_file, drive, sector_size):                     # OK
+    def __init__(self, core):
         '''
         Constructor
         '''
-        self.db_file = db_file
+        # Database files
+        self.connection = sqlite3.connect('../../../log.sqlite')
+        self.connection.execute('ATTACH DATABASE :core AS core', {'core': core})
 
-#        self.connection = sqlite3.connect(db_file)
-        self.connection = sqlite3.connect(db_file, check_same_thread=False)
-        self.connect()
-
-        def Get_NumSectors():
-            # http://stackoverflow.com/questions/283707/size-of-an-open-file-object
-            drive.seek(0, 2)
-            end = drive.tell()
-            drive.seek(0)
-            return (end - 1) // sector_size
-
-        self._parseFunctions('/home/piranna/Proyectos/FUSE/PirannaFS/src/sql')
-
-        self._Create_Database(type=stat.S_IFDIR, length=Get_NumSectors(),
-                              sector=0)
-
-    def __del__(self):
-        self.connection.commit()
-        self.connection.close()
-
-
-    def connect(self):
-        self.connection.row_factory = DictObj_factory
         self.connection.isolation_level = None
 
         # SQLite tune-ups
@@ -196,12 +128,6 @@ class DB():
         # Force enable foreign keys check
         self.connection.execute("PRAGMA foreign_keys = ON;")
 
+        self._parseFunctions(join(dirname(__file__), 'sql'))
 
-    def Put_Chunks(self, chunks):                                           # OK
-        return self.connection.executemany(
-             """UPDATE chunks
-                SET file = :file, block = :block
-                WHERE sector=:sector
-                -- WHERE drive=:drive AND sector=:sector""",
-            chunks)
-#        return self.connection.executemany(self.__queries['Put_Chunks'], chunks)
+        self.create()

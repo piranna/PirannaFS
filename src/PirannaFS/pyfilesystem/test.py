@@ -31,12 +31,9 @@ class TestPirannaFS(unittest.TestCase, FSTestCases):
         pm = plugins.Manager()
         pm.Load_Dir("../../plugins")
 
-#        db = sqlite3.connect(self.db_file)
-        db = sqlite3.connect(self.db_file, check_same_thread=False)
-
         sector_size = 512
 
-        self.fs = Filesystem(db, drive, sector_size)
+        self.fs = Filesystem(self.db_file, drive, sector_size)
 
     def tearDown(self):
         self.fs.close()
