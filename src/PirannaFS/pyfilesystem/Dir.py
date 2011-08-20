@@ -126,7 +126,7 @@ class Dir(BaseDir):
             self.parent = d._inode
 
         # Make directory
-        self._inode = self.db.mkdir(type=stat.S_IFDIR)
+        self._inode = self.db._Make_DirEntry(type=stat.S_IFDIR)
         self.db.link(parent_dir=self.parent, name=self.name,
                      child_entry=self._inode)
 

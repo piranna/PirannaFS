@@ -9,14 +9,6 @@ CREATE TABLE IF NOT EXISTS dir_entries
     modification timestamp DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS directories
-(
-    inode INTEGER PRIMARY KEY,
-
-    FOREIGN KEY(inode) REFERENCES dir_entries(inode)
-        ON DELETE CASCADE ON UPDATE CASCADE
-);
-
 CREATE TABLE IF NOT EXISTS links
 (
     id          INTEGER   PRIMARY KEY,
@@ -28,7 +20,7 @@ CREATE TABLE IF NOT EXISTS links
 
     FOREIGN KEY(child_entry) REFERENCES dir_entries(inode)
         ON DELETE CASCADE ON UPDATE CASCADE,
-    FOREIGN KEY(parent_dir) REFERENCES directories(inode)
+    FOREIGN KEY(parent_dir) REFERENCES dir_entries(inode)
         ON DELETE CASCADE ON UPDATE CASCADE,
 
     UNIQUE(parent_dir,name)
@@ -107,16 +99,12 @@ BEGIN
 END;
 
 
--- If directories table is empty (table has just been created)
+-- If dir_entries table is empty (table has just been created)
 -- create initial row defining the root directory
 
 INSERT INTO dir_entries(inode, type)
                  SELECT 0,   %(type)s
                  WHERE NOT EXISTS(SELECT * FROM dir_entries LIMIT 1);
-
-INSERT INTO directories(inode)
-                 SELECT 0
-                 WHERE NOT EXISTS(SELECT * FROM directories LIMIT 1);
 
 INSERT INTO links(id, child_entry, parent_dir, name)
            SELECT 0,  0,           0,          ''
