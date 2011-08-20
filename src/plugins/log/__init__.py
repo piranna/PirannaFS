@@ -12,7 +12,7 @@ import plugins
 
 class log(plugins.Plugin):
     def __init__(self):
-#        print >> sys.stderr, '*** log.__init__'
+        print '*** log.__init__'
         plugins.connect(self.create, "FS.__init__")
         plugins.connect(self.log)
 

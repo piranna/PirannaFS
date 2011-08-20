@@ -9,6 +9,8 @@ Created on 22/09/2010
 
 import imp, inspect, os
 
+from os.path import join, splitext
+
 import louie
 
 
@@ -45,7 +47,7 @@ class Manager:
         @param path: path of the dir containing the modules to load
         @type path: string
         """
-#        print >> sys.stderr, '*** Load_Dir', path
+#        print '*** Load_Dir', path
 
         for name in self.__Find_Modules(path):
             self.Load_Module(name, [path])
@@ -59,13 +61,13 @@ class Manager:
         @param path: path or group of paths where to search the module to load
         @type path: string or iterable of strings
         """
-#        print >> sys.stderr, '*** Load_Module', name, path
+#        print '*** Load_Module', name, path
 
         if isinstance(path, basestring):
             path = [path]
 
         # Load module
-        (file, pathname, description) = imp.find_module(name, path)
+        file, pathname, description = imp.find_module(name, path)
         module = imp.load_module(name, file, pathname, description)
 
         # Load plugins from modules
@@ -87,10 +89,13 @@ class Manager:
         @param plugin: plugin to be loaded
         @type plugin: Plugin class
         """
-#        print >> sys.stderr, '*** Load_Plugin', plugin
+#        print '*** Load_Plugin', plugin
 
-#        plugin.dependencies = set(plugin.dependencies)
-#        plugin.replaces = set(plugin.replaces)
+        plugin.dependencies = set(plugin.dependencies)
+        plugin.replaces = set(plugin.replaces)
+
+#        print '\t', plugin.dependencies
+#        print '\t', plugin.replaces
 
         # Plugin has not dependencies or they are all loaded - load it now
         if plugin.dependencies.issubset(self.__loaded):
@@ -102,21 +107,30 @@ class Manager:
 
 
     def __Find_Modules(self, path="."):
-        """Return names of modules in a directory.
+        """Return names of modules and packages in a directory.
 
-        Returns module names in a list. Filenames that end in ".py" or
-        ".pyc" are considered to be modules. The extension is not included
-        in the returned list.
+        Returns module and package names in a list. Filenames that end in ".py"
+        or ".pyc" are considered to be modules, and directories with a file
+        "__init__.py" are considered to be packages. The extension is not
+        included in the returned list.
 
         @param path: path of the dir with the modules
         @type path: string
+
+        @return: list of modules and packages
         """
         modules = set()
 
         for filename in os.listdir(path):
-            filename = os.path.splitext(filename)
+            filename = splitext(filename)
 
-            if filename[1] in (".py", ".pyc"):
+            # Packages
+            if filename[1] == '':
+                if '__init__.py' in os.listdir(join(path, filename[0])):
+                    modules.add(filename[0])
+
+            # Modules
+            elif filename[1] in (".py", ".pyc"):
                 modules.add(filename[0])
 
         return list(modules)
@@ -130,7 +144,7 @@ class Manager:
         @param plugin: plugin to be loaded
         @type plugin: Plugin class
         """
-#        print >> sys.stderr, '*** __Load_Plugin', plugin
+#        print '*** __Load_Plugin', plugin
 
         # Add plugin to loaded ones
         # and remove from pending

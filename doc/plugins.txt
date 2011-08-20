@@ -1,3 +1,7 @@
 Cada plugin tiene su propia conexion a la base de datos.
 Dicha conexion solo contiene las tablas que necesita.
 Las tablas que necesita las obtiene a los plugins de los que depende.
+
+Chunks_Final se ejecuta en close partiendo el ultimo sector del ultimo chunk
+del archivo y guardandolo en el sector final de otro archivo si hay espacio
+disponible.
