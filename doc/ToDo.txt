@@ -11,8 +11,7 @@
 
 0.3
 ===
-* Modificar base de datos
-    Usar principio y final en lugar de principio y longitud (bug critico)
+[2011-08-20] Modificar base de datos
     * Aumentar velocidad de acceso (cache y similares)
     [2010-08-30] Size y timestamp en tabla files
     [2011-07-31] Almacenar fechas como UNIX timestamp (INTEGER), no como texto
@@ -20,11 +19,22 @@
 
 0.4
 ===
+Modificar base de datos
+    Usar principio y final en lugar de principio y longitud (bug critico)
 * Unificar codigo e interfaces FUSE y PyFilesystem
-Hacer parches de delegacion de objetos para PyFilesystem
 [2011-07-31] Sacar sentencias SQL a archivos independientes en lugar de estar hardcodeadas
 plugins
-    (soporte)
+    soporte en PyFilesystem
+    File
+    Directories
+    "core"
+Dividir base de datos en multiples archivos
+Conexiones a base de datos multiples a nivel de plugins (¿instancias de objetos?)
+
+0.5
+===
+Hacer parches de delegacion de objetos para PyFilesystem
+plugins
     log
     checksum
     Links simbolicos
