@@ -7,8 +7,8 @@ CREATE TABLE IF NOT EXISTS log
     'why'   TEXT      NULL,
     'how'   TEXT      NOT NULL,                  --Parameters
     'whom'  INTEGER   NULL,                      --Inode
-    'for'   TEXT      NULL--,
+    'for'   TEXT      NULL,
 
---    FOREIGN KEY('whom') REFERENCES dir_entries(inode)
---        ON UPDATE CASCADE
+    FOREIGN KEY('whom') REFERENCES dir_entries(inode)
+        ON UPDATE CASCADE
 )

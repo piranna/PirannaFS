@@ -69,6 +69,11 @@ class DB():
 
 
     def _parseFunctions(self, dirPath):
+        import re
+        def S2SF(sql):
+            "Convert from SQLite escape query format to Python string format"
+            return re.sub(":\w+", lambda m: "%%(%s)s" % m.group(0)[1:], sql)
+
         for filename in listdir(dirPath):
             methodName = splitext(filename)[0]
 
@@ -94,17 +99,17 @@ class DB():
                     def applyMethod(stmts, methodName):
                         def method(self, **kwargs):
                             cursor = self.connection.cursor()
-                            cursor.execute(unicode(stmts[0]) % kwargs)
+                            cursor.execute(stmts[0] % kwargs)
                             rowid = cursor.lastrowid
 
                             for stmt in stmts[1:]:
-                                cursor.execute(unicode(stmt) % kwargs)
+                                cursor.execute(stmt % kwargs)
 
                             return rowid
 
                         setattr(self.__class__, methodName, method)
 
-                    applyMethod(stmts, methodName)
+                    applyMethod([S2SF(unicode(x)) for x in stmts], methodName)
 
             # One statement query
             elif len(split2(stream)) == 1:
@@ -155,7 +160,7 @@ class DB():
 
                     setattr(self.__class__, methodName, method)
 
-                applyMethod(Tokens2Unicode(stream), methodName)
+                applyMethod(S2SF(Tokens2Unicode(stream)), methodName)
 
 
     def __init__(self, db_file, drive, sector_size):                     # OK
@@ -177,8 +182,7 @@ class DB():
 
         self._parseFunctions('/home/piranna/Proyectos/FUSE/PirannaFS/src/sql')
 
-        self._Create_Database(type=stat.S_IFDIR, length=Get_NumSectors(),
-                              sector=0)
+        self.create(type=stat.S_IFDIR, length=Get_NumSectors(), sector=0)
 
     def __del__(self):
         self.connection.commit()

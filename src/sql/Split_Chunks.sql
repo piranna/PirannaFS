@@ -4,12 +4,12 @@
 -- Create new chunks containing the tail sectors and
 -- update the old chunks length to contain only the head sectors
 
-INSERT INTO chunks(file, block,              length,              sector)
-            SELECT file, block+%(length)s+1, length-%(length)s-1, sector+%(length)s+1
+INSERT INTO chunks(file, block,           length,           sector)
+            SELECT file, block+:length+1, length-:length-1, sector+:length+1
             FROM chunks
-            WHERE file IS %(file)s
-              AND block = %(block)s;
+            WHERE file IS :file
+              AND block = :block ;
 
-UPDATE chunks SET length  = %(length)s
-WHERE file IS %(file)s
-  AND block = %(block)s;
+UPDATE chunks SET length  = :length
+WHERE file IS :file
+  AND block = :block;
