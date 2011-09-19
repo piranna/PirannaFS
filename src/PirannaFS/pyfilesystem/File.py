@@ -44,9 +44,6 @@ class File(BaseFile):
         # File mode
         self._mode = frozenset()
 
-    def __del__(self):
-        self.close()
-
 
     def close(self):
         self.flush()
@@ -76,7 +73,7 @@ class File(BaseFile):
 
 
     def open(self, mode="r", **kwargs):
-        self.CalcMode(mode)
+        self._CalcMode(mode)
 
         return self
 
@@ -85,12 +82,7 @@ class File(BaseFile):
     def read(self, size= -1):
         """
         """
-#        print >> sys.stderr, '*** read', length
-
-        plugins.send("File.read begin")
-        data = self._read(size)
-        plugins.send("File.read end")
-        return data
+        return self._read(size)
 
     @readable
     def readline(self, size= -1):
@@ -111,7 +103,7 @@ class File(BaseFile):
 
         while remanent > 0:
             # Read chunk
-            chunks = self._Get_Chunks(block)
+            chunks = self._Get_Chunks(block, block)
             data = self.ll.Read(chunks)
 
             # Check if we have get end of line
@@ -136,14 +128,6 @@ class File(BaseFile):
 
         return readed[offset:self._offset]
 
-    @readable
-    def readlines(self, sizehint= -1):
-        """
-        """
-        plugins.send("File.readlines begin")
-        data = self._read(sizehint).splitlines(True)
-        plugins.send("File.readlines end")
-        return data
 
     def seek(self, offset, whence=os.SEEK_SET):
         """
@@ -290,23 +274,3 @@ class File(BaseFile):
         for line in sequence:
             data += line
         self.write(data)
-
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self.close()
-        return False
-
-    def __iter__(self):
-        return self
-
-
-#    def __str__(self):
-#        return "<File in %s %s>" % (self.__fs, self.path)
-#
-#    __repr__ = __str__
-#
-#    def __unicode__(self):
-#        return unicode(self.__str__())

@@ -37,7 +37,7 @@ class File(BaseFile):
         BaseFile.__init__(self, fs, path)
 
         # File mode
-        self.CalcMode(mode)
+        self._CalcMode(mode)
 
 
     # Undocumented
@@ -145,7 +145,7 @@ class File(BaseFile):
 #        print >> sys.stderr, "floor",floor, "ceil",ceil, "offset",offset
 
         # Read chunks
-        chunks = self.__Get_Chunks(self.__inode, floor, ceil)
+        chunks = self._Get_Chunks(floor, ceil)
 #        print >> sys.stderr, chunks
 
         readed = self.ll.Read(chunks)
@@ -183,7 +183,7 @@ class File(BaseFile):
         sectors_required = 1 + ceil - floor
 
         # Get file chunks
-        chunks = self.__Get_Chunks(self.__inode, floor, ceil)
+        chunks = self._Get_Chunks(floor, ceil)
         for chunk in chunks:
             if chunk['sector']:
                 sectors_required -= chunk['length']
@@ -280,45 +280,6 @@ class File(BaseFile):
 
 
     # Hide
-    def __Get_Chunks(self, file, floor, ceil):                                    # OK
-        '''
-        Get sectors and use empty entries for not maped chunks (all zeroes)
-        '''
-#        print >> sys.stderr, '\tGet_Chunks', file,floor,ceil
-
-        # Stored chunks
-        chunks = self.db.Get_Chunks(file=self.__inode, floor=floor, ceil=ceil)
-
-        #If there are chunks,
-        # check their bounds
-        if chunks:
-            # Create first chunk if not stored
-            chunk = DictObj(chunks[0])
-
-            if chunk['block'] > floor:
-
-                chunk['length'] = chunk['block'] - floor
-                chunk['block'] = floor
-                chunk['drive'] = None
-                chunk['sector'] = None
-
-                chunks = [chunk, ].extend(chunks)
-
-            # Create last chunk if not stored
-            chunk = DictObj(chunks[-1])
-
-            chunk['block'] += chunk['length']
-            if chunk['block'] - 1 < ceil:
-                chunk['length'] = ceil - chunk['block'] - 1
-
-                if chunk['length'] > 0:
-                    chunk['drive'] = None
-                    chunk['sector'] = None
-                    chunks.extend([chunk, ])
-
-        return chunks
-
-
     def __Get_FreeSpace(self, sectors_required):                                # OK
 #        print >> sys.stderr, '*** __Get_FreeSpace', sectors_required
         chunks = []

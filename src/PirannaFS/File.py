@@ -138,8 +138,20 @@ class BaseFile(object):
         self._Set_Size(size)
 
 
+    def __del__(self):
+        self.close()
+
+
+    @readable
+    def readlines(self, sizehint= -1):
+        """
+        """
+        return self._read(sizehint).splitlines(True)
+
+
     # Private
-    def CalcMode(self, mode):
+
+    def _CalcMode(self, mode):
         # Based on code from filelike.py
 
         # Set `self._mode` as a set so we can modify it.
@@ -192,19 +204,14 @@ class BaseFile(object):
 
         return floor, ceil
 
-    def _Get_Chunks(self, floor, ceil=None):                             # OK
+    def _Get_Chunks(self, floor, ceil):                             # OK
         '''
         Get sectors and use empty entries for not maped chunks (all zeroes)
         '''
 #        print >> sys.stderr, '\tGet_Chunks', file,floor,ceil
 
-        # Adjust ceil if we want only one chunk
-        if ceil == None: ceil = floor
-
         # Stored chunks
         chunks = self.db.Get_Chunks(file=self._inode, floor=floor, ceil=ceil)
-#        print "_Get_Chunks", chunks, floor, ceil
-#        print "_Get_Chunks", self.db.Get_Chunks(file=self._inode, floor=0, ceil=2047)
 
         #If there are chunks, check their bounds
         if chunks:
@@ -218,7 +225,7 @@ class BaseFile(object):
                 chunk['drive'] = None
                 chunk['sector'] = None
 
-                chunks = [chunk, ].extend(chunks)
+                chunks = [chunk].extend(chunks)
 
             # Create last chunk if not stored
             chunk = DictObj(chunks[-1])
@@ -230,7 +237,7 @@ class BaseFile(object):
 
                 chunk['drive'] = None
                 chunk['sector'] = None
-                chunks.extend([chunk, ])
+                chunks.append(chunk)
 
         # There're no chunks for that file at this blocks, make a fake empty one
         else:
@@ -251,3 +258,23 @@ class BaseFile(object):
         """Set file size and reset filesystem free space counter"""
         self.db.Set_Size(inode=self._inode, size=size)
         self.fs._freeSpace = None
+
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
+        return False
+
+    def __iter__(self):
+        return self
+
+
+#    def __str__(self):
+#        return "<File in %s %s>" % (self.__fs, self.path)
+#
+#    __repr__ = __str__
+#
+#    def __unicode__(self):
+#        return unicode(self.__str__())
