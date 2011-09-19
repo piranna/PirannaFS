@@ -53,21 +53,13 @@ class Dir(BaseDir):
 
 
     def readdir(self, offset=None):                                         # OK
-#        print >> sys.stderr, '*** readdir', offset
-        if self._inode == None:
-            raise ResourceNotFoundError(self.path)
+        """Lists the files and directories under a given path.
+        The directory contents are returned as a list of fuse.Direntry structs.
 
-        plugins.send("Dir.list.begin")
-
-#        yield fuse.Direntry('.')
-#        yield fuse.Direntry('..')
-
-        for dir_entry in self.db.readdir(parent_dir=self._inode, limit= -1):
-            if dir_entry['name']:
-                yield fuse.Direntry(unicode(dir_entry['name']))
-#                yield fuse.Direntry(str(dir_entry['name']))
-
-        plugins.send("DIR.list.end")
+        @rtype: iterable of fuse.Direntry structs
+        """
+        for dir_entry in self._list():
+            yield fuse.Direntry(dir_entry)
 
 
 #    def releasedir(self):

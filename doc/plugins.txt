@@ -5,3 +5,7 @@ Las tablas que necesita las obtiene a los plugins de los que depende.
 Chunks_Final se ejecuta en close partiendo el ultimo sector del ultimo chunk
 del archivo y guardandolo en el sector final de otro archivo si hay espacio
 disponible.
+
+Holes checkea los chunks a escribir y cuando detecta uno o varios sectores que
+son todo ceros, divide el chunk en ese punto y deja el hueco, el cual se
+rellenara posteriormente con ceros al leer.

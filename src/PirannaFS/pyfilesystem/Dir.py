@@ -49,16 +49,17 @@ class Dir(BaseDir):
                 raise ResourceInvalidError(path)
 
 
-#    def ilist(self, wildcard=None,
-#              full=False, absolute=False, dirs_only=False, files_only=False):
-#        """Generator yielding the files and directories under a given path.
-#
-#        This method behaves identically to :py:meth:`fs.base.FS.listdir` but
-#        returns an generator instead of a list.  Depending on the filesystem
-#        this may be more efficient than calling :py:meth:`fs.base.FS.listdir`
-#        and iterating over the resulting list.
-#        """
-#        return self.readline()
+    def ilist(self, wildcard=None,
+              full=False, absolute=False, dirs_only=False, files_only=False):
+        """Generator yielding the files and directories under a given path.
+
+        This method behaves identically to :py:meth:`fs.base.FS.listdir` but
+        returns an generator instead of a list.  Depending on the filesystem
+        this may be more efficient than calling :py:meth:`fs.base.FS.listdir`
+        and iterating over the resulting list.
+        """
+        return self.fs._listdir_helper(self.path, self._list(), wildcard,
+                                       full, absolute, dirs_only, files_only)
 
 
     def list(self, wildcard=None,
@@ -89,8 +90,7 @@ class Dir(BaseDir):
             a directory
         :raises `fs.errors.ResourceNotFoundError`: if the path is not found
         """
-        return self.fs._listdir_helper(self.path, self.readlines(), wildcard,
-                                       full, absolute, dirs_only, files_only)
+        return list(self.ilist(wildcard, full, absolute, dirs_only, files_only))
 
 
     def make(self, recursive=False, allow_recreate=False):
@@ -151,7 +151,7 @@ class Dir(BaseDir):
         # Force dir deletion
         if force:
             for dir_entry in self.db.readdir(parent_dir=self._inode, limit= -1):
-                path = os.path.join(self.path, dir_entry.name)
+                path = os.path.join(self.path, dir_entry['name'])
 
                 try:
                     inode = self.fs.Get_Inode(path)
@@ -163,9 +163,12 @@ class Dir(BaseDir):
                     pass
 
                 else:
+                    # Entry is from a directory, delete it recursively
                     if self.db.Get_Mode(inode=inode) == stat.S_IFDIR:
                         d = Dir(self.fs, path)
                         d.remove(force=True)
+
+                    # Entry is from a file, ask to filesystem to delete it
                     else:
                         self.fs.remove(path)
 
@@ -187,56 +190,3 @@ class Dir(BaseDir):
                 pass
 
         plugins.send("Dir.remove")
-
-
-    #
-    # File-like interface
-    #
-
-    def close(self):
-        pass
-
-
-    def next(self):
-        data = self.readline()
-        if data:
-            return data
-        raise StopIteration
-
-
-    def readline(self):                                                     # OK
-        """Lists the files and directories under a given path.
-        The directory contents are returned as a list of unicode paths.
-
-        @rtype: iterable of paths
-        """
-        if self._inode == None:
-            raise ResourceNotFoundError(self.path)
-
-        plugins.send("Dir.list.begin")
-
-#        yield unicode('.')
-#        yield unicode('..')
-
-        for dir_entry in self.db.readdir(parent_dir=self._inode, limit= -1):
-            if dir_entry['name']:
-                yield unicode(dir_entry['name'])
-
-        plugins.send("Dir.list.end")
-
-    def readlines(self):
-        """Return a list of all lines in the file."""
-        if self._inode == None:
-            raise ResourceNotFoundError(self.path)
-
-        plugins.send("Dir.list.begin")
-
-#        d = [ln for ln in self.readline()]
-        d = []
-        for dir_entry in self.db.readdir(parent_dir=self._inode, limit= -1):
-            if dir_entry['name']:
-                d.append(unicode(dir_entry['name']))
-
-        plugins.send("Dir.list.end")
-
-        return d
