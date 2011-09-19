@@ -19,38 +19,25 @@ class File(BaseFile):
     classdocs
     '''
 
-    def __init__(self, fs, path, flags, mode=None):                               # OK
+    def __init__(self, fs, path, flags, mode=None):                         # OK
         '''
         Constructor
         '''
-#        print >> sys.stderr, '\n*** File __init__',fs, path,flags,mode
-
-        self.__sector_size = fs.sector  # Sector size
-
-        # Get file inode
-        self.__inode = fs.Get_Inode(path[1:])
-
-        # File not exist
-        if self.__inode == -errno.ENOENT:
-            inodeName = fs.Path2InodeName(path[1:])
-            if inodeName < 0:
-                return inodeName
-            parent_dir_inode, name = inodeName
-
-            # If dir_entry exist,
-            # return error
-            if fs.Get_Inode(name, parent_dir_inode) >= 0:
-                return -errno.EEXIST
-
-            self.__inode = self.db.mknod()
-            self.db.link(parent_dir_inode, name, self.__inode)
-
-        # Error
-        elif self.__inode < 0:
-            return self.__inode
+        # Get file inode or raise exception
+        try:
+            self._inode = fs.Get_Inode(path[1:])
+        except ResourceNotFoundError:
+            self._make()
+        else:
+            # If inode is a dir, raise error
+            if fs.db.Get_Mode(inode=self._inode) == stat.S_IFDIR:
+                raise ResourceInvalidError(path)
 
         # Init base class
         BaseFile.__init__(self, fs, path)
+
+        # File mode
+        self.CalcMode(mode)
 
 
     # Undocumented
@@ -100,24 +87,22 @@ class File(BaseFile):
 #        return -errno.ENOSYS
 
 
-    @writeable
-    def ftruncate(self, length):
-        if length < 0:
+    def ftruncate(self, size):
+        if size < 0:
             return -errno.EINVAL
 
-        ceil = divmod(length, self.__sector_size)
-        if ceil[1]:
-            ceil = ceil[0] + 1
-        else:
-            ceil = ceil[0]
+#        ceil = divmod(size, self.ll.sector_size)
+#        if ceil[1]:
+#            ceil = ceil[0] + 1
+#        else:
+#            ceil = ceil[0]
+#
+#        # Split chunks whose offset+size is greather that new file size
+#        for chunk in self.db.Get_Chunks_Truncate(file=self._inode, ceil=ceil):
+#            if self.__Split_Chunks(chunk):
+#                self._Free_Chunks(chunk)
 
-        # Split chunks whose offset+length is greather that new file size
-        for chunk in self.db.Get_Chunks_Truncate(file=self.__inode, ceil=ceil):
-            if self.__Split_Chunks(chunk):
-                self._Free_Chunks(chunk)
-
-        # Set new file size
-        self.db.Set_Size(inode=inode, size=length)
+        self._truncate(size)
 
         return 0
 

@@ -4,6 +4,8 @@ Created on 02/04/2011
 @author: piranna
 '''
 
+from stat import S_IFREG
+
 from os import SEEK_END
 from os.path import split
 
@@ -82,6 +84,14 @@ class BaseFile(object):
         self._offset = 0
 
 
+        # Evented
+
+    def _make(self):
+        self._inode = self.db.mknod(type=S_IFREG)
+        self.db.link(parent_dir=self.parent, name=self.name,
+                     child_entry=self._inode)
+
+
     def _read(self, size):
         """
         """
@@ -104,6 +114,76 @@ class BaseFile(object):
         self._offset += remanent
 
         return readed[offset:self._offset]
+
+
+    @writeable
+    def _truncate(self, size):
+        ceil = (size - 1) // self.ll.sector_size
+
+        # If new file size if bigger than zero, split chunks
+        if ceil > -1:
+            for chunk in self.db.Get_Chunks_Truncate(file=self._inode, ceil=ceil):
+                print "_truncate"
+                self.db.Split_Chunks(**ChunkConverted(chunk))
+
+        def Free_Chunks(chunk):
+            self.db.Free_Chunks(**chunk)
+    #        self.__Compact_FreeSpace()
+
+        # Free unwanted chunks from the file
+        for chunk in self.db.Get_Chunks_Truncate(file=self._inode, ceil=ceil):
+            Free_Chunks(chunk)
+
+        # Set new file size
+        self._Set_Size(size)
+
+
+    # Private
+    def CalcMode(self, mode):
+        # Based on code from filelike.py
+
+        # Set `self._mode` as a set so we can modify it.
+        # Needed to truncate the file while processing the mode
+        self._mode = set()
+
+        # Calc the mode and perform the corresponding initialization actions
+        if 'r' in mode:
+            # Action
+            if self._inode == None:
+                raise ResourceNotFoundError(self.path)
+
+            # Set mode
+            self._mode.add('r')
+            if '+' in mode:
+                self._mode.add('w')
+
+        elif 'w' in mode:
+            # Set mode
+            self._mode.add('w')
+            if '+' in mode:
+                self._mode.add('r')
+
+            # Action
+            if self._inode == None:
+                self.make()
+            else:
+                self._truncate(0)
+
+        elif 'a' in mode:
+            # Action
+            if self._inode == None:
+                self.make()
+            else:
+                self.seek(0, SEEK_END)
+
+            # Set mode
+            self._mode.add('w')
+            self._mode.add('a')
+            if '+' in mode:
+                self._mode.add('r')
+
+        # Re-set `self._mode` as an inmutable frozenset.
+        self._mode = frozenset(self._mode)
 
 
     def _Calc_Bounds(self, offset):

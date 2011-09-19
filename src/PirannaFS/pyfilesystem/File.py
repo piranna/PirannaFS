@@ -41,6 +41,7 @@ class File(BaseFile):
         # Init base class
         BaseFile.__init__(self, fs, path)
 
+        # File mode
         self._mode = frozenset()
 
     def __del__(self):
@@ -64,9 +65,8 @@ class File(BaseFile):
             raise DestinationExistsError(self.path)
 
         # Make file
-        self._inode = self.db.mknod(type=stat.S_IFREG)
-        self.db.link(parent_dir=self.parent, name=self.name,
-                     child_entry=self._inode)
+        self._make()
+
 
     def next(self):
         data = self.readline()
@@ -76,55 +76,7 @@ class File(BaseFile):
 
 
     def open(self, mode="r", **kwargs):
-        def CalcMode():
-            # Based on code from filelike.py
-
-            # Set `self._mode` as a set so we can modify it.
-            # Needed to truncate the file while processing the mode
-            self._mode = set()
-
-            # Calc the mode and perform the corresponding initialization actions
-            if 'r' in mode:
-                # Action
-                if self._inode == None:
-                    raise ResourceNotFoundError(self.path)
-
-                # Set mode
-                self._mode.add('r')
-                if '+' in mode:
-
-                    self._mode.add('w')
-
-            elif 'w' in mode:
-                # Set mode
-                self._mode.add('w')
-                if '+' in mode:
-                    self._mode.add('r')
-
-                # Action
-#                print "inode", inode
-                if self._inode == None:
-                    self.make()
-                else:
-                    self.truncate()
-
-            elif 'a' in mode:
-                # Action
-                if self._inode == None:
-                    self.make()
-                else:
-                    self.seek(0, os.SEEK_END)
-
-                # Set mode
-                self._mode.add('w')
-                self._mode.add('a')
-                if '+' in mode:
-                    self._mode.add('r')
-
-            # Re-set `self._mode` as an inmutable frozenset.
-            self._mode = frozenset(self._mode)
-
-        CalcMode()
+        self.CalcMode(mode)
 
         return self
 
@@ -219,27 +171,13 @@ class File(BaseFile):
         return self._offset
 
 
-    @writeable
     def truncate(self, size=0):
-        def Free_Chunks(chunk):
-            self.db.Free_Chunks(**chunk)
-    #        self.__Compact_FreeSpace()
-
         size += self._offset
 
-        ceil = (size - 1) // self.ll.sector_size
+        if size < 0:
+            raise ResourceInvalidError(msg="truncate under zero")
 
-        # If new file size if bigger than zero, plit chunks
-        if ceil > -1:
-            for chunk in self.db.Get_Chunks_Truncate(file=self._inode, ceil=ceil):
-                self.db.Split_Chunks(**ChunkConverted(chunk))
-
-        # Free unwanted chunks from the file
-        for chunk in self.db.Get_Chunks_Truncate(file=self._inode, ceil=ceil):
-            Free_Chunks(chunk)
-
-        # Set new file size
-        self._Set_Size(size)
+        self._truncate(size)
 
 
     @writeable
