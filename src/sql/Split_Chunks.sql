@@ -10,6 +10,6 @@ INSERT INTO chunks(file, block,           length,           sector)
             WHERE file IS :file
               AND block = :block ;
 
-UPDATE chunks SET length  = :length
+UPDATE chunks SET length = :length
 WHERE file IS :file
   AND block = :block;

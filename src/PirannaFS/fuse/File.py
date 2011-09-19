@@ -19,7 +19,7 @@ class File(BaseFile):
     classdocs
     '''
 
-    def __init__(self, fs, path, flags, mode=None):                               # OK
+    def __init__(self, fs, path, flags, mode=None):                         # OK
         '''
         Constructor
         '''
@@ -100,24 +100,22 @@ class File(BaseFile):
 #        return -errno.ENOSYS
 
 
-    @writeable
-    def ftruncate(self, length):
-        if length < 0:
+    def ftruncate(self, size):
+        if size < 0:
             return -errno.EINVAL
 
-        ceil = divmod(length, self.__sector_size)
-        if ceil[1]:
-            ceil = ceil[0] + 1
-        else:
-            ceil = ceil[0]
+#        ceil = divmod(size, self.ll.sector_size)
+#        if ceil[1]:
+#            ceil = ceil[0] + 1
+#        else:
+#            ceil = ceil[0]
+#
+#        # Split chunks whose offset+size is greather that new file size
+#        for chunk in self.db.Get_Chunks_Truncate(file=self._inode, ceil=ceil):
+#            if self.__Split_Chunks(chunk):
+#                self._Free_Chunks(chunk)
 
-        # Split chunks whose offset+length is greather that new file size
-        for chunk in self.db.Get_Chunks_Truncate(file=self.__inode, ceil=ceil):
-            if self.__Split_Chunks(chunk):
-                self._Free_Chunks(chunk)
-
-        # Set new file size
-        self.db.Set_Size(inode=inode, size=length)
+        self._truncate(size)
 
         return 0
 

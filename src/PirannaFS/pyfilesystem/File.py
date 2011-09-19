@@ -219,27 +219,13 @@ class File(BaseFile):
         return self._offset
 
 
-    @writeable
     def truncate(self, size=0):
-        def Free_Chunks(chunk):
-            self.db.Free_Chunks(**chunk)
-    #        self.__Compact_FreeSpace()
-
         size += self._offset
 
-        ceil = (size - 1) // self.ll.sector_size
+        if size < 0:
+            raise ResourceInvalidError(msg="truncate under zero")
 
-        # If new file size if bigger than zero, plit chunks
-        if ceil > -1:
-            for chunk in self.db.Get_Chunks_Truncate(file=self._inode, ceil=ceil):
-                self.db.Split_Chunks(**ChunkConverted(chunk))
-
-        # Free unwanted chunks from the file
-        for chunk in self.db.Get_Chunks_Truncate(file=self._inode, ceil=ceil):
-            Free_Chunks(chunk)
-
-        # Set new file size
-        self._Set_Size(size)
+        self._truncate(size)
 
 
     @writeable

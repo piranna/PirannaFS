@@ -9,7 +9,7 @@
     [2010-09-02] Escritura
     [2010-09-04] Funciones varias (touch, truncate, append...)
 
-0.3
+[2011-08-20] 0.3
 ===
 [2011-08-20] Modificar base de datos
     * Aumentar velocidad de acceso (cache y similares)
@@ -19,17 +19,25 @@
 
 0.4
 ===
+Hacer test para truncate mayor que un sector
+Opciones para seleccionar modo de sincronizacion
+Usar transacciones cuando sea posible/necesario y empaquetar peticiones
+    Transacciones encadenadas (APSW)
+Incorporar fsx.c a la bateria de pruebas
+Usar yield en lugar de devolver listas (si es posible)
 Modificar base de datos
     Usar principio y final en lugar de principio y longitud (bug critico)
 * Unificar codigo e interfaces FUSE y PyFilesystem
 [2011-07-31] Sacar sentencias SQL a archivos independientes en lugar de estar hardcodeadas
 plugins
-    soporte en PyFilesystem
+    * soporte en PyFilesystem
+    plugins funcionando por eventos
+        [BUG] Ver porque no funcionan con UnitTest (desaparecen las conexiones)
     File
     Directories
     "core"
-Dividir base de datos en multiples archivos
-Conexiones a base de datos multiples a nivel de plugins (¿instancias de objetos?)
+* Dividir base de datos en multiples archivos
+* Conexiones a base de datos multiples a nivel de plugins (¿instancias de objetos?)
 
 0.5
 ===
@@ -38,7 +46,7 @@ plugins
     log
     checksum
     Links simbolicos
-plugins funcionando por eventos
+        Añadir soporte en PyFilesystem
 Commits dentro de la base de datos
 Habilitar informacion de StatFS
 

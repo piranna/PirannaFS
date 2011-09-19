@@ -106,6 +106,28 @@ class BaseFile(object):
         return readed[offset:self._offset]
 
 
+    @writeable
+    def _truncate(self, size):
+        ceil = (size - 1) // self.ll.sector_size
+
+        # If new file size if bigger than zero, split chunks
+        if ceil > -1:
+            for chunk in self.db.Get_Chunks_Truncate(file=self._inode, ceil=ceil):
+                print "_truncate"
+                self.db.Split_Chunks(**ChunkConverted(chunk))
+
+        def Free_Chunks(chunk):
+            self.db.Free_Chunks(**chunk)
+    #        self.__Compact_FreeSpace()
+
+        # Free unwanted chunks from the file
+        for chunk in self.db.Get_Chunks_Truncate(file=self._inode, ceil=ceil):
+            Free_Chunks(chunk)
+
+        # Set new file size
+        self._Set_Size(size)
+
+
     def _Calc_Bounds(self, offset):
         floor = self._offset // self.ll.sector_size
         ceil = (self._offset + offset - 1) // self.ll.sector_size
