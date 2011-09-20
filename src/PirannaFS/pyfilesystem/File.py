@@ -34,17 +34,6 @@ class File(BaseFile):
         self._mode = frozenset()
 
 
-    def close(self):
-        self.flush()
-#        self._mode = frozenset()
-
-        plugins.send("File.close")
-
-    def flush(self):
-        pass
-#        self.ll._file.flush()
-
-
     def make(self):
         # Check if dir_entry
         if self._inode:
@@ -58,77 +47,6 @@ class File(BaseFile):
         self._CalcMode(mode)
 
         return self
-
-
-    @readable
-    def readline(self, size= -1):
-        """
-        """
-        plugins.send("File.readline begin")
-
-        # Adjust read size
-        remanent = self.db.Get_Size(inode=self._inode) - self._offset
-        if 0 <= size < remanent:
-            remanent = size
-
-        # Calc floor required
-        floor = self._offset // self.ll.sector_size
-
-        block = floor
-        readed = ""
-
-        while remanent > 0:
-            # Read chunk
-            chunks = self._Get_Chunks(block, block)
-            data = self.ll.Read(chunks)
-
-            # Check if we have get end of line
-            try:
-                index = data.index('\n') + 1
-
-            except ValueError:
-                # Calc next block required
-                readed += data
-                block += chunks[0].length + 1
-                remanent -= len(data)
-
-            else:
-                readed += data[:index]
-                break
-
-        # Set read query offset and cursor
-        offset = self._offset - floor * self.ll.sector_size
-        self._offset += len(readed)
-
-        plugins.send("File.readline end")
-
-        return readed[offset:self._offset]
-
-
-    def seek(self, offset, whence=os.SEEK_SET):
-        """
-        """
-#        print >> sys.stderr, '*** read', length,offset
-
-        plugins.send("File.seeking")
-
-        # Set whence
-        if   whence == os.SEEK_SET: whence = 0
-        elif whence == os.SEEK_CUR: whence = self._offset
-        elif whence == os.SEEK_END: whence = self.db.Get_Size(inode=self._inode)
-        else:                       raise ResourceInvalidError(self.__path)
-
-        # Readjust offset
-        self._offset = whence + offset
-
-        plugins.send("File.seeked")
-
-    def tell(self):
-        """Return the current cursor position offset
-
-        @return: integer
-        """
-        return self._offset
 
 
     def truncate(self, size=0):
@@ -241,12 +159,3 @@ class File(BaseFile):
 
         # Set new offset
         self._offset = file_size
-
-        plugins.send("File.write", chunks=chunks, data=data)
-
-    @writeable
-    def writelines(self, sequence):
-        data = ""
-        for line in sequence:
-            data += line
-        self.write(data)

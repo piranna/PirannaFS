@@ -26,7 +26,7 @@ class File(BaseFile):
         '''
         Constructor
         '''
-        BaseFile.__init__(self, fs, path[1:])
+        BaseFile.__init__(self, fs, path[1:], True)
 
         # File mode
         self._CalcMode(mode)
