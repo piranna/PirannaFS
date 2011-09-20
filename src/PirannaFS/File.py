@@ -9,9 +9,10 @@ from stat import S_IFDIR, S_IFREG
 from os import SEEK_SET, SEEK_CUR, SEEK_END
 from os.path import split
 
-from DB import DictObj
+from DB import ChunkConverted, DictObj
 
 from fs.errors import ResourceInvalidError, ResourceNotFoundError
+from fs.errors import StorageSpaceError
 
 
 def readable(method):
@@ -38,7 +39,7 @@ class BaseFile(object):
 
     # Common
 
-    def __init__(self, fs, path, make=False):
+    def __init__(self, fs, path):
         '''
         Constructor
         '''
@@ -46,10 +47,7 @@ class BaseFile(object):
         try:
             self._inode = fs.Get_Inode(path)
         except ResourceNotFoundError:
-            if make:
-                self._make()
-            else:
-                self._inode = None
+            self._inode = None
         else:
             # If inode is a dir, raise error
             if fs.db.Get_Mode(inode=self._inode) == S_IFDIR:
@@ -133,7 +131,6 @@ class BaseFile(object):
     def __del__(self):
         self.close()
 
-
     def close(self):
         self.flush()
 #        self._mode = frozenset()
@@ -141,7 +138,6 @@ class BaseFile(object):
     def flush(self):
         pass
 #        self.ll._file.flush()
-
 
     def next(self):
         data = self.readline()
@@ -219,6 +215,24 @@ class BaseFile(object):
         return self._offset
 
 
+    def write(self, data):
+        if not data: return
+
+        size = len(data)
+        floor, ceil = self._Calc_Bounds(size)
+        sectors_required = ceil - floor
+
+### DB ###
+        sectors_required, chunks = self._GetChunksWritten(sectors_required,
+                                                          floor, ceil)
+
+        # Raise error if there's not enought free space available
+        if sectors_required > self.fs.FreeSpace() // self.ll.sector_size:
+            raise StorageSpaceError
+### DB ###
+
+        self._write(data, size, chunks, floor)
+
     def writelines(self, sequence):
         data = ""
         for line in sequence:
@@ -274,14 +288,14 @@ class BaseFile(object):
 
             # Action
             if self._inode == None:
-                self.make()
+                self._make()
             else:
                 self._truncate(0)
 
         elif 'a' in mode:
             # Action
             if self._inode == None:
-                self.make()
+                self._make()
             else:
                 self.seek(0, SEEK_END)
 
@@ -295,9 +309,9 @@ class BaseFile(object):
         self._mode = frozenset(self._mode)
 
 
-    def _Calc_Bounds(self, offset):
+    def _Calc_Bounds(self, size):
         floor = self._offset // self.ll.sector_size
-        ceil = (self._offset + offset - 1) // self.ll.sector_size
+        ceil = (self._offset + size - 1) // self.ll.sector_size
 
         return floor, ceil
 
@@ -351,6 +365,19 @@ class BaseFile(object):
         # Return list of chunks
         return chunks
 
+    def _GetChunksWritten(self, sectors_required, floor, ceil):
+        """Get written chunks of the file"""
+        chunks = self._Get_Chunks(floor, ceil)
+
+        # Check if there's enought free space available
+        for chunk in chunks:
+            # Discard chunks already in file from required space
+            if chunk.sector != None:
+                sectors_required -= chunk.length + 1
+
+        return sectors_required, chunks
+
+
     def __readPre(self, size= -1):
         if not size:
             return None, None, 0
@@ -373,6 +400,85 @@ class BaseFile(object):
         self._offset += remanent
 
         return readed[offset:self._offset]
+
+
+    @writeable
+    def _write(self, data, size, chunks, floor):
+        file_size = self._offset + size
+
+        # If there is an offset in the first sector
+        # adapt data chunks
+        offset = self._offset % self.ll.sector_size
+        if offset:
+            sector = chunks[0]['sector']
+#            print "sector:", sector, chunks
+
+            # If first sector was not written before
+            # fill space with zeroes
+            if sector == None:
+                sector = '\0' * offset
+
+            # Else get it's current value as base for new data
+            else:
+                sector = self.ll.Read([{"sector":sector, "length":0}])
+                sector = sector[:offset]
+
+            # Adapt data
+            data = sector + data
+
+### DB ###
+        # Fill holes between written chunks (if any)
+        for chunk in chunks:
+#            print "chunks durante", chunks
+            if chunk.sector == None:
+                index = chunks.index(chunk)
+                block = chunk.block
+
+                while chunk.length >= 0:
+                    # Get the free chunk that best fit the hole
+
+                    free = self.db.Get_FreeChunk_BestFit(sectors_required=chunk.length,
+                            blocks=','.join([str(chunk.block) for chunk in chunks]))
+
+                    # If free chunk is bigger that hole, split it
+                    if free.length > chunk.length:
+                        free.length = chunk.length
+                        self.db.Split_Chunks(**ChunkConverted(free))
+
+                    # Adapt free chunk
+                    free.file = self._inode
+                    free.block = block
+
+                    # Add free chunk to the hole
+                    chunks.insert(index, free)
+                    index += 1
+
+                    # Increase block number for the next free chunk in the hole
+                    # and decrease size of hole
+                    block += free.length + 1
+                    chunk.length -= free.length + 1
+
+                # Remove hole chunk since we have filled it
+                chunks.pop(index)
+### DB ###
+
+        # Write chunks data to the drive
+        for chunk in chunks:
+            offset = (chunk.block - floor) * self.ll.sector_size
+            d = data[offset:offset + (chunk.length + 1) * self.ll.sector_size]
+            self.ll.Write_Chunk(chunk.sector, d)
+
+        # Set new offset
+        self._offset = file_size
+
+### DB ###
+        # Put chunks in database
+        self.db.Put_Chunks(chunks)
+
+        # Set new file size if neccesary
+        if self.db.Get_Size(inode=self._inode) < file_size:
+            self._Set_Size(file_size)
+### DB ###
 
 
     def _Set_Size(self, size):

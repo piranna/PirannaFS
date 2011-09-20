@@ -8,13 +8,11 @@ import sys
 
 import errno
 
-from stat import S_IFDIR
-
 import plugins
 
 from DB import DictObj, ChunkConverted
 
-from ..File import BaseFile, readable, writeable
+from ..File import BaseFile
 
 
 class File(BaseFile):
@@ -26,7 +24,7 @@ class File(BaseFile):
         '''
         Constructor
         '''
-        BaseFile.__init__(self, fs, path[1:], True)
+        BaseFile.__init__(self, fs, path[1:])
 
         # File mode
         self._CalcMode(mode)
@@ -106,116 +104,30 @@ class File(BaseFile):
 #        return -errno.ENOSYS
 
 
-    @writeable
-    def write(self, data, offset):                                               # OK
-        print >> sys.stderr, '\n*** write', repr(data), offset
-
-        if not data:
-            return None
+    def write(self, data, offset):                                          # OK
+        if not data: return
 
         if offset < 0:
             return -errno.EINVAL
+        self._offset = offset
 
-        # Get data size
-        data_size = len(data)
+        size = len(data)
+        floor, ceil = self._Calc_Bounds(size)
+        sectors_required = ceil - floor
 
-        # Get file size
-        file_size = offset + data_size
+### DB ###
+        sectors_required, chunks = self._GetChunksWritten(sectors_required,
+                                                          floor, ceil)
 
-        # Calc floor and ceil blocks required
-        floor = offset // self.__sector_size
-        ceil = file_size // self.__sector_size
-
-        sectors_required = 1 + ceil - floor
-
-        # Get file chunks
-        chunks = self._Get_Chunks(floor, ceil)
-        for chunk in chunks:
-            if chunk['sector']:
-                sectors_required -= chunk['length']
-
-        # Get free space (if required)
-        if sectors_required > 0:
-            chunks_free, sectors_required = self.__Get_FreeSpace(sectors_required)
-            chunks.extend(chunks_free)
-
-        # If more sectors are required
-        # return no space error
-        if sectors_required > 0:
+        # Raise error if there's not enought free space available
+        if sectors_required > self.fs.FreeSpace() // self.ll.sector_size:
             return -errno.ENOSPC
+### DB ###
 
-        # If there is an offset in the first sector
-        # adapt data chunks
-        offset -= floor * self.__sector_size
-        if offset:
-            sector = chunks[0]['sector']
-
-            # If first sector was written before
-            # get it's current value as base for new data
-            if sector:
-                sector = self.ll.Read([{"sector":sector, "length":1}])
-                sector = sector[:offset]
-
-            # If not,
-            # fill it with zeroes
-            else:
-                sector = '\0' * (offset)
-
-            # Adapt data
-            data = sector + data
-
-#        # Add remaining zeroes at end of the data
-#        # to align to self.__sector_size (if neccesary)
-#        offset = len(data)%self.__sector_size
-#        if offset:
-#            data += '\0'*(self.__sector_size - offset)
-
-        # Prepare chunks
-        # [ToDo] data_offset can be superfluous...
-#        print >> sys.stderr, "chunks",repr(chunks)
-        chunks_write = []
-        data_offset = 0
-        block = floor
-
-        for chunk in chunks:
-
-            # Split chunk if it's bigger that the required space
-            length = 1 + (data_size - data_offset) // self.__sector_size
-            if chunk['length'] > length:
-                chunk['length'] = length
-                self.__Split_Chunks(chunk)
-
-            # Add chunk to writable ones
-            chunk['file'] = self.__inode
-            chunk['block'] = block
-
-            chunks_write.append(chunk)
-
-            data_offset += chunk['length'] * self.__sector_size
-            block += chunk['length']
-
-            if block >= ceil:
-                break
-
-        # Write chunks
-#        print >> sys.stderr, "chunks_write",repr(chunks_write)
-        for chunk in chunks_write:
-            offset = (chunk['block'] - floor) * self.__sector_size
-            d = data[offset:offset + chunk['length'] * self.__sector_size]
-
-            self.ll.Write_Chunk(chunk['sector'], d)
-            plugins.send("File.write", chunk=chunk['id'], data=d)
-
-        self.db.Put_Chunks(chunks_write)
-
-#        plugins.send("File.write", chunks_write=chunks_write, data=data)
-
-        # Set new file size if neccesary
-        if file_size > self.db.Get_Size(inode=self.__inode):
-            self.db.Set_Size(inode=self.__inode, size=file_size)
+        self._write(data, size, chunks, floor)
 
         # Return size of the written data
-        return data_size
+        return size
 
 
     # Don't show
@@ -226,7 +138,7 @@ class File(BaseFile):
 
 
     # Hide
-    def __Get_FreeSpace(self, sectors_required):                                # OK
+    def __Get_FreeSpace(self, sectors_required):                            # OK
 #        print >> sys.stderr, '*** __Get_FreeSpace', sectors_required
         chunks = []
 
