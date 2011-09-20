@@ -22,23 +22,12 @@ class File(BaseFile):
     classdocs
     '''
     def __init__(self, fs, path):
-        """
+        """Constructor
 
         @raise ParentDirectoryMissingError:
         @raise ResourceNotFoundError:
         @raise ResourceInvalidError:
         """
-        # Get file inode or raise exception
-        try:
-            self._inode = fs.Get_Inode(path)
-        except ResourceNotFoundError:
-            self._inode = None
-        else:
-            # If inode is a dir, raise error
-            if fs.db.Get_Mode(inode=self._inode) == stat.S_IFDIR:
-                raise ResourceInvalidError(path)
-
-        # Init base class
         BaseFile.__init__(self, fs, path)
 
         # File mode
@@ -65,24 +54,11 @@ class File(BaseFile):
         self._make()
 
 
-    def next(self):
-        data = self.readline()
-        if data:
-            return data
-        raise StopIteration
-
-
     def open(self, mode="r", **kwargs):
         self._CalcMode(mode)
 
         return self
 
-
-    @readable
-    def read(self, size= -1):
-        """
-        """
-        return self._read(size)
 
     @readable
     def readline(self, size= -1):

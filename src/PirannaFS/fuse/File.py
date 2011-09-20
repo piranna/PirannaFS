@@ -5,7 +5,10 @@ Created on 14/08/2010
 '''
 
 import sys
+
 import errno
+
+from stat import S_IFDIR
 
 import plugins
 
@@ -23,32 +26,20 @@ class File(BaseFile):
         '''
         Constructor
         '''
-        # Get file inode or raise exception
-        try:
-            self._inode = fs.Get_Inode(path[1:])
-        except ResourceNotFoundError:
-            self._make()
-        else:
-            # If inode is a dir, raise error
-            if fs.db.Get_Mode(inode=self._inode) == stat.S_IFDIR:
-                raise ResourceInvalidError(path)
-
-        # Init base class
-        BaseFile.__init__(self, fs, path)
+        BaseFile.__init__(self, fs, path[1:])
 
         # File mode
         self._CalcMode(mode)
 
 
     # Undocumented
-    '''
-    I have been not be able to found documentation for this functions,
-    but it seems they are required to work using a file class in fuse-python
-    since a patch done in 2008 to allow direct access to hardware instead
-    of data been cached in kernel space before been sended to user space.
-    Now you know the same as me, or probably more. If so, don't doubt in
-    tell me it :-)
-    '''
+
+    # I have been not be able to found documentation for this functions,
+    # but it seems they are required to work using a file class in fuse-python
+    # since a patch done in 2008 to allow direct access to hardware instead
+    # of data been cached in kernel space before been sended to user space.
+    # Now you know the same as me, or probably more. If so, don't doubt in
+    # tell me it :-)
     def direct_io(self, *args, **kwargs):
         print >> sys.stderr, '*** direct_io', args, kwargs
         return -errno.ENOSYS
@@ -91,17 +82,6 @@ class File(BaseFile):
         if size < 0:
             return -errno.EINVAL
 
-#        ceil = divmod(size, self.ll.sector_size)
-#        if ceil[1]:
-#            ceil = ceil[0] + 1
-#        else:
-#            ceil = ceil[0]
-#
-#        # Split chunks whose offset+size is greather that new file size
-#        for chunk in self.db.Get_Chunks_Truncate(file=self._inode, ceil=ceil):
-#            if self.__Split_Chunks(chunk):
-#                self._Free_Chunks(chunk)
-
         self._truncate(size)
 
         return 0
@@ -112,47 +92,13 @@ class File(BaseFile):
 #        return -errno.ENOSYS
 
 
-    @readable
     def read(self, length, offset):                                              # OK
-#        print >> sys.stderr, '*** read', length,offset
-
-        if not length:
-            return None
-
         if offset < 0:
             return -errno.EINVAL
 
-        # Get file size
-        size = self.db.Get_Size(inode=self.__inode)
+        self._offset = offset
 
-        # If offset required is greather or equals that file size
-        # return EOF
-        if offset >= size:
-            return None
-
-        # If length greather that remanent data
-        # adjust length
-        if length > size - offset:
-            length = size - offset
-
-        # Calc floor and ceil blocks required
-        floor = offset // self.__sector_size
-        ceil = (offset + length) // self.__sector_size
-
-        # Readjust offset to be read query offset instead of file offset
-        offset -= floor * self.__sector_size
-
-#        print >> sys.stderr, "floor",floor, "ceil",ceil, "offset",offset
-
-        # Read chunks
-        chunks = self._Get_Chunks(floor, ceil)
-#        print >> sys.stderr, chunks
-
-        readed = self.ll.Read(chunks)
-#        print >> sys.stderr, repr(readed)
-
-        plugins.send("File.read")
-        return readed[offset:offset + length]
+        return BaseFile.read(self, length)
 
 
 #    def release(self, flags):

@@ -4,14 +4,14 @@ Created on 02/04/2011
 @author: piranna
 '''
 
-from stat import S_IFREG
+from stat import S_IFDIR, S_IFREG
 
 from os import SEEK_END
 from os.path import split
 
 from DB import DictObj
 
-from fs.errors import ResourceNotFoundError
+from fs.errors import ResourceInvalidError, ResourceNotFoundError
 
 
 def readable(method):
@@ -41,6 +41,16 @@ class BaseFile(object):
         '''
         Constructor
         '''
+        # Get file inode or raise exception
+        try:
+            self._inode = fs.Get_Inode(path)
+        except ResourceNotFoundError:
+            self._inode = None
+        else:
+            # If inode is a dir, raise error
+            if fs.db.Get_Mode(inode=self._inode) == S_IFDIR:
+                raise ResourceInvalidError(path)
+
         self.fs = fs        # Filesystem
         self.db = fs.db     # Database
         self.ll = fs.ll     # Low level implementation
@@ -92,30 +102,6 @@ class BaseFile(object):
                      child_entry=self._inode)
 
 
-    def _read(self, size):
-        """
-        """
-        # Adjust read size
-        remanent = self.db.Get_Size(inode=self._inode) - self._offset
-        if remanent <= 0:
-            return ""
-        if 0 <= size < remanent:
-            remanent = size
-
-        # Calc floor and ceil blocks required
-        floor, ceil = self._Calc_Bounds(remanent)
-
-        # Read chunks
-        chunks = self._Get_Chunks(floor, ceil)
-        readed = self.ll.Read(chunks)
-
-        # Set read query offset and cursor
-        offset = self._offset % self.ll.sector_size
-        self._offset += remanent
-
-        return readed[offset:self._offset]
-
-
     @writeable
     def _truncate(self, size):
         ceil = (size - 1) // self.ll.sector_size
@@ -142,11 +128,45 @@ class BaseFile(object):
         self.close()
 
 
+    def next(self):
+        data = self.readline()
+        if data:
+            return data
+        raise StopIteration
+
+
     @readable
+    def read(self, size= -1):
+        """
+        """
+        if not size:
+            return ""
+
+        # Adjust read size
+        remanent = self.db.Get_Size(inode=self._inode) - self._offset
+        if remanent <= 0:
+            return ""
+        if 0 <= size < remanent:
+            remanent = size
+
+        # Calc floor and ceil blocks required
+        floor, ceil = self._Calc_Bounds(remanent)
+
+        # Read chunks
+        chunks = self._Get_Chunks(floor, ceil)
+        readed = self.ll.Read(chunks)
+
+        # Set read query offset and cursor
+        offset = self._offset % self.ll.sector_size
+        self._offset += remanent
+
+        return readed[offset:self._offset]
+
+
     def readlines(self, sizehint= -1):
         """
         """
-        return self._read(sizehint).splitlines(True)
+        return self.read(sizehint).splitlines(True)
 
 
     # Private
