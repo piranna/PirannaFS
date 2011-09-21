@@ -28,7 +28,7 @@ class BaseDir(object):
         path, self.name = split(path)
 
         try:
-            self.parent = fs.Get_Inode(path)
+            self.parent = fs._Get_Inode(path)
         except (ParentDirectoryMissingError, ResourceNotFoundError):
             self.parent = path
 

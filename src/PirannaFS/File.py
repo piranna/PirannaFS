@@ -43,7 +43,7 @@ class BaseFile(object):
         '''
         # Get file inode or raise exception
         try:
-            self._inode = fs.Get_Inode(path)
+            self._inode = fs._Get_Inode(path)
         except ResourceNotFoundError:
             self._inode = None
         else:
@@ -57,7 +57,7 @@ class BaseFile(object):
 
         self.path = path
         path, self.name = split(path)
-        self.parent = fs.Get_Inode(path)
+        self.parent = fs._Get_Inode(path)
 
         self._offset = 0
 
@@ -197,7 +197,7 @@ class BaseFile(object):
                                                           floor, ceil)
 
         # Raise error if there's not enought free space available
-        if sectors_required > self.fs.FreeSpace() // self.ll.sector_size:
+        if sectors_required > self.fs._FreeSpace() // self.ll.sector_size:
             raise StorageSpaceError
 ### DB ###
 

@@ -118,7 +118,7 @@ class File(BaseFile):
                                                           floor, ceil)
 
         # Raise error if there's not enought free space available
-        if sectors_required > self.fs.FreeSpace() // self.ll.sector_size:
+        if sectors_required > self.fs._FreeSpace() // self.ll.sector_size:
             return -errno.ENOSPC
 ### DB ###
 

@@ -40,7 +40,7 @@ class Dir(BaseDir):
         BaseDir.__init__(self, fs, path)
 
         try:
-            self._inode = fs.Get_Inode(path)
+            self._inode = fs._Get_Inode(path)
         except ResourceError:
             self._inode = None
         else:
@@ -178,7 +178,7 @@ class Dir(BaseDir):
                 path = os.path.join(self.path, dir_entry['name'])
 
                 try:
-                    inode = self.fs.Get_Inode(path)
+                    inode = self.fs._Get_Inode(path)
 
                 # Path doesn't exist, probably because it was removed by another
                 # thead while we were getting the entries in this one. Since in

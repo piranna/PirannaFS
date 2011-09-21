@@ -124,7 +124,7 @@ class Filesystem(BaseFS, base.FS):
         :raises ResourceInvalidError
         :raises ResourceNotFoundError:  If the path does not exist
         """
-        parent_dir, name = self.Path2InodeName(path)
+        parent_dir, name = self._Path2InodeName(path)
 
         inode = self.db.Get_Inode(parent_dir=parent_dir, name=name)
         if inode == None:
@@ -141,7 +141,7 @@ class Filesystem(BaseFS, base.FS):
         :rtype: bool
         """
         try:
-            inode = self.Get_Inode(path)
+            inode = self._Get_Inode(path)
         except (ParentDirectoryMissingError, ResourceInvalidError,
                 ResourceNotFoundError):
             return False
@@ -155,7 +155,7 @@ class Filesystem(BaseFS, base.FS):
         :rtype: bool
         """
         try:
-            inode = self.Get_Inode(path)
+            inode = self._Get_Inode(path)
         except (ParentDirectoryMissingError, ResourceInvalidError,
                 ResourceNotFoundError):
             return False
@@ -182,15 +182,15 @@ class Filesystem(BaseFS, base.FS):
             raise ResourceInvalidError(src)
 
         # Get parent dir inodes and names
-        parent_inode_old, name_old = self.Path2InodeName(src)
-        parent_inode_new, name_new = self.Path2InodeName(dst)
+        parent_inode_old, name_old = self._Path2InodeName(src)
+        parent_inode_new, name_new = self._Path2InodeName(dst)
 
         # If dst exist, unlink it before rename src link
         if self.db.Get_Inode(parent_dir=parent_inode_new, name=name_new) != None:
             # If old path type is different from new path type then raise error
-            type_old = self.db.Get_Mode(inode=self.Get_Inode(name_old,
+            type_old = self.db.Get_Mode(inode=self._Get_Inode(name_old,
                                                              parent_inode_old))
-            type_new = self.db.Get_Mode(inode=self.Get_Inode(name_new,
+            type_new = self.db.Get_Mode(inode=self._Get_Inode(name_new,
                                                              parent_inode_new))
 
             if type_old != type_new:

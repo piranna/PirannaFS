@@ -30,18 +30,18 @@ class BaseFS(object):
         self.__sector_size = sector_size
 
 
-    def FreeSpace(self):
+    def _FreeSpace(self):
         if self._freeSpace == None:
             self._freeSpace = self.db.Get_FreeSpace()*self.__sector_size
 
         return self._freeSpace
 
 
-    def Get_Inode(self, path, inode=0):                                     # OK
+    def _Get_Inode(self, path, inode=0):                                     # OK
         '''
         Get the inode of a path
         '''
-#        print >> sys.stderr, '*** Get_Inode', repr(path),inode
+#        print >> sys.stderr, '*** _Get_Inode', repr(path),inode
 
         # If there are path elements
         # get their inodes
@@ -63,7 +63,7 @@ class BaseFS(object):
             # If the dir entry is a directory
             # get child inode
             if self.db.Get_Mode(inode=inode) == stat.S_IFDIR:
-                return self.Get_Inode(path, inode)
+                return self._Get_Inode(path, inode)
 
             # If is not a directory and is not the last path element
             # return error
@@ -77,14 +77,14 @@ class BaseFS(object):
         # so return computed inode
         return inode
 
-    def Path2InodeName(self, path):                                         # OK
+    def _Path2InodeName(self, path):                                         # OK
         '''
         Get the parent dir inode and the name of a dir entry defined by path
         '''
-#        print >> sys.stderr, '*** Path2InodeName', repr(path)
+#        print >> sys.stderr, '*** _Path2InodeName', repr(path)
         path, name = split(path)
         try:
-            inode = self.Get_Inode(path)
+            inode = self._Get_Inode(path)
         except ResourceNotFoundError:
             raise ParentDirectoryMissingError(path)
 

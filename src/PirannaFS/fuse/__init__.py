@@ -129,7 +129,7 @@ class FileSystem(FS.FileSystem, fuse.Fuse):
 #        Set the access and modification time stamps of PATH
 #        '''
 #        print >> sys.stderr, '*** utimens', path,ts_acc,ts_mod
-#        inode = self.Get_Inode(path[1:])
+#        inode = self._Get_Inode(path[1:])
 #        if inode < 0:
 #            return inode
 #

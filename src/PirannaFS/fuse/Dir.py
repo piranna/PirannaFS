@@ -29,7 +29,7 @@ class Dir(BaseDir):
         BaseDir.__init__(self, fs, path)
 
         try:
-            self._inode = fs.Get_Inode(path[1:])
+            self._inode = fs._Get_Inode(path[1:])
         except ResourceError:
             self._inode = None
         else:
