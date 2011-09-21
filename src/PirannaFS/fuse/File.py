@@ -78,9 +78,9 @@ class File(BaseFile):
         return 0
 
 
-#    def lock(self, cmd,owner, **kw):
-#        print >> sys.stderr, '*** lock', cmd,owner
-#        return -errno.ENOSYS
+    def lock(self, cmd, owner, **kw):
+        print >> sys.stderr, '*** lock', cmd, owner
+        return -errno.ENOSYS
 
 
     def open(self):

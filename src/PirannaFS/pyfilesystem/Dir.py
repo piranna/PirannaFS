@@ -49,6 +49,19 @@ class Dir(BaseDir):
                 raise ResourceInvalidError(path)
 
 
+#    def copy(self):
+#        pass
+
+
+    def isempty(self):
+        """Check if a directory is empty (contains no files or sub-directories)
+
+        @rtype: bool
+        """
+#        print "BaseDir.isempty"
+        return self.db.readdir(parent_dir=self._inode, limit=1)
+
+
     def ilist(self, wildcard=None,
               full=False, absolute=False, dirs_only=False, files_only=False):
         """Generator yielding the files and directories under a given path.
@@ -61,6 +74,8 @@ class Dir(BaseDir):
         return self.fs._listdir_helper(self.path, self._list(), wildcard,
                                        full, absolute, dirs_only, files_only)
 
+#    def ilistinfo(self):
+#        pass
 
     def list(self, wildcard=None,
              full=False, absolute=False, dirs_only=False, files_only=False):
@@ -91,6 +106,9 @@ class Dir(BaseDir):
         :raises `fs.errors.ResourceNotFoundError`: if the path is not found
         """
         return list(self.ilist(wildcard, full, absolute, dirs_only, files_only))
+
+#    def listinfo(self):
+#        pass
 
 
     def make(self, recursive=False, allow_recreate=False):
@@ -131,6 +149,12 @@ class Dir(BaseDir):
                      child_entry=self._inode)
 
         plugins.send("Dir.make.end")
+
+#    def makeopen(self):
+#        pass
+#
+#    def open(self):
+#        pass
 
 
     def remove(self, recursive=False, force=False):
@@ -190,3 +214,13 @@ class Dir(BaseDir):
                 pass
 
         plugins.send("Dir.remove")
+
+
+#    def walk(self):
+#        pass
+#
+#    def walkdirs(self):
+#        pass
+#
+#    def walkfiles(self):
+#        pass

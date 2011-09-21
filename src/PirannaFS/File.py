@@ -62,7 +62,9 @@ class BaseFile(object):
         self._offset = 0
 
 
-        # Evented
+    #
+    # Evented
+    #
 
     def _make(self):
         self._inode = self.db.mknod(type=S_IFREG)
@@ -92,7 +94,9 @@ class BaseFile(object):
         self._Set_Size(size)
 
 
-    # File-like
+    #
+    # File-like interface
+    #
 
     def __del__(self):
         self.close()

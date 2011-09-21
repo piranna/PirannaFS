@@ -33,15 +33,6 @@ class BaseDir(object):
             self.parent = path
 
 
-    def isempty(self):
-        """Check if a directory is empty (contains no files or sub-directories)
-
-        @rtype: bool
-        """
-#        print "BaseDir.isempty"
-        return self.db.readdir(parent_dir=self._inode, limit=1)
-
-
     def _list(self):
         """Lists the files and directories under a given path.
         The directory contents are returned as a list of unicode paths.

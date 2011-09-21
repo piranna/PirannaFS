@@ -72,7 +72,9 @@ class File(BaseFile):
         return 0
 
 
-    # File-like
+    #
+    # File-like interface
+    #
 
     def truncate(self, size=0):
         size += self._offset

@@ -40,15 +40,13 @@ class Dir(BaseDir):
 
     # Overloaded
 
-    # inits
-#    def opendir(self):
-#        print >> sys.stderr, '*** opendir'
+#    def fsyncdir(self):
+#        print >> sys.stderr, '*** fsyncdir'
 #        return -errno.ENOSYS
 
 
-    # proxied
-#    def fsyncdir(self):
-#        print >> sys.stderr, '*** fsyncdir'
+#    def opendir(self):
+#        print >> sys.stderr, '*** opendir'
 #        return -errno.ENOSYS
 
 
