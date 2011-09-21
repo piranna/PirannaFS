@@ -50,30 +50,30 @@ class File(BaseFile):
     # Overloaded
 
     # inits
-#    def create(self):
-#        print >> sys.stderr, '*** create'
-#        return -errno.ENOSYS
+    def create(self):
+        print >> sys.stderr, '*** create'
+        return -errno.ENOSYS
 
 
-#    def open(self):
-#        print >> sys.stderr, '*** open'
-#        return -errno.ENOSYS
+    def open(self):
+        print >> sys.stderr, '*** open'
+        return -errno.ENOSYS
 
 
-#    # proxied
-#    def fgetattr(self):
-#        print >> sys.stderr, '*** fgetattr'
-#        return -errno.ENOSYS
-#
-#
-#    def flush(self):
-#        print >> sys.stderr, '*** flush'
-#        return -errno.ENOSYS
-#
-#
-#    def fsync(self, isSyncFile):
-#        print >> sys.stderr, '*** fsync', isSyncFile
-#        return -errno.ENOSYS
+    # proxied
+    def fgetattr(self):
+        print >> sys.stderr, '*** fgetattr'
+        return -errno.ENOSYS
+
+
+    def flush(self):
+        print >> sys.stderr, '*** flush'
+        return -errno.ENOSYS
+
+
+    def fsync(self, isSyncFile):
+        print >> sys.stderr, '*** fsync', isSyncFile
+        return -errno.ENOSYS
 
 
     def ftruncate(self, size):
@@ -99,9 +99,9 @@ class File(BaseFile):
         return BaseFile.read(self, length)
 
 
-#    def release(self, flags):
-#        print >> sys.stderr, '*** release', flags
-#        return -errno.ENOSYS
+    def release(self, flags):
+        print >> sys.stderr, '*** release', flags
+        return -errno.ENOSYS
 
 
     def write(self, data, offset):                                          # OK
@@ -128,35 +128,3 @@ class File(BaseFile):
 
         # Return size of the written data
         return size
-
-
-    # Don't show
-    def _Free_Chunks(self, chunk):
-#        plugins.send("File.ftruncate", chunk=chunk)
-        self.db.Free_Chunks(chunk)
-#        self.__Compact_FreeSpace()
-
-
-    # Hide
-    def __Get_FreeSpace(self, sectors_required):                            # OK
-#        print >> sys.stderr, '*** __Get_FreeSpace', sectors_required
-        chunks = []
-
-        while sectors_required > 0:
-            chunk = self.db.Get_FreeSpace(sectors_required, chunks) * self.__sector_size
-
-            # Not chunks available
-            if not chunk:
-                break
-
-            sectors_required -= chunk.length
-            chunks.append(chunk)
-
-        return chunks, sectors_required
-
-
-    def __Split_Chunks(self, chunk):
-        if self.db.Split_Chunks(ChunkConverted(chunk)):
-            plugins.send("File.__Split_Chunks", chunk=chunk)
-
-            return True
