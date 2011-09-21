@@ -110,7 +110,7 @@ class File(BaseFile):
         self._offset = offset
 
         size = len(data)
-        floor, ceil = self._Calc_Bounds(size)
+        floor, ceil = self._CalcBounds(size)
         sectors_required = ceil - floor
 
         ### DB ###
