@@ -98,15 +98,6 @@ class Filesystem(BaseFS, base.FS):
 #        plugins.send("FS.__init__", db=self.db, ll=self.ll)
 
 
-#    def listdir(self, path='./', wildcard=None,
-#             full=False, absolute=False, dirs_only=False, files_only=False):
-#        result = plugins.send("FS.dir.list", path)
-#        print "listdir", result
-#        if result:
-#            return self.fs._listdir_helper(self.path, result[0][0], wildcard,
-#                                           full, absolute, dirs_only, files_only)
-#        return base.FS.listdir(self)
-
     #
     # Essential methods
     #
