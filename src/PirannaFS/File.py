@@ -37,8 +37,6 @@ class BaseFile(object):
     classdocs
     '''
 
-    # Common
-
     def __init__(self, fs, path):
         '''
         Constructor
@@ -61,38 +59,6 @@ class BaseFile(object):
         path, self.name = split(path)
         self.parent = fs.Get_Inode(path)
 
-        self._offset = 0
-
-
-    def getsize(self):
-        """Returns the size (in bytes) of a resource.
-
-        :rtype: integer
-        :returns: the size of the file
-        """
-        if self._inode != None:
-            return self.db.Get_Size(inode=self._inode)
-        return 0
-
-    isempty = getsize
-
-
-    def remove(self):
-        """Remove a file from the filesystem.
-
-        :raises ParentDirectoryMissingError: if a containing directory is missing and recursive is False
-        :raises ResourceInvalidError:        if the path is a directory or a parent path is an file
-        :raises ResourceNotFoundError:       if the path is not found
-        """
-#        # Get inode and name from path
-
-        if self._inode == None:
-            raise ResourceNotFoundError(self.path)
-
-        # Unlink dir entry
-        self.db.unlink(parent_dir=self.parent, name=self.name)
-
-        self._inode = None
         self._offset = 0
 
 

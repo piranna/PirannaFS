@@ -49,18 +49,11 @@ class File(BaseFile):
 
     # Overloaded
 
-    # inits
     def create(self):
         print >> sys.stderr, '*** create'
         return -errno.ENOSYS
 
 
-    def open(self):
-        print >> sys.stderr, '*** open'
-        return -errno.ENOSYS
-
-
-    # proxied
     def fgetattr(self):
         print >> sys.stderr, '*** fgetattr'
         return -errno.ENOSYS
@@ -88,6 +81,11 @@ class File(BaseFile):
 #    def lock(self, cmd,owner, **kw):
 #        print >> sys.stderr, '*** lock', cmd,owner
 #        return -errno.ENOSYS
+
+
+    def open(self):
+        print >> sys.stderr, '*** open'
+        return -errno.ENOSYS
 
 
     def read(self, length, offset):                                              # OK
