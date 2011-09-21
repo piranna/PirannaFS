@@ -113,14 +113,14 @@ class File(BaseFile):
         floor, ceil = self._Calc_Bounds(size)
         sectors_required = ceil - floor
 
-### DB ###
+        ### DB ###
         sectors_required, chunks = self._GetChunksWritten(sectors_required,
                                                           floor, ceil)
 
         # Raise error if there's not enought free space available
         if sectors_required > self.fs._FreeSpace() // self.ll.sector_size:
             return -errno.ENOSPC
-### DB ###
+        ### DB ###
 
         self._write(data, size, chunks, floor)
 

@@ -4,7 +4,10 @@ Created on 14/08/2010
 @author: piranna
 '''
 
+from os import SEEK_SET, SEEK_CUR, SEEK_END
+
 from fs.errors import ResourceInvalidError, ResourceNotFoundError
+from fs.errors import StorageSpaceError
 
 from ..File import BaseFile
 
@@ -76,6 +79,19 @@ class File(BaseFile):
     # File-like interface
     #
 
+    def seek(self, offset, whence=SEEK_SET):
+        """
+        """
+        # Set whence
+        if   whence == SEEK_SET: whence = 0
+        elif whence == SEEK_CUR: whence = self._offset
+        elif whence == SEEK_END: whence = self.db.Get_Size(inode=self._inode)
+        else:                    raise ResourceInvalidError(self.path)
+
+        # Readjust offset
+        self._offset = whence + offset
+
+
     def truncate(self, size=0):
         size += self._offset
 
@@ -83,3 +99,28 @@ class File(BaseFile):
             raise ResourceInvalidError(msg="truncate under zero")
 
         self._truncate(size)
+
+
+    def write(self, data):
+        if not data: return
+
+        size = len(data)
+        floor, ceil = self._Calc_Bounds(size)
+        sectors_required = ceil - floor
+
+        ### DB ###
+        sectors_required, chunks = self._GetChunksWritten(sectors_required,
+                                                          floor, ceil)
+
+        # Raise error if there's not enought free space available
+        if sectors_required > self.fs._FreeSpace() // self.ll.sector_size:
+            raise StorageSpaceError
+        ### DB ###
+
+        self._write(data, size, chunks, floor)
+
+    def writelines(self, sequence):
+        data = ""
+        for line in sequence:
+            data += line
+        self.write(data)

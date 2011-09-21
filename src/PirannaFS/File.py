@@ -6,13 +6,12 @@ Created on 02/04/2011
 
 from stat import S_IFDIR, S_IFREG
 
-from os import SEEK_SET, SEEK_CUR, SEEK_END
+from os import SEEK_END
 from os.path import split
 
 from DB import ChunkConverted, DictObj
 
 from fs.errors import ResourceInvalidError, ResourceNotFoundError
-from fs.errors import StorageSpaceError
 
 
 def readable(method):
@@ -165,49 +164,12 @@ class BaseFile(object):
         return self.read(sizehint).splitlines(True)
 
 
-    def seek(self, offset, whence=SEEK_SET):
-        """
-        """
-        # Set whence
-        if   whence == SEEK_SET: whence = 0
-        elif whence == SEEK_CUR: whence = self._offset
-        elif whence == SEEK_END: whence = self.db.Get_Size(inode=self._inode)
-        else:                    raise ResourceInvalidError(self.path)
-
-        # Readjust offset
-        self._offset = whence + offset
-
     def tell(self):
         """Return the current cursor position offset
 
         @return: integer
         """
         return self._offset
-
-
-    def write(self, data):
-        if not data: return
-
-        size = len(data)
-        floor, ceil = self._Calc_Bounds(size)
-        sectors_required = ceil - floor
-
-### DB ###
-        sectors_required, chunks = self._GetChunksWritten(sectors_required,
-                                                          floor, ceil)
-
-        # Raise error if there's not enought free space available
-        if sectors_required > self.fs._FreeSpace() // self.ll.sector_size:
-            raise StorageSpaceError
-### DB ###
-
-        self._write(data, size, chunks, floor)
-
-    def writelines(self, sequence):
-        data = ""
-        for line in sequence:
-            data += line
-        self.write(data)
 
 
     def __enter__(self):
