@@ -91,12 +91,12 @@ class BaseFile(object):
         if not data: return
 
         size = len(data)
-        floor, ceil = self._CalcBounds(size)
+        floor, ceil = self.__CalcBounds(size)
         sectors_required = ceil - floor
 
         ### DB ###
-        sectors_required, chunks = self._GetChunksWritten(sectors_required,
-                                                          floor, ceil)
+        sectors_required, chunks = self.__GetChunksWritten(sectors_required,
+                                                           floor, ceil)
 
         # Raise error if there's not enought free space available
         if sectors_required > self.fs._FreeSpace() // self.ll.sector_size:
@@ -209,7 +209,7 @@ class BaseFile(object):
             return ""
 
         # Read chunks
-        chunks = self._GetChunks(floor, ceil)
+        chunks = self.__GetChunks(floor, ceil)
         readed = self.ll.Read(chunks)
 
         return self.__readPost(readed, remanent)
@@ -224,7 +224,7 @@ class BaseFile(object):
         readed = ""
         while remanent > 0:
             # Read chunk
-            chunks = self._GetChunks(floor, floor)
+            chunks = self.__GetChunks(floor, floor)
             data = self.ll.Read(chunks)
 
             # Check if we have get end of line
@@ -279,7 +279,9 @@ class BaseFile(object):
 #        return unicode(self.__str__())
 
 
+    #
     # Protected
+    #
 
     def _CalcMode(self, mode):
         # Based on code from filelike.py
@@ -333,13 +335,17 @@ class BaseFile(object):
         self._mode = frozenset(self._mode)
 
 
-    def _CalcBounds(self, size):
+    #
+    # Private
+    #
+
+    def __CalcBounds(self, size):
         floor = self._offset // self.ll.sector_size
         ceil = (self._offset + size - 1) // self.ll.sector_size
 
         return floor, ceil
 
-    def _GetChunks(self, floor, ceil):                             # OK
+    def __GetChunks(self, floor, ceil):                             # OK
         '''
         Get sectors and use empty entries for not maped chunks (all zeroes)
         '''
@@ -389,9 +395,9 @@ class BaseFile(object):
         # Return list of chunks
         return chunks
 
-    def _GetChunksWritten(self, sectors_required, floor, ceil):
+    def __GetChunksWritten(self, sectors_required, floor, ceil):
         """Get written chunks of the file"""
-        chunks = self._GetChunks(floor, ceil)
+        chunks = self.__GetChunks(floor, ceil)
 
         # Check if there's enought free space available
         for chunk in chunks:
@@ -414,7 +420,7 @@ class BaseFile(object):
             remanent = size
 
         # Calc floor and ceil blocks required
-        floor, ceil = self._CalcBounds(remanent)
+        floor, ceil = self.__CalcBounds(remanent)
 
         return floor, ceil, remanent
 
