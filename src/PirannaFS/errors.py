@@ -32,6 +32,16 @@ class FSError(Exception):
         return (self.__class__, (), self.__dict__.copy(),)
 
 
+class OperationFailedError(FSError):
+    """Base exception class for errors associated with a specific operation."""
+    default_message = "Unable to %(opname)s: unspecified error [%(errno)s - %(details)s]"
+
+    def __init__(self, opname="", path=None, **kwds):
+        self.opname = opname
+        self.path = path
+        self.errno = getattr(kwds.get("details", None), "errno", None)
+        super(OperationFailedError, self).__init__(**kwds)
+
 class ResourceError(FSError):
     """Base exception class for error associated with a specific resource."""
     default_message = "Unspecified resource error: %(path)s"
@@ -53,3 +63,8 @@ class ResourceInvalidError(ResourceError):
 class ResourceNotFoundError(ResourceError):
     """Exception raised when a required resource is not found."""
     default_message = "Resource not found: %(path)s"
+
+
+class StorageSpace(OperationFailedError):
+    """Exception raised when operations encounter storage space trouble."""
+    default_message = "Unable to %(opname)s: insufficient storage space"

@@ -12,6 +12,7 @@ from os.path import split
 from DB import ChunkConverted, DictObj
 
 from errors import ResourceInvalidError, ResourceNotFoundError
+from errors import StorageSpace
 
 
 def readable(method):
@@ -87,7 +88,22 @@ class BaseFile(object):
         self.__Set_Size(size)
 
     @writeable
-    def _write(self, data, size, chunks, floor):
+    def _write(self, data):
+        if not data: return
+
+        size = len(data)
+        floor, ceil = self._CalcBounds(size)
+        sectors_required = ceil - floor
+
+        ### DB ###
+        sectors_required, chunks = self._GetChunksWritten(sectors_required,
+                                                          floor, ceil)
+
+        # Raise error if there's not enought free space available
+        if sectors_required > self.fs._FreeSpace() // self.ll.sector_size:
+            raise StorageSpace
+        ### DB ###
+
         file_size = self._offset + size
 
         # If there is an offset in the first sector

@@ -12,6 +12,8 @@ import plugins
 
 from DB import DictObj, ChunkConverted
 
+from PirannaFS.errors import StorageSpace
+
 from ..File import BaseFile
 
 
@@ -103,26 +105,14 @@ class File(BaseFile):
 
 
     def write(self, data, offset):                                          # OK
-        if not data: return
-
         if offset < 0:
             return -errno.EINVAL
         self._offset = offset
 
-        size = len(data)
-        floor, ceil = self._CalcBounds(size)
-        sectors_required = ceil - floor
-
-        ### DB ###
-        sectors_required, chunks = self._GetChunksWritten(sectors_required,
-                                                          floor, ceil)
-
-        # Raise error if there's not enought free space available
-        if sectors_required > self.fs._FreeSpace() // self.ll.sector_size:
+        try:
+            self._write(data)
+        except StorageSpace, e:
             return -errno.ENOSPC
-        ### DB ###
-
-        self._write(data, size, chunks, floor)
 
         # Return size of the written data
-        return size
+        return len(data)

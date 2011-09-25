@@ -11,6 +11,7 @@ from fs.errors import StorageSpaceError
 
 from PirannaFS.errors import ResourceInvalidError as ResourceInvalid
 from PirannaFS.errors import ResourceNotFoundError as ResourceNotFound
+from PirannaFS.errors import StorageSpace
 
 from ..File import BaseFile
 
@@ -111,22 +112,10 @@ class File(BaseFile):
 
 
     def write(self, data):
-        if not data: return
-
-        size = len(data)
-        floor, ceil = self._CalcBounds(size)
-        sectors_required = ceil - floor
-
-        ### DB ###
-        sectors_required, chunks = self._GetChunksWritten(sectors_required,
-                                                          floor, ceil)
-
-        # Raise error if there's not enought free space available
-        if sectors_required > self.fs._FreeSpace() // self.ll.sector_size:
-            raise StorageSpaceError
-        ### DB ###
-
-        self._write(data, size, chunks, floor)
+        try:
+            self._write(data)
+        except StorageSpace, e:
+            raise StorageSpaceError(e)
 
     def writelines(self, sequence):
         data = ""
