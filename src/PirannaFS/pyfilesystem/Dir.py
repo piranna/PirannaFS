@@ -10,8 +10,7 @@ import stat
 from fs.errors import DestinationExistsError, DirectoryNotEmptyError
 from fs.errors import ResourceInvalidError, ResourceNotFoundError
 
-from PirannaFS.errors import ResourceError
-from PirannaFS.errors import ResourceNotFoundError as ResourceNotFound
+from PirannaFS.errors import ResourceError, ResourceNotFound
 
 import plugins
 

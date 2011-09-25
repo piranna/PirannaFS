@@ -9,7 +9,7 @@ import stat
 
 from os.path import split
 
-from errors import ParentDirectoryMissingError, ResourceInvalidError, ResourceNotFoundError
+from errors import ParentDirectoryMissing, ResourceInvalid, ResourceNotFound
 
 from DB import DB
 from LL import LL
@@ -54,9 +54,9 @@ class BaseFS(object):
             # or to one of it's parents
             if inode == None:
                 if path:
-                    raise ParentDirectoryMissingError(parent)
+                    raise ParentDirectoryMissing(parent)
                 else:
-                    raise ResourceNotFoundError(parent)
+                    raise ResourceNotFound(parent)
 
             # If the dir entry is a directory
             # get child inode
@@ -66,7 +66,7 @@ class BaseFS(object):
             # If is not a directory and is not the last path element
             # return error
             if path:
-                raise ResourceInvalidError(path)
+                raise ResourceInvalid(path)
 
         # Path is empty, so
         # * it's the root path
@@ -83,7 +83,7 @@ class BaseFS(object):
         path, name = split(path)
         try:
             inode = self._Get_Inode(path)
-        except ResourceNotFoundError:
-            raise ParentDirectoryMissingError(path)
+        except ResourceNotFound:
+            raise ParentDirectoryMissing(path)
 
         return inode, name

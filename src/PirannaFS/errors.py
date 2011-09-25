@@ -52,15 +52,15 @@ class ResourceError(FSError):
         super(ResourceError, self).__init__(**kwds)
 
 
-class ParentDirectoryMissingError(ResourceError):
+class ParentDirectoryMissing(ResourceError):
     """Exception raised when a parent directory is missing."""
     default_message = "Parent directory is missing: %(path)s"
 
-class ResourceInvalidError(ResourceError):
+class ResourceInvalid(ResourceError):
     """Exception raised when a resource is the wrong type."""
     default_message = "Resource is invalid: %(path)s"
 
-class ResourceNotFoundError(ResourceError):
+class ResourceNotFound(ResourceError):
     """Exception raised when a required resource is not found."""
     default_message = "Resource not found: %(path)s"
 

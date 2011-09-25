@@ -11,9 +11,8 @@ import stat
 from fs import base
 from fs.errors import ParentDirectoryMissingError, ResourceNotFoundError
 
-from PirannaFS.errors import ParentDirectoryMissingError as ParentDirectoryMissing
-from PirannaFS.errors import ResourceInvalidError
-from PirannaFS.errors import ResourceNotFoundError as ResourceNotFound
+from PirannaFS.errors import ParentDirectoryMissing
+from PirannaFS.errors import ResourceInvalid, ResourceNotFound
 
 import Dir
 import File
@@ -137,7 +136,7 @@ class Filesystem(BaseFS, base.FS):
         """
         try:
             inode = self._Get_Inode(path)
-        except (ParentDirectoryMissing, ResourceInvalidError,
+        except (ParentDirectoryMissing, ResourceInvalid,
                 ResourceNotFound):
             return False
         return self.db.Get_Mode(inode=inode) == stat.S_IFDIR
@@ -151,7 +150,7 @@ class Filesystem(BaseFS, base.FS):
         """
         try:
             inode = self._Get_Inode(path)
-        except (ParentDirectoryMissing, ResourceInvalidError,
+        except (ParentDirectoryMissing, ResourceInvalid,
                 ResourceNotFound):
             return False
         return self.db.Get_Mode(inode=inode) != stat.S_IFDIR

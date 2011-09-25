@@ -35,7 +35,7 @@ class Dir(BaseDir):
         else:
             # If inode is not a dir, raise error
             if fs.db.Get_Mode(inode=self._inode) != stat.S_IFDIR:
-                raise ResourceInvalidError(path)
+                raise ResourceInvalid(path)
 
 
     # Overloaded

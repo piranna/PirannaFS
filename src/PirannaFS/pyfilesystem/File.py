@@ -9,8 +9,7 @@ from os import SEEK_SET, SEEK_CUR, SEEK_END
 from fs.errors import ResourceInvalidError, ResourceNotFoundError
 from fs.errors import StorageSpaceError
 
-from PirannaFS.errors import ResourceInvalidError as ResourceInvalid
-from PirannaFS.errors import ResourceNotFoundError as ResourceNotFound
+from PirannaFS.errors import ResourceInvalid, ResourceNotFound
 from PirannaFS.errors import StorageSpace
 
 from ..File import BaseFile

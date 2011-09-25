@@ -11,8 +11,7 @@ from os.path import split
 
 from DB import ChunkConverted, DictObj
 
-from errors import ResourceInvalidError, ResourceNotFoundError
-from errors import StorageSpace
+from errors import ResourceInvalid, ResourceNotFound, StorageSpace
 
 
 def readable(method):
@@ -44,12 +43,12 @@ class BaseFile(object):
         # Get file inode or raise exception
         try:
             self._inode = fs._Get_Inode(path)
-        except ResourceNotFoundError:
+        except ResourceNotFound:
             self._inode = None
         else:
             # If inode is a dir, raise error
             if fs.db.Get_Mode(inode=self._inode) == S_IFDIR:
-                raise ResourceInvalidError(path)
+                raise ResourceInvalid(path)
 
         self.fs = fs        # Filesystem
         self.db = fs.db     # Database
@@ -298,7 +297,7 @@ class BaseFile(object):
         if 'r' in mode:
             # Action
             if self._inode == None:
-                raise ResourceNotFoundError(self.path)
+                raise ResourceNotFound(self.path)
 
             # Set mode
             self._mode.add('r')

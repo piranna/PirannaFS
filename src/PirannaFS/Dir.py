@@ -6,7 +6,7 @@ Created on 02/04/2011
 
 from os.path import split
 
-from errors import ParentDirectoryMissingError, ResourceNotFoundError
+from errors import ParentDirectoryMissing, ResourceNotFound
 
 import plugins
 
@@ -29,7 +29,7 @@ class BaseDir(object):
 
         try:
             self.parent = fs._Get_Inode(path)
-        except (ParentDirectoryMissingError, ResourceNotFoundError):
+        except (ParentDirectoryMissing, ResourceNotFound):
             self.parent = path
 
 
@@ -39,10 +39,10 @@ class BaseDir(object):
 
         @rtype: iterable of paths
 
-        @raise ResourceNotFoundError: directory doesn't exists
+        @raise ResourceNotFound: directory doesn't exists
         """
         if self._inode == None:
-            raise ResourceNotFoundError(self.path)
+            raise ResourceNotFound(self.path)
 
         plugins.send("Dir.list begin")
 
