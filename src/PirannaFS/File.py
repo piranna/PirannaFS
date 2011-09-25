@@ -11,7 +11,7 @@ from os.path import split
 
 from DB import ChunkConverted, DictObj
 
-from fs.errors import ResourceInvalidError, ResourceNotFoundError
+from errors import ResourceInvalidError, ResourceNotFoundError
 
 
 def readable(method):

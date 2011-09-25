@@ -9,9 +9,7 @@ import stat
 
 from os.path import split
 
-# Errors are imported from PyFilesystem doing it system dependent
-# maybe in the future i use my own implementation
-from fs.errors import *
+from errors import ParentDirectoryMissingError, ResourceInvalidError, ResourceNotFoundError
 
 from DB import DB
 from LL import LL

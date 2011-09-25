@@ -8,8 +8,10 @@ import os
 import stat
 
 from fs.errors import DestinationExistsError, DirectoryNotEmptyError
-from fs.errors import ParentDirectoryMissingError
-from fs.errors import ResourceError, ResourceInvalidError, ResourceNotFoundError
+from fs.errors import ResourceInvalidError, ResourceNotFoundError
+
+from PirannaFS.errors import ResourceError
+from PirannaFS.errors import ResourceNotFoundError as ResourceNotFound
 
 import plugins
 
@@ -71,8 +73,8 @@ class Dir(BaseDir):
         this may be more efficient than calling :py:meth:`fs.base.FS.listdir`
         and iterating over the resulting list.
         """
-        return self.fs._listdir_helper(self.path, self._list(), wildcard,
-                                       full, absolute, dirs_only, files_only)
+        return self.fs._listdir_helper(self.path, self._list(), wildcard, full,
+                                       absolute, dirs_only, files_only)
 
 #    def ilistinfo(self):
 #        pass
@@ -105,7 +107,10 @@ class Dir(BaseDir):
             a directory
         :raises `fs.errors.ResourceNotFoundError`: if the path is not found
         """
-        return list(self.ilist(wildcard, full, absolute, dirs_only, files_only))
+        try:
+            return list(self.ilist(wildcard, full, absolute, dirs_only, files_only))
+        except ResourceNotFound, e:
+            raise ResourceNotFoundError(e)
 
 #    def listinfo(self):
 #        pass
@@ -183,7 +188,7 @@ class Dir(BaseDir):
                 # Path doesn't exist, probably because it was removed by another
                 # thead while we were getting the entries in this one. Since in
                 # any case we are removing it, we can ignore the exception
-                except ResourceNotFoundError:
+                except ResourceNotFound:
                     pass
 
                 else:

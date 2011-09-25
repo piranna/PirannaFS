@@ -9,7 +9,11 @@ import os
 import stat
 
 from fs import base
-from fs.errors import *
+from fs.errors import ParentDirectoryMissingError, ResourceNotFoundError
+
+from PirannaFS.errors import ParentDirectoryMissingError as ParentDirectoryMissing
+from PirannaFS.errors import ResourceInvalidError
+from PirannaFS.errors import ResourceNotFoundError as ResourceNotFound
 
 import Dir
 import File
@@ -133,8 +137,8 @@ class Filesystem(BaseFS, base.FS):
         """
         try:
             inode = self._Get_Inode(path)
-        except (ParentDirectoryMissingError, ResourceInvalidError,
-                ResourceNotFoundError):
+        except (ParentDirectoryMissing, ResourceInvalidError,
+                ResourceNotFound):
             return False
         return self.db.Get_Mode(inode=inode) == stat.S_IFDIR
 
@@ -147,8 +151,8 @@ class Filesystem(BaseFS, base.FS):
         """
         try:
             inode = self._Get_Inode(path)
-        except (ParentDirectoryMissingError, ResourceInvalidError,
-                ResourceNotFoundError):
+        except (ParentDirectoryMissing, ResourceInvalidError,
+                ResourceNotFound):
             return False
         return self.db.Get_Mode(inode=inode) != stat.S_IFDIR
 
@@ -173,8 +177,11 @@ class Filesystem(BaseFS, base.FS):
             raise ResourceInvalidError(src)
 
         # Get parent dir inodes and names
-        parent_inode_old, name_old = self._Path2InodeName(src)
-        parent_inode_new, name_new = self._Path2InodeName(dst)
+        try:
+            parent_inode_old, name_old = self._Path2InodeName(src)
+            parent_inode_new, name_new = self._Path2InodeName(dst)
+        except ParentDirectoryMissing, e:
+            raise ParentDirectoryMissingError(e)
 
         # If dst exist, unlink it before rename src link
         if self.db.Get_Inode(parent_dir=parent_inode_new, name=name_new) != None:

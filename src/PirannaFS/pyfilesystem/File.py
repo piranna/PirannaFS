@@ -9,6 +9,9 @@ from os import SEEK_SET, SEEK_CUR, SEEK_END
 from fs.errors import ResourceInvalidError, ResourceNotFoundError
 from fs.errors import StorageSpaceError
 
+from PirannaFS.errors import ResourceInvalidError as ResourceInvalid
+from PirannaFS.errors import ResourceNotFoundError as ResourceNotFound
+
 from ..File import BaseFile
 
 
@@ -23,7 +26,10 @@ class File(BaseFile):
         @raise ResourceNotFoundError:
         @raise ResourceInvalidError:
         """
-        BaseFile.__init__(self, fs, path)
+        try:
+            BaseFile.__init__(self, fs, path)
+        except ResourceInvalid, e:
+            raise ResourceInvalidError(e)
 
         # File mode
         self._mode = frozenset()
@@ -39,7 +45,10 @@ class File(BaseFile):
 #        pass
 
     def open(self, mode="r", **kwargs):
-        self._CalcMode(mode)
+        try:
+            self._CalcMode(mode)
+        except ResourceNotFound, e:
+            raise ResourceNotFoundError(e)
 
         return self
 

@@ -6,7 +6,7 @@ Created on 02/04/2011
 
 from os.path import split
 
-from fs.errors import ParentDirectoryMissingError, ResourceNotFoundError
+from errors import ParentDirectoryMissingError, ResourceNotFoundError
 
 import plugins
 
