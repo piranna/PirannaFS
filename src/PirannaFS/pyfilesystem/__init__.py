@@ -23,35 +23,33 @@ from .. import BaseFS
 
 
 class Filesystem(BaseFS, base.FS):
-    _meta = {"pickle_contents":False,
-             "thread_safe":    False}
+    _meta = {"pickle_contents": False, "thread_safe": False}
 
-    _dir_class_map = {'copy':     'copydir',
-                      'isempty':  'isdirempty',
-                      'ilist':    'ilistdir',
-                      'ilistinfo':'ilistdirinfo',
-                      'list':     'listdir',
-                      'listinfo': 'listdirinfo',
-                      'make':     'makedir',
-                      'makeopen': 'makeopendir',
-                      'move':     'movedir',
-                      'open':     'opendir',
-                      'remove':   'removedir',
-                      'walk':     'walk',
-                      'walkdirs': 'walkdirs',
-                      'walkfiles':'walkfiles'}
+    _dir_class_map = {'copy':      'copydir',
+                      'isempty':   'isdirempty',
+                      'ilist':     'ilistdir',
+                      'ilistinfo': 'ilistdirinfo',
+                      'list':      'listdir',
+                      'listinfo':  'listdirinfo',
+                      'make':      'makedir',
+                      'makeopen':  'makeopendir',
+                      'move':      'movedir',
+                      'open':      'opendir',
+                      'remove':    'removedir',
+                      'walk':      'walk',
+                      'walkdirs':  'walkdirs',
+                      'walkfiles': 'walkfiles'}
 
-    _file_class_map = {'contents':'getcontents',
-                       'copy':    'copy',
-                       'move':    'move',
-                       'open':    'open',
-                       'remove':  'remove',
-                       'safeopen':'safeopen',
-                       'size':    'getsize'}
+    _file_class_map = {'contents': 'getcontents',
+                       'copy':     'copy',
+                       'move':     'move',
+                       'open':     'open',
+                       'remove':   'remove',
+                       'safeopen': 'safeopen',
+                       'size':     'getsize'}
 
     dir_class = Dir.Dir
     file_class = File.File
-
 
     def _delegate_methods(self, klass, class_map):
         """Method that looks inside class `klass` and its ancestors for some
@@ -64,7 +62,7 @@ class Filesystem(BaseFS, base.FS):
             for c in klass.mro():
                 methodsMRO.extend(c.__dict__.iteritems())
 
-            # Run over all `class_map` looking for known methods in `methodsMRO`
+            # Run over `class_map` looking for known methods in `methodsMRO`
             for class_method, fs_method in class_map.iteritems():
                 for method_name, method_func in methodsMRO:
 
@@ -89,7 +87,6 @@ class Filesystem(BaseFS, base.FS):
                         applyMethod(method_func)
                         break
 
-
     def __init__(self, db_file, drive, sector_size):
         BaseFS.__init__(self, db_file, drive, sector_size)
         base.FS.__init__(self)
@@ -100,12 +97,11 @@ class Filesystem(BaseFS, base.FS):
         print "__init__", plugins.send("FS.__init__", db=db_file, ll=self.ll)
 #        plugins.send("FS.__init__", db=self.db, ll=self.ll)
 
-
     #
     # Essential methods
     #
 
-    def getinfo(self, path):                                                # OK
+    def getinfo(self, path):                                               # OK
         """Returns information for a path as a dictionary. The exact content of
         this dictionary will vary depending on the implementation, but will
         likely include a few common values.
@@ -126,8 +122,7 @@ class Filesystem(BaseFS, base.FS):
 
         return self.db.getinfo(parent_dir=parent_dir, name=name)
 
-
-    def isdir(self, path):                                                  # OK
+    def isdir(self, path):                                                 # OK
         """Check if a path references a directory.
 
         :param path: a path in the filesystem
@@ -141,7 +136,7 @@ class Filesystem(BaseFS, base.FS):
             return False
         return self.db.Get_Mode(inode=inode) == stat.S_IFDIR
 
-    def isfile(self, path):                                                 # OK
+    def isfile(self, path):                                                # OK
         """Check if a path references a file.
 
         :param path: a path in the filessystem
@@ -155,8 +150,7 @@ class Filesystem(BaseFS, base.FS):
             return False
         return self.db.Get_Mode(inode=inode) != stat.S_IFDIR
 
-
-    def rename(self, src, dst):                                             # OK
+    def rename(self, src, dst):                                            # OK
         """Renames a file or directory
 
         :param src: path to rename
@@ -166,7 +160,7 @@ class Filesystem(BaseFS, base.FS):
             missing
         :raises ResourceInvalidError: if the path or a parent path is not a
             directory or src is a parent of dst or one of src or dst is a dir
-            and the other not 
+            and the other not
         :raises ResourceNotFoundError: if the src path does not exist
         """
         if src == dst:
@@ -183,7 +177,8 @@ class Filesystem(BaseFS, base.FS):
             raise ParentDirectoryMissingError(e)
 
         # If dst exist, unlink it before rename src link
-        if self.db.Get_Inode(parent_dir=parent_inode_new, name=name_new) != None:
+        inode = self.db.Get_Inode(parent_dir=parent_inode_new, name=name_new)
+        if inode != None:
             # If old path type is different from new path type then raise error
             type_old = self.db.Get_Mode(inode=self._Get_Inode(name_old,
                                                              parent_inode_old))
