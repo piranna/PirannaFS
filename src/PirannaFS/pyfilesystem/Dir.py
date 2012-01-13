@@ -8,7 +8,7 @@ import os
 import stat
 
 from fs.errors import DestinationExistsError, DirectoryNotEmptyError
-from fs.errors import ParentDirectoryMissingError
+from fs.errors import ParentDirectoryMissingError, RemoveRootError
 from fs.errors import ResourceInvalidError, ResourceNotFoundError
 
 from PirannaFS.errors import ResourceError, ResourceNotFound
@@ -170,6 +170,9 @@ class Dir(BaseDir):
             is False
         @raise ResourceNotFoundError: if the directory not exists
         """
+        if self.path == '/':
+            raise RemoveRootError()
+
         if not self._inode:
             raise ResourceNotFoundError(self.path)
 
