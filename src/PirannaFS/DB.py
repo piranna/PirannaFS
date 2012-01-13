@@ -147,7 +147,7 @@ class DB():
                 applyMethod(S2SF(Tokens2Unicode(stream)), methodName)
 
 
-    def __init__(self, db_conn, drive, sector_size):                     # OK
+    def __init__(self, db_conn, sql_dir, drive, sector_size):                     # OK
         '''
         Constructor
         '''
@@ -161,7 +161,7 @@ class DB():
             drive.seek(0)
             return (end - 1) // sector_size
 
-        self._parseFunctions('/home/piranna/Proyectos/FUSE/PirannaFS/src/sql')
+        self._parseFunctions(sql_dir)
 
         self.create(type=stat.S_IFDIR, length=Get_NumSectors(), sector=0)
 
