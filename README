@@ -13,7 +13,7 @@ Spain 2011.
 * Python   (>= 2.5)
 * SQLite   (>= 3.6.19)
 * Louie    (>= 1.1)
-* sqlparse (>= 0.1.3.20110004)
+* sqlparse (>= 0.1.3.20110804)
 
 ==Interfaces (only one is needed)==
 * Python-FUSE  (>= 0.2)     Legacy, work in integration

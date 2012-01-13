@@ -9,3 +9,13 @@ disponible.
 Holes checkea los chunks a escribir y cuando detecta uno o varios sectores que
 son todo ceros, divide el chunk en ese punto y deja el hueco, el cual se
 rellenara posteriormente con ceros al leer.
+
+Plugins que solo amplian caracteristicas de otro plugin y estan fuertemente
+ligados a el (relaccion 1-a-1 y que afecten a todas las entradas) pueden
+reutilizar las tablas existentes añadiendo los campos necesario (por ejemplo, un
+campo en la tabla files indicando el formato de compresion del archivo en
+cuestion). Esto ahorrara tiempo al hacer las consultar y las simplificara al
+usar una sola tabla, aunque habra que cambiar las queries a * y que los plugin
+checkeen los campos previamente.
+
+Hacer plugin de dir_entries.
