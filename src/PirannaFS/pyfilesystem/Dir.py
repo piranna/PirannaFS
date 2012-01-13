@@ -8,6 +8,7 @@ import os
 import stat
 
 from fs.errors import DestinationExistsError, DirectoryNotEmptyError
+from fs.errors import ParentDirectoryMissingError, RemoveRootError
 from fs.errors import ResourceInvalidError, ResourceNotFoundError
 
 from PirannaFS.errors import ResourceError, ResourceNotFound
@@ -22,7 +23,7 @@ class Dir(BaseDir):
     http://pubs.opengroup.org/onlinepubs/007908799/xsh/dirent.h.html
     '''
 
-    def __init__(self, fs, path):                                           # OK
+    def __init__(self, fs, path):                                          # OK
         """Constructor
 
         @param fs: reference to the filesystem instance
@@ -49,10 +50,8 @@ class Dir(BaseDir):
             if fs.db.Get_Mode(inode=self._inode) != stat.S_IFDIR:
                 raise ResourceInvalidError(path)
 
-
 #    def copy(self):
 #        pass
-
 
     def isempty(self):
         """Check if a directory is empty (contains no files or sub-directories)
@@ -61,7 +60,6 @@ class Dir(BaseDir):
         """
 #        print "BaseDir.isempty"
         return self.db.readdir(parent_dir=self._inode, limit=1)
-
 
     def ilist(self, wildcard=None,
               full=False, absolute=False, dirs_only=False, files_only=False):
@@ -87,8 +85,8 @@ class Dir(BaseDir):
         :param path: root of the path to list
         :type path: string
         :param wildcard: Only returns paths that match this wildcard
-        :type wildcard: string containing a wildcard, or a callable that accepts
-            a path and returns a boolean
+        :type wildcard: string containing a wildcard, or a callable that
+            accepts a path and returns a boolean
         :param full: returns full paths (relative to the root)
         :type full: bool
         :param absolute: returns absolute paths (paths beginning with /)
@@ -96,24 +94,24 @@ class Dir(BaseDir):
         :param dirs_only: if True, only return directories
         :type dirs_only: bool
         :param files_only: if True, only return files
-        :type files_only: bool        
+        :type files_only: bool
 
         :rtype: iterable of paths
 
         :raises `fs.errors.ParentDirectoryMissingError`: if an intermediate
             directory is missing
-        :raises `fs.errors.ResourceInvalidError`: if the path exists, but is not
-            a directory
+        :raises `fs.errors.ResourceInvalidError`: if the path exists, but is
+            not a directory
         :raises `fs.errors.ResourceNotFoundError`: if the path is not found
         """
         try:
-            return list(self.ilist(wildcard, full, absolute, dirs_only, files_only))
+            return list(self.ilist(wildcard, full, absolute, dirs_only,
+                                   files_only))
         except ResourceNotFound, e:
             raise ResourceNotFoundError(e)
 
 #    def listinfo(self):
 #        pass
-
 
     def make(self, recursive=False, allow_recreate=False):
         """Make a directory on the filesystem.
@@ -121,7 +119,7 @@ class Dir(BaseDir):
         @param recursive: if True, any intermediate directories will also be
             created
         @type recursive: bool
-        @param allow_recreate: if True, re-creating a directory wont be an error
+        @param allow_recreate: if True, recreating a directory wont be an error
         @type allow_create: bool
 
         :raises DestinationExistsError: if the path is already a directory, and
@@ -133,13 +131,12 @@ class Dir(BaseDir):
         if self._inode:
             if allow_recreate:
                 return
-            else:
-                raise DestinationExistsError(self.path)
+            raise DestinationExistsError(self.path)
 
         # Get parent dir
         if isinstance(self.parent, basestring):
             if not recursive:
-                raise
+                raise ParentDirectoryMissingError(self.path)
 
             # Parents doesn't exist, they are the Three Wise men ;-)
             # but we want to create them anyway to get their inode
@@ -160,11 +157,11 @@ class Dir(BaseDir):
 #    def open(self):
 #        pass
 
-
     def remove(self, recursive=False, force=False):
         """Remove a directory from the filesystem
 
-        @param recursive: if True, then empty parent directories will be removed
+        @param recursive: if True, then empty parent directories will be
+            removed
         @type recursive: bool
         @param force: if True, any directory contents will be removed
         @type force: bool
@@ -173,20 +170,24 @@ class Dir(BaseDir):
             is False
         @raise ResourceNotFoundError: if the directory not exists
         """
+        if self.path == '/':
+            raise RemoveRootError()
+
         if not self._inode:
             raise ResourceNotFoundError(self.path)
 
         # Force dir deletion
         if force:
-            for dir_entry in self.db.readdir(parent_dir=self._inode, limit= -1):
+            for dir_entry in self.db.readdir(parent_dir=self._inode, limit=-1):
                 path = os.path.join(self.path, dir_entry['name'])
 
                 try:
                     inode = self.fs._Get_Inode(path)
 
-                # Path doesn't exist, probably because it was removed by another
-                # thead while we were getting the entries in this one. Since in
-                # any case we are removing it, we can ignore the exception
+                # Path doesn't exist, probably because it was removed by
+                # another thead while we were getting the entries in this one.
+                # Since in any case we are removing it, we can ignore the
+                # exception
                 except ResourceNotFound:
                     pass
 
@@ -201,7 +202,7 @@ class Dir(BaseDir):
                         self.fs.remove(path)
 
         # If dir is not empty raise error
-        if self.db.readdir(parent_dir=self._inode, limit= -1):
+        if self.db.readdir(parent_dir=self._inode, limit=-1):
             raise DirectoryNotEmptyError(self.path)
 
         # Removed directory

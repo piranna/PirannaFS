@@ -21,6 +21,7 @@ def readable(method):
         raise IOError("File not opened for reading")
     return wrapper
 
+
 def writeable(method):
     def wrapper(self, *args, **kwargs):
         if 'w' in self._mode:
@@ -60,7 +61,6 @@ class BaseFile(object):
 
         self._offset = 0
 
-
     #
     # Evented
     #
@@ -71,7 +71,8 @@ class BaseFile(object):
 
         # If new file size if bigger than zero, split chunks
         if ceil > -1:
-            for chunk in self.db.Get_Chunks_Truncate(file=self._inode, ceil=ceil):
+            for chunk in self.db.Get_Chunks_Truncate(file=self._inode,
+                                                     ceil=ceil):
                 print "_truncate"
                 self.db.Split_Chunks(**ChunkConverted(chunk))
 
@@ -88,7 +89,8 @@ class BaseFile(object):
 
     @writeable
     def _write(self, data):
-        if not data: return
+        if not data:
+            return
 
         size = len(data)
         floor, ceil = self.__CalcBounds(size)
@@ -136,8 +138,10 @@ class BaseFile(object):
                 while chunk.length >= 0:
                     # Get the free chunk that best fit the hole
 
-                    free = self.db.Get_FreeChunk_BestFit(sectors_required=chunk.length,
-                            blocks=','.join([str(chunk.block) for chunk in chunks]))
+                    req = chunk.length
+                    blocks = ','.join([str(chunk.block) for chunk in chunks])
+                    free = self.db.Get_FreeChunk_BestFit(sectors_required=req,
+                            blocks=blocks)
 
                     # If free chunk is bigger that hole, split it
                     if free.length > chunk.length:
@@ -179,7 +183,6 @@ class BaseFile(object):
             self.__Set_Size(file_size)
 ### DB ###
 
-
     #
     # File-like interface
     #
@@ -201,9 +204,8 @@ class BaseFile(object):
             return data
         raise StopIteration
 
-
     @readable
-    def read(self, size= -1):
+    def read(self, size=-1):
         floor, ceil, remanent = self.__readPre(size)
         if not remanent:
             return ""
@@ -215,7 +217,7 @@ class BaseFile(object):
         return self.__readPost(readed, remanent)
 
     @readable
-    def readline(self, size= -1):
+    def readline(self, size=-1):
         floor, _, remanent = self.__readPre(size)
         if not remanent:
             return ""
@@ -245,11 +247,10 @@ class BaseFile(object):
 
         return self.__readPost(readed, remanent)
 
-    def readlines(self, sizehint= -1):
+    def readlines(self, sizehint=-1):
         """
         """
         return self.read(sizehint).splitlines(True)
-
 
     def tell(self):
         """Return the current cursor position offset
@@ -257,7 +258,6 @@ class BaseFile(object):
         @return: integer
         """
         return self._offset
-
 
     def __enter__(self):
         return self
@@ -277,7 +277,6 @@ class BaseFile(object):
 #
 #    def __unicode__(self):
 #        return unicode(self.__str__())
-
 
     #
     # Protected
@@ -334,7 +333,6 @@ class BaseFile(object):
         # Re-set `self._mode` as an inmutable frozenset.
         self._mode = frozenset(self._mode)
 
-
     #
     # Private
     #
@@ -380,7 +378,7 @@ class BaseFile(object):
                 chunk['sector'] = None
                 chunks.append(chunk)
 
-        # There're no chunks for that file at this blocks, make a fake empty one
+        # There's no chunks for that file at this blocks, make a fake empty one
         else:
             # Create first chunk if not stored
             chunk = DictObj()
@@ -407,8 +405,7 @@ class BaseFile(object):
 
         return sectors_required, chunks
 
-
-    def __readPre(self, size= -1):
+    def __readPre(self, size=-1):
         if not size:
             return None, None, 0
 
@@ -430,7 +427,6 @@ class BaseFile(object):
         self._offset += remanent
 
         return readed[offset:self._offset]
-
 
     def __Set_Size(self, size):
         """Set file size and reset filesystem free space counter"""

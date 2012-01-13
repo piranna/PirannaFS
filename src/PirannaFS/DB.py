@@ -4,29 +4,14 @@ Created on 04/08/2010
 @author: piranna
 '''
 
-import stat
-
 from os      import listdir
 from os.path import join, splitext
+from stat    import S_IFDIR
 
 from sqlparse import split2
 from sqlparse.filters import Tokens2Unicode
 
 from sql2 import Compact, GetColumns, GetLimit, IsType
-
-
-# Store data in UNIX timestamp instead ISO format (sqlite default)
-# and None objects as 'NULL' strings
-import datetime, time
-import sqlite3
-
-def adapt_datetime(ts):
-    return time.mktime(ts.timetuple())
-sqlite3.register_adapter(datetime.datetime, adapt_datetime)
-
-#def adapt_None(_):
-#    return 'NULL'
-#sqlite3.register_adapter(None, adapt_None)
 
 
 class DictObj(dict):
@@ -65,11 +50,9 @@ class DB():
     '''
     classdocs
     '''
-    db_file = ""
-
-
     def _parseFunctions(self, dirPath):
         import re
+
         def S2SF(sql):
             "Convert from SQLite escape query format to Python string format"
             return re.sub(":\w+", lambda m: "%%(%s)s" % m.group(0)[1:], sql)
@@ -80,10 +63,11 @@ class DB():
             with open(join(dirPath, filename)) as f:
                 stream = Compact(f.read(), dirPath)
 
-            # Insert statement (last row id)
+            # Insert statement (return last row id)
             if IsType('INSERT')(stream):
                 stmts = split2(stream)
 
+                # One statement query
                 if len(stmts) == 1:
                     def applyMethod(sql, methodName):
                         def method(self, **kwargs):
@@ -95,6 +79,7 @@ class DB():
 
                     applyMethod(unicode(stmts[0]), methodName)
 
+                # Multiple statement query (return last row id of first one)
                 else:
                     def applyMethod(stmts, methodName):
                         def method(self, **kwargs):
@@ -117,7 +102,7 @@ class DB():
                 if GetLimit(stream) == 1:
                     columns = GetColumns(stream)
 
-                    # Value function
+                    # Value function (one register, one field)
                     if len(columns) == 1 and columns[0] != '*':
                         def applyMethod(sql, methodName, column):
                             def method(self, **kwargs):
@@ -128,9 +113,10 @@ class DB():
 
                             setattr(self.__class__, methodName, method)
 
-                        applyMethod(Tokens2Unicode(stream), methodName, columns[0])
+                        applyMethod(Tokens2Unicode(stream), methodName,
+                                    columns[0])
 
-                    # Register function
+                    # Register function (one register, several fields)
                     else:
                         def applyMethod(sql, methodName):
                             def method(self, **kwargs):
@@ -141,10 +127,22 @@ class DB():
 
                         applyMethod(Tokens2Unicode(stream), methodName)
 
-                # Table function
+                # Table function (several registers)
                 else:
                     def applyMethod(sql, methodName):
-                        def method(self, **kwargs):
+                        def method(self, _=None, **kwargs):
+                            # Received un-named parameter
+                            if _:
+                                # Parameters are given as a dictionary,
+                                # put them in the correct place (bad guy...)
+                                if isinstance(_, dict):
+                                    kwargs = _
+
+                                # Iterable of parameters, use executemany()
+                                else:
+                                    return self.connection.executemany(sql, _)
+
+                            # Execute single SQL statement
                             result = self.connection.execute(sql, kwargs)
                             return result.fetchall()
 
@@ -162,32 +160,27 @@ class DB():
 
                 applyMethod(S2SF(Tokens2Unicode(stream)), methodName)
 
-
-    def __init__(self, db_file, drive, sector_size):                     # OK
+    def __init__(self, db_conn, sql_dir, drive, sector_size):              # OK
         '''
         Constructor
         '''
-        self.db_file = db_file
-
-#        self.connection = sqlite3.connect(db_file)
-        self.connection = sqlite3.connect(db_file, check_same_thread=False)
+        self.connection = db_conn
         self.connect()
 
+        # http://stackoverflow.com/questions/283707/size-of-an-open-file-object
         def Get_NumSectors():
-            # http://stackoverflow.com/questions/283707/size-of-an-open-file-object
             drive.seek(0, 2)
             end = drive.tell()
             drive.seek(0)
             return (end - 1) // sector_size
 
-        self._parseFunctions('/home/piranna/Proyectos/FUSE/PirannaFS/src/sql')
+        self._parseFunctions(sql_dir)
 
-        self.create(type=stat.S_IFDIR, length=Get_NumSectors(), sector=0)
+        self.create(type=S_IFDIR, length=Get_NumSectors(), sector=0)
 
     def __del__(self):
         self.connection.commit()
         self.connection.close()
-
 
     def connect(self):
         self.connection.row_factory = DictObj_factory
@@ -199,13 +192,3 @@ class DB():
 
         # Force enable foreign keys check
         self.connection.execute("PRAGMA foreign_keys = ON;")
-
-
-    def Put_Chunks(self, chunks):                                           # OK
-        return self.connection.executemany(
-             """UPDATE chunks
-                SET file = :file, block = :block
-                WHERE sector=:sector
-                -- WHERE drive=:drive AND sector=:sector""",
-            chunks)
-#        return self.connection.executemany(self.__queries['Put_Chunks'], chunks)
