@@ -15,20 +15,6 @@ from sqlparse.filters import Tokens2Unicode
 from sql2 import Compact, GetColumns, GetLimit, IsType
 
 
-# Store data in UNIX timestamp instead ISO format (sqlite default)
-# and None objects as 'NULL' strings
-import datetime, time
-import sqlite3
-
-def adapt_datetime(ts):
-    return time.mktime(ts.timetuple())
-sqlite3.register_adapter(datetime.datetime, adapt_datetime)
-
-#def adapt_None(_):
-#    return 'NULL'
-#sqlite3.register_adapter(None, adapt_None)
-
-
 class DictObj(dict):
     def __getattr__(self, name):
         try:
@@ -65,11 +51,9 @@ class DB():
     '''
     classdocs
     '''
-    db_file = ""
-
-
     def _parseFunctions(self, dirPath):
         import re
+
         def S2SF(sql):
             "Convert from SQLite escape query format to Python string format"
             return re.sub(":\w+", lambda m: "%%(%s)s" % m.group(0)[1:], sql)
@@ -163,14 +147,11 @@ class DB():
                 applyMethod(S2SF(Tokens2Unicode(stream)), methodName)
 
 
-    def __init__(self, db_file, drive, sector_size):                     # OK
+    def __init__(self, db_conn, drive, sector_size):                     # OK
         '''
         Constructor
         '''
-        self.db_file = db_file
-
-#        self.connection = sqlite3.connect(db_file)
-        self.connection = sqlite3.connect(db_file, check_same_thread=False)
+        self.connection = db_conn
         self.connect()
 
         def Get_NumSectors():

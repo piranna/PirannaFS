@@ -3,8 +3,8 @@
 	<name>PirannaFS</name>
 	<comment></comment>
 	<projects>
-		<project>piranna-sqlparse</project>
 		<project>PyFilesystem-read_only</project>
+		<project>python-sqlparse</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

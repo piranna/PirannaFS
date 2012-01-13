@@ -15,27 +15,44 @@ from DB import DB
 from LL import LL
 
 
+# Store data in UNIX timestamp instead ISO format (sqlite default)
+# and None objects as 'NULL' strings
+from datetime import datetime
+from time import mktime
+from sqlite3 import connect, register_adapter
+
+
+def adapt_datetime(ts):
+    return mktime(ts.timetuple())
+register_adapter(datetime, adapt_datetime)
+
+#def adapt_None(_):
+#    return 'NULL'
+#register_adapter(None, adapt_None)
+
+
 class BaseFS(object):
     '''
     classdocs
     '''
 
-    def __init__(self, db, drive, sector_size=512):
+    def __init__(self, db_file, drive, sector_size=512):
         self.ll = LL(drive, sector_size)
-        self.db = DB(db, self.ll._file, sector_size)
+
+#        db_conn = connect(db_file)
+        db_conn = connect(db_file, check_same_thread=False)
+        self.db = DB(db_conn, self.ll._file, sector_size)
 
         self._freeSpace = None
         self.__sector_size = sector_size
 
-
     def _FreeSpace(self):
         if self._freeSpace == None:
-            self._freeSpace = self.db.Get_FreeSpace()*self.__sector_size
+            self._freeSpace = self.db.Get_FreeSpace() * self.__sector_size
 
         return self._freeSpace
 
-
-    def _Get_Inode(self, path, inode=0):                                     # OK
+    def _Get_Inode(self, path, inode=0):                                   # OK
         '''
         Get the inode of a path
         '''
@@ -75,7 +92,7 @@ class BaseFS(object):
         # so return computed inode
         return inode
 
-    def _Path2InodeName(self, path):                                         # OK
+    def _Path2InodeName(self, path):                                       # OK
         '''
         Get the parent dir inode and the name of a dir entry defined by path
         '''
