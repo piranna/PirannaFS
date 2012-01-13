@@ -8,6 +8,7 @@ import os
 import stat
 
 from fs.errors import DestinationExistsError, DirectoryNotEmptyError
+from fs.errors import ParentDirectoryMissingError
 from fs.errors import ResourceInvalidError, ResourceNotFoundError
 
 from PirannaFS.errors import ResourceError, ResourceNotFound
@@ -22,7 +23,7 @@ class Dir(BaseDir):
     http://pubs.opengroup.org/onlinepubs/007908799/xsh/dirent.h.html
     '''
 
-    def __init__(self, fs, path):                                           # OK
+    def __init__(self, fs, path):                                          # OK
         """Constructor
 
         @param fs: reference to the filesystem instance
@@ -114,14 +115,13 @@ class Dir(BaseDir):
 #    def listinfo(self):
 #        pass
 
-
     def make(self, recursive=False, allow_recreate=False):
         """Make a directory on the filesystem.
 
         @param recursive: if True, any intermediate directories will also be
             created
         @type recursive: bool
-        @param allow_recreate: if True, re-creating a directory wont be an error
+        @param allow_recreate: if True, recreating a directory wont be an error
         @type allow_create: bool
 
         :raises DestinationExistsError: if the path is already a directory, and
@@ -133,13 +133,12 @@ class Dir(BaseDir):
         if self._inode:
             if allow_recreate:
                 return
-            else:
-                raise DestinationExistsError(self.path)
+            raise DestinationExistsError(self.path)
 
         # Get parent dir
         if isinstance(self.parent, basestring):
             if not recursive:
-                raise
+                raise ParentDirectoryMissingError(self.path)
 
             # Parents doesn't exist, they are the Three Wise men ;-)
             # but we want to create them anyway to get their inode
