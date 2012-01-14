@@ -12,9 +12,9 @@ Spain 2011.
 = Dependencies =
 * Python  >= 2.6 (by PyFilesystem)
 * SQLite  >= 3.6.19
-* Louie   >= 1.1
-* AntiORM >= 2012.01.14
+* [http://pypi.python.org/pypi/Louie/1.1 Louie]   >= 1.1
+* [https://github.com/piranna/AntiORM AntiORM] >= 2012.01.14
 
 == Interfaces (only one is needed) ==
-* Python-FUSE  (>= 0.2)     Legacy, work in integration
-* PyFilesystem (>= 0.4 SVN) Current standard
+* Python-FUSE  >= 0.2     (Legacy, currently working in integration)
+* [http://code.google.com/p/pyfilesystem PyFilesystem] >= 0.4 SVN (Current standard)
