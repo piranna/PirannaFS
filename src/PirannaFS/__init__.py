@@ -66,7 +66,7 @@ class BaseFS(object):
             drive.seek(0)
             return (end - 1) // sector_size
 
-        self.db._parseFunctions('/home/piranna/Proyectos/FUSE/PirannaFS/src/sql')
+        self.db.ParseDir('/home/piranna/Proyectos/FUSE/PirannaFS/src/sql')
 
         self.db.create(type=S_IFDIR, length=Get_NumSectors(), sector=0)
 
