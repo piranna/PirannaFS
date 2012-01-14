@@ -9,7 +9,7 @@ from stat import S_IFDIR, S_IFREG
 from os import SEEK_END
 from os.path import split
 
-from DB import ChunkConverted, DictObj
+from antiorm import ChunkConverted, DictObj
 
 from errors import ResourceInvalid, ResourceNotFound, StorageSpace
 
@@ -205,7 +205,7 @@ class BaseFile(object):
         raise StopIteration
 
     @readable
-    def read(self, size=-1):
+    def read(self, size= -1):
         floor, ceil, remanent = self.__readPre(size)
         if not remanent:
             return ""
@@ -217,7 +217,7 @@ class BaseFile(object):
         return self.__readPost(readed, remanent)
 
     @readable
-    def readline(self, size=-1):
+    def readline(self, size= -1):
         floor, _, remanent = self.__readPre(size)
         if not remanent:
             return ""
@@ -247,7 +247,7 @@ class BaseFile(object):
 
         return self.__readPost(readed, remanent)
 
-    def readlines(self, sizehint=-1):
+    def readlines(self, sizehint= -1):
         """
         """
         return self.read(sizehint).splitlines(True)
@@ -405,7 +405,7 @@ class BaseFile(object):
 
         return sectors_required, chunks
 
-    def __readPre(self, size=-1):
+    def __readPre(self, size= -1):
         if not size:
             return None, None, 0
 

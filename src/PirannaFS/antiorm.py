@@ -45,7 +45,7 @@ def ChunkConverted(chunk):
     return d
 
 
-class DB():
+class AntiORM():
     '''
     classdocs
     '''

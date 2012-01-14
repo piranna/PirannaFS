@@ -9,7 +9,7 @@ from stat    import S_IFDIR
 
 from errors import ParentDirectoryMissing, ResourceInvalid, ResourceNotFound
 
-from DB import DB, DictObj_factory
+from antiorm import AntiORM, DictObj_factory
 from LL import LL
 
 
@@ -56,7 +56,7 @@ class BaseFS(object):
         #
         # antiORM
 
-        self.db = DB(db_conn)
+        self.db = AntiORM(db_conn)
 
         # http://stackoverflow.com/questions/283707/size-of-an-open-file-object
         drive = self.ll._file
