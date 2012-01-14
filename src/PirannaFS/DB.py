@@ -6,7 +6,6 @@ Created on 04/08/2010
 
 from os      import listdir
 from os.path import join, splitext
-from stat    import S_IFDIR
 
 from sqlparse import split2
 from sqlparse.filters import Tokens2Unicode
@@ -172,40 +171,15 @@ class DB():
 
                         setattr(self.__class__, methodName, method)
 
-                    applyMethod([S2SF(unicode(x)) for x in stmts], methodName)
+                    applyMethod([unicode(x) for x in stmts], methodName)
 
 
-
-
-    def __init__(self, db_conn, sql_dir, drive, sector_size):              # OK
+    def __init__(self, db_conn):
         '''
         Constructor
         '''
         self.connection = db_conn
-        self.connect()
-
-        # http://stackoverflow.com/questions/283707/size-of-an-open-file-object
-        def Get_NumSectors():
-            drive.seek(0, 2)
-            end = drive.tell()
-            drive.seek(0)
-            return (end - 1) // sector_size
-
-        self._parseFunctions(sql_dir)
-
-        self.create(type=S_IFDIR, length=Get_NumSectors(), sector=0)
 
     def __del__(self):
         self.connection.commit()
         self.connection.close()
-
-    def connect(self):
-        self.connection.row_factory = DictObj_factory
-        self.connection.isolation_level = None
-
-        # SQLite tune-ups
-        self.connection.execute("PRAGMA synchronous = OFF;")
-        self.connection.execute("PRAGMA temp_store = MEMORY;")  # Not so much
-
-        # Force enable foreign keys check
-        self.connection.execute("PRAGMA foreign_keys = ON;")

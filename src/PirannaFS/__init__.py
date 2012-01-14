@@ -4,14 +4,12 @@ Created on 02/04/2011
 @author: piranna
 '''
 
-import os
-import stat
-
-from os.path import split
+from os.path import sep, split
+from stat    import S_IFDIR
 
 from errors import ParentDirectoryMissing, ResourceInvalid, ResourceNotFound
 
-from DB import DB
+from DB import DB, DictObj_factory
 from LL import LL
 
 
@@ -39,10 +37,38 @@ class BaseFS(object):
     def __init__(self, db_file, drive, sector_size=512):
         self.ll = LL(drive, sector_size)
 
+        #
+        # Data base
+
 #        db_conn = connect(db_file)
         db_conn = connect(db_file, check_same_thread=False)
-        self.db = DB(db_conn, '/home/piranna/Proyectos/FUSE/PirannaFS/src/sql',
-                     self.ll._file, sector_size)
+
+        db_conn.row_factory = DictObj_factory
+        db_conn.isolation_level = None
+
+        # SQLite tune-ups
+        db_conn.execute("PRAGMA synchronous = OFF;")
+        db_conn.execute("PRAGMA temp_store = MEMORY;")  # Not so much
+
+        # Force enable foreign keys check
+        db_conn.execute("PRAGMA foreign_keys = ON;")
+
+        #
+        # antiORM
+
+        self.db = DB(db_conn)
+
+        # http://stackoverflow.com/questions/283707/size-of-an-open-file-object
+        drive = self.ll._file
+        def Get_NumSectors():
+            drive.seek(0, 2)
+            end = drive.tell()
+            drive.seek(0)
+            return (end - 1) // sector_size
+
+        self.db._parseFunctions('/home/piranna/Proyectos/FUSE/PirannaFS/src/sql')
+
+        self.db.create(type=S_IFDIR, length=Get_NumSectors(), sector=0)
 
         self._freeSpace = None
         self.__sector_size = sector_size
@@ -62,7 +88,7 @@ class BaseFS(object):
         # If there are path elements
         # get their inodes
         if path:
-            parent, _, path = path.partition(os.sep)
+            parent, _, path = path.partition(sep)
 
             # Get inode of the dir entry
             inode = self.db.Get_Inode(parent_dir=inode, name=parent)
@@ -78,7 +104,7 @@ class BaseFS(object):
 
             # If the dir entry is a directory
             # get child inode
-            if self.db.Get_Mode(inode=inode) == stat.S_IFDIR:
+            if self.db.Get_Mode(inode=inode) == S_IFDIR:
                 return self._Get_Inode(path, inode)
 
             # If is not a directory and is not the last path element

@@ -8,10 +8,6 @@ import sys
 
 import errno
 
-import plugins
-
-from DB import DictObj, ChunkConverted
-
 from PirannaFS.errors import StorageSpace
 
 from ..File import BaseFile
@@ -22,7 +18,7 @@ class File(BaseFile):
     classdocs
     '''
 
-    def __init__(self, fs, path, flags, mode=None):                         # OK
+    def __init__(self, fs, path, flags, mode=None):                        # OK
         '''
         Constructor
         '''
