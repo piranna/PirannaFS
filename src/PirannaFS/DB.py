@@ -152,13 +152,30 @@ class DB():
 
             # Multiple statement query
             else:
-                def applyMethod(sql, methodName):
-                    def method(self, **kwargs):
-                        self.connection.executescript(sql % kwargs)
+                import sys
+                if 'sqlite3' in sys.modules:
+                    def applyMethod(sql, methodName):
+                        def method(self, **kwargs):
+                            self.connection.executescript(sql % kwargs)
 
-                    setattr(self.__class__, methodName, method)
+                        setattr(self.__class__, methodName, method)
 
-                applyMethod(S2SF(Tokens2Unicode(stream)), methodName)
+                    applyMethod(S2SF(Tokens2Unicode(stream)), methodName)
+
+                else:
+                    stmts = split2(stream)
+
+                    def applyMethod(stmts, methodName):
+                        def method(self, **kwargs):
+                            for stmt in stmts:
+                                self.connection.execute(stmt, kwargs)
+
+                        setattr(self.__class__, methodName, method)
+
+                    applyMethod([S2SF(unicode(x)) for x in stmts], methodName)
+
+
+
 
     def __init__(self, db_conn, sql_dir, drive, sector_size):              # OK
         '''

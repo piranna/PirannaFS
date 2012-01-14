@@ -41,7 +41,7 @@ class BaseFS(object):
 
 #        db_conn = connect(db_file)
         db_conn = connect(db_file, check_same_thread=False)
-        self.db = DB(db_conn, '/home/piranna/Proyectos/PirannaFS/src/sql',
+        self.db = DB(db_conn, '/home/piranna/Proyectos/FUSE/PirannaFS/src/sql',
                      self.ll._file, sector_size)
 
         self._freeSpace = None
