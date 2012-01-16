@@ -34,7 +34,7 @@ class BaseFS(object):
     classdocs
     '''
 
-    def __init__(self, db_file, drive, sector_size=512):
+    def __init__(self, db_file, db_dirPath, drive, sector_size=512):
         self.ll = LL(drive, sector_size)
 
         #
@@ -56,17 +56,16 @@ class BaseFS(object):
         #
         # antiORM
 
-        self.db = AntiORM(db_conn)
+        self.db = AntiORM(db_conn, db_dirPath)
 
         # http://stackoverflow.com/questions/283707/size-of-an-open-file-object
         drive = self.ll._file
+
         def Get_NumSectors():
             drive.seek(0, 2)
             end = drive.tell()
             drive.seek(0)
             return (end - 1) // sector_size
-
-        self.db.ParseDir('/home/piranna/Proyectos/FUSE/PirannaFS/src/sql')
 
         self.db.create(type=S_IFDIR, length=Get_NumSectors(), sector=0)
 

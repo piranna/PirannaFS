@@ -21,6 +21,8 @@ class TestPirannaFS(unittest.TestCase, FSTestCases):
         self.db_file = '../../../' + test_name + '.sqlite'
 #        self.db_file = ':memory:'
 
+        db_dirPath = '/home/piranna/Proyectos/PirannaFS/src/sql'
+
         self.ll_file = '../../../' + test_name + '.img'
         drive = open(self.ll_file, 'w+')
 #        drive = StringIO()
@@ -32,7 +34,7 @@ class TestPirannaFS(unittest.TestCase, FSTestCases):
 
         sector_size = 512
 
-        self.fs = Filesystem(self.db_file, drive, sector_size)
+        self.fs = Filesystem(self.db_file, db_dirPath, drive, sector_size)
 
     def tearDown(self):
         self.fs.close()
