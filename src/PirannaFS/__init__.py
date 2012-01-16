@@ -7,10 +7,10 @@ Created on 02/04/2011
 from os.path import sep, split
 from stat    import S_IFDIR
 
-from errors import ParentDirectoryMissing, ResourceInvalid, ResourceNotFound
-
 from antiorm import AntiORM, DictObj_factory
-from LL import LL
+
+from errors import ParentDirectoryMissing, ResourceInvalid, ResourceNotFound
+from LL     import LL
 
 
 # Store data in UNIX timestamp instead ISO format (sqlite default)
@@ -38,7 +38,7 @@ class BaseFS(object):
         self.ll = LL(drive, sector_size)
 
         #
-        # Data base
+        # Database
 
 #        db_conn = connect(db_file)
         db_conn = connect(db_file, check_same_thread=False)
