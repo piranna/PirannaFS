@@ -44,11 +44,11 @@ class BaseFS(object):
         db_conn = connect(db_file, check_same_thread=False)
 
         db_conn.row_factory = DictObj_factory
-        db_conn.isolation_level = None
+#        db_conn.isolation_level = None
 
         # SQLite tune-ups
         db_conn.execute("PRAGMA synchronous = OFF;")
-        db_conn.execute("PRAGMA temp_store = MEMORY;")  # Not so much
+        db_conn.execute("PRAGMA temp_store = MEMORY;")
 
         # Force enable foreign keys check
         db_conn.execute("PRAGMA foreign_keys = ON;")
