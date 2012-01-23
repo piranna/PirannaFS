@@ -74,7 +74,13 @@ class BaseFS(object):
 
     def _FreeSpace(self):
         if self._freeSpace == None:
-            self._freeSpace = self.db.Get_FreeSpace() * self.__sector_size
+            freespace = self.db.Get_FreeSpace()
+            print "self.db.Get_FreeSpace()",freespace
+
+            if freespace:
+                self._freeSpace = freespace * self.__sector_size
+            else:
+                self._freeSpace = 0
 
         return self._freeSpace
 
