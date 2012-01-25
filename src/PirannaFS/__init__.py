@@ -14,7 +14,6 @@ from LL     import LL
 
 
 # Store data in UNIX timestamp instead ISO format (sqlite default)
-# and None objects as 'NULL' strings
 from datetime import datetime
 from time import mktime
 from sqlite3 import connect, register_adapter
@@ -23,10 +22,6 @@ from sqlite3 import connect, register_adapter
 def adapt_datetime(ts):
     return mktime(ts.timetuple())
 register_adapter(datetime, adapt_datetime)
-
-#def adapt_None(_):
-#    return 'NULL'
-#register_adapter(None, adapt_None)
 
 
 class BaseFS(object):
@@ -83,7 +78,7 @@ class BaseFS(object):
 
         return self._freeSpace
 
-    def _Get_Inode(self, path, inode=0):                                   # OK
+    def _Get_Inode(self, path, inode=None):                                # OK
         '''
         Get the inode of a path
         '''

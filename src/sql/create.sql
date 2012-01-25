@@ -16,8 +16,8 @@ CREATE TABLE IF NOT EXISTS links
 (
     id          INTEGER   PRIMARY KEY,
 
+    parent_dir  INTEGER       NULL,    -- NULL means filesystem root
     child_entry INTEGER   NOT NULL,
-    parent_dir  INTEGER   NOT NULL,
     name        TEXT      NOT NULL,
     creation    timestamp DEFAULT CURRENT_TIMESTAMP,
 
@@ -76,15 +76,15 @@ BEGIN
 END;
 
 
--- If links table is empty (table has just been created)
--- create initial row defining the root directory
-INSERT INTO dir_entries(inode,type)
-                 SELECT 0,   :type
-                 WHERE NOT EXISTS(SELECT * FROM links LIMIT 1);
-
-INSERT INTO links(id, child_entry, parent_dir, name)
-           SELECT 0,  0,           0,          ''
-           WHERE NOT EXISTS(SELECT * FROM links LIMIT 1);
+---- If links table is empty (table has just been created)
+---- create initial row defining the root directory
+--INSERT INTO dir_entries(inode,type)
+--                 SELECT 0,   :type
+--                 WHERE NOT EXISTS(SELECT * FROM links LIMIT 1);
+--
+--INSERT INTO links(id, child_entry, parent_dir, name)
+--           SELECT 0,  0,           0,          ''
+--           WHERE NOT EXISTS(SELECT * FROM links LIMIT 1);
 
            
            

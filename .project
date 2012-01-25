@@ -4,7 +4,7 @@
 	<comment></comment>
 	<projects>
 		<project>AntiORM</project>
-		<project>pyfilesystem-read-only</project>
+		<project>PyFilesystem-read_only</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

@@ -146,6 +146,7 @@ class Dir(BaseDir):
 
         # Make directory
         self._inode = self.db._Make_DirEntry(type=stat.S_IFDIR)
+        print self.parent, self.name, self._inode
         self.db.link(parent_dir=self.parent, name=self.name,
                      child_entry=self._inode)
 
@@ -178,7 +179,7 @@ class Dir(BaseDir):
 
         # Force dir deletion
         if force:
-            for dir_entry in self.db.readdir(parent_dir=self._inode, limit=-1):
+            for dir_entry in self.db.readdir(parent_dir=self._inode, limit= -1):
                 path = os.path.join(self.path, dir_entry['name'])
 
                 try:
@@ -202,7 +203,7 @@ class Dir(BaseDir):
                         self.fs.remove(path)
 
         # If dir is not empty raise error
-        if self.db.readdir(parent_dir=self._inode, limit=-1):
+        if self.db.readdir(parent_dir=self._inode, limit= -1):
             raise DirectoryNotEmptyError(self.path)
 
         # Removed directory
