@@ -33,7 +33,6 @@ class File(BaseFile):
         # File mode
         self._mode = frozenset()
 
-
 #    def contents(self):
 #        pass
 #
@@ -54,9 +53,11 @@ class File(BaseFile):
     def remove(self):
         """Remove a file from the filesystem.
 
-        :raises ParentDirectoryMissingError: if a containing directory is missing and recursive is False
-        :raises ResourceInvalidError:        if the path is a directory or a parent path is an file
-        :raises ResourceNotFoundError:       if the path is not found
+        :raises ParentDirectoryMissingError: if a containing directory is
+            missing and recursive is False
+        :raises ResourceInvalidError: if the path is a directory or a parent
+            path is an file
+        :raises ResourceNotFoundError: if the path is not found
         """
 #        # Get inode and name from path
 
@@ -82,7 +83,6 @@ class File(BaseFile):
             return self.db.Get_Size(inode=self._inode)
         return 0
 
-
     #
     # File-like interface
     #
@@ -99,7 +99,6 @@ class File(BaseFile):
         # Readjust offset
         self._offset = whence + offset
 
-
     def truncate(self, size=0):
         size += self._offset
 
@@ -107,7 +106,6 @@ class File(BaseFile):
             raise ResourceInvalidError(msg="truncate under zero")
 
         self._truncate(size)
-
 
     def write(self, data):
         try:
