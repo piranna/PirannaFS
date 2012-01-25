@@ -9,7 +9,7 @@ from stat import S_IFDIR, S_IFREG
 from os import SEEK_END
 from os.path import split
 
-from antiorm import ChunkConverted, DictObj
+from antiorm import DictObj
 
 from errors import ResourceInvalid, ResourceNotFound, StorageSpace
 
@@ -74,7 +74,7 @@ class BaseFile(object):
             for chunk in self.db.Get_Chunks_Truncate(file=self._inode,
                                                      ceil=ceil):
                 print "_truncate"
-                self.db.Split_Chunks(**ChunkConverted(chunk))
+                self.db.Split_Chunks(**chunk)
 
         def Free_Chunks(chunk):
             self.db.Free_Chunks(**chunk)
@@ -146,7 +146,7 @@ class BaseFile(object):
                     # If free chunk is bigger that hole, split it
                     if free.length > chunk.length:
                         free.length = chunk.length
-                        self.db.Split_Chunks(**ChunkConverted(free))
+                        self.db.Split_Chunks(**free)
 
                     # Adapt free chunk
                     free.file = self._inode
