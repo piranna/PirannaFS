@@ -20,7 +20,7 @@ class TestPirannaFS(unittest.TestCase, FSTestCases):
         self.db_file = '../../../' + test_name + '.sqlite'
 #        self.db_file = ':memory:'
 
-        db_dirPath = '/home/piranna/Proyectos/FUSE/PirannaFS/src/sql'
+        db_dirPath = '/home/piranna/Proyectos/PirannaFS/src/sql'
 
         self.ll_file = '../../../' + test_name + '.img'
         drive = open(self.ll_file, 'w+')
@@ -38,8 +38,8 @@ class TestPirannaFS(unittest.TestCase, FSTestCases):
     def tearDown(self):
         self.fs.close()
 
-        if self.db_file != ':memory:':
-            os.remove(self.db_file)
+#        if self.db_file != ':memory:':
+#            os.remove(self.db_file)
         if not isinstance(self.ll_file, StringIO):
             os.remove(self.ll_file)
 

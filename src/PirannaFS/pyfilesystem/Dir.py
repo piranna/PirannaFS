@@ -134,6 +134,7 @@ class Dir(BaseDir):
             raise DestinationExistsError(self.path)
 
         # Get parent dir
+        print "parent:",self.parent
         if isinstance(self.parent, basestring):
             if not recursive:
                 raise ParentDirectoryMissingError(self.path)
