@@ -88,23 +88,26 @@ class BaseFS(object):
         # get their inodes
         if path:
             parent, _, path = path.partition(sep)
+            print "_Get_Inode\t",repr(parent),'/', repr(path)
 
-            # Get inode of the dir entry
-            inode = self.db.Get_Inode(parent_dir=inode, name=parent)
+            if parent:
+                # Get inode of the dir entry
+                inode = self.db.Get_Inode(parent_dir=inode, name=parent)
+                print "\t",inode
 
-            # If there's no such dir entry, raise the adecuate exception
-            # depending of it's related to the resource we are looking for
-            # or to one of it's parents
-            if inode == None:
-                if path:
-                    raise ParentDirectoryMissing(parent)
-                else:
-                    raise ResourceNotFound(parent)
+                # If there's no such dir entry, raise the adecuate exception
+                # depending of it's related to the resource we are looking for
+                # or to one of it's parents
+                if inode == None:
+                    if path:
+                        raise ParentDirectoryMissing(parent)
+                    else:
+                        raise ResourceNotFound(parent)
 
-            # If the dir entry is a directory
-            # get child inode
-            if self.db.Get_Mode(inode=inode) == S_IFDIR:
-                return self._Get_Inode(path, inode)
+                # If the dir entry is a directory
+                # get child inode
+                if self.db.Get_Mode(inode=inode) == S_IFDIR:
+                    return self._Get_Inode(path, inode)
 
             # If is not a directory and is not the last path element
             # return error
