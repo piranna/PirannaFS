@@ -82,32 +82,34 @@ class BaseFS(object):
         '''
         Get the inode of a path
         '''
-#        print >> sys.stderr, '*** _Get_Inode', repr(path),inode
+        print '_Get_Inode', repr(path),inode
 
         # If there are path elements
         # get their inodes
         if path:
-            parent, _, path = path.partition(sep)
-            print "_Get_Inode\t",repr(parent),'/', repr(path)
+            name, _, path = path.partition(sep)
+            print "\t",repr(name),'/', repr(path)
 
-            if parent:
-                # Get inode of the dir entry
-                inode = self.db.Get_Inode(parent_dir=inode, name=parent)
-                print "\t",inode
+            if not name:  # Absolute path
+                return self._Get_Inode(path, inode)
 
-                # If there's no such dir entry, raise the adecuate exception
-                # depending of it's related to the resource we are looking for
-                # or to one of it's parents
-                if inode == None:
-                    if path:
-                        raise ParentDirectoryMissing(parent)
-                    else:
-                        raise ResourceNotFound(parent)
+            # Get inode of the dir entry
+            inode = self.db.Get_Inode(parent_dir=inode, name=name)
+            print "\t",inode
 
-                # If the dir entry is a directory
-                # get child inode
-                if self.db.Get_Mode(inode=inode) == S_IFDIR:
-                    return self._Get_Inode(path, inode)
+            # If there's no such dir entry, raise the adecuate exception
+            # depending of it's related to the resource we are looking for
+            # or to one of it's parents
+            if inode == None:
+                if path:
+                    raise ParentDirectoryMissing(name)
+                else:
+                    raise ResourceNotFound(name)
+
+            # If the dir entry is a directory
+            # get child inode
+            if self.db.Get_Mode(inode=inode) == S_IFDIR:
+                return self._Get_Inode(path, inode)
 
             # If is not a directory and is not the last path element
             # return error
