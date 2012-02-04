@@ -7,7 +7,8 @@ Created on 02/04/2011
 from os.path import sep, split
 from stat    import S_IFDIR
 
-from antiorm import AntiORM, DictObj_factory
+from antiorm import DictObj_factory
+from antiorm.Sqlite import Sqlite
 
 from errors import ParentDirectoryMissing, ResourceInvalid, ResourceNotFound
 from LL     import LL
@@ -56,7 +57,7 @@ class BaseFS(object):
         #
         # antiORM
 
-        self.db = AntiORM(db_conn, db_dirPath)
+        self.db = Sqlite(db_conn, db_dirPath)
 
         # http://stackoverflow.com/questions/283707/size-of-an-open-file-object
         drive = self.ll._file
