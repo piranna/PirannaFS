@@ -71,10 +71,8 @@ class BaseFile(object):
 
         # If new file size if bigger than zero, split chunks
         if ceil > -1:
-            for chunk in self.db.Get_Chunks_Truncate(file=self._inode,
-                                                     ceil=ceil):
-                print "_truncate"
-                self.db.Split_Chunks(**chunk)
+            chunks = self.db.Get_Chunks_Truncate(file=self._inode, ceil=ceil)
+            self.db.Split_Chunks(chunks)
 
         def Free_Chunks(chunk):
             self.db.Free_Chunks(**chunk)
