@@ -20,7 +20,7 @@ class TestPirannaFS(unittest.TestCase, FSTestCases):
         self.db_file = '../../../' + test_name + '.sqlite'
 #        self.db_file = ':memory:'
 
-        db_dirPath = '/home/piranna/Proyectos/PirannaFS/src/sql'
+        db_dirPath = '/home/piranna/Proyectos/FUSE/PirannaFS/src/sql'
 
         self.ll_file = '../../../' + test_name + '.img'
         drive = open(self.ll_file, 'w+')
