@@ -57,7 +57,7 @@ class BaseFS(object):
         #
         # antiORM
 
-        self.db = Sqlite(db_conn, db_dirPath)
+        self.db = Sqlite(db_conn, db_dirPath, True)
 
         # http://stackoverflow.com/questions/283707/size-of-an-open-file-object
         drive = self.ll._file
