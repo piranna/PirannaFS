@@ -7,8 +7,8 @@ Created on 02/04/2011
 from os.path import sep, split
 from stat    import S_IFDIR
 
-from antiorm import DictObj_factory
-from antiorm.Sqlite import Sqlite
+from antiorm.backends.sqlite import Sqlite
+from antiorm.utils           import DictObj_factory
 
 from errors import ParentDirectoryMissing, ResourceInvalid, ResourceNotFound
 from LL     import LL

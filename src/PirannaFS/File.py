@@ -9,7 +9,7 @@ from stat import S_IFDIR, S_IFREG
 from os import SEEK_END
 from os.path import split
 
-from antiorm import DictObj
+from antiorm.utils import DictObj
 
 from errors import ResourceInvalid, ResourceNotFound, StorageSpace
 
