@@ -50,8 +50,8 @@ class BaseDir(object):
 #        yield unicode('..')
 
         for dir_entry in self.db.readdir(parent_dir=self._inode, limit= -1):
-            if dir_entry['name']:
-                yield unicode(dir_entry['name'])
+            if dir_entry.name:
+                yield unicode(dir_entry.name)
 
         plugins.send("Dir.list end")
 

@@ -8,7 +8,7 @@ from os.path import sep, split
 from stat    import S_IFDIR
 
 from antiorm.backends.sqlite import Sqlite
-from antiorm.utils           import DictObj_factory
+from antiorm.utils           import TupleObj_factory
 
 from errors import ParentDirectoryMissing, ResourceInvalid, ResourceNotFound
 from LL     import LL
@@ -44,7 +44,7 @@ class BaseFS(object):
 #        db_conn = connect(db_file)
         db_conn = connect(db_file, check_same_thread=False)
 
-        db_conn.row_factory = DictObj_factory
+        db_conn.row_factory = TupleObj_factory
 #        db_conn.isolation_level = None
 
         # SQLite tune-ups
