@@ -69,15 +69,14 @@ class BaseFile(object):
     def _truncate(self, size):
         ceil = (size - 1) // self.ll.sector_size
 
-        chunks = self.db.Get_Chunks_Truncate(file=self._inode, ceil=ceil)
-
         # If new file size if bigger than zero, split chunks
         if ceil >= 0:
-            self.db.truncate(chunks)
+            chunks = self.db.Get_Chunks_Truncate(file=self._inode, ceil=ceil)
+            self.db.truncate1(chunks)
 
         # Free unwanted chunks from the file
         else:
-            self.db.Free_Chunks(chunks)
+            self.db.truncate2(file=self._inode, ceil=ceil)
 
         # Set new file size
         self.__Set_Size(size)
