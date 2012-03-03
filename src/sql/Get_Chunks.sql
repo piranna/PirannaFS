@@ -1,4 +1,4 @@
 SELECT * FROM chunks
-WHERE file = :file AND block BETWEEN :floor AND :ceil-length
-GROUP BY file,block
+WHERE inode = :inode AND block BETWEEN :floor AND :ceil-length
+GROUP BY inode,block
 ORDER BY block

@@ -71,13 +71,13 @@ class BaseFile(object):
 
         # If new file size if bigger than zero, split chunks
         if ceil >= 0:
-            self.db.truncate1(file=self._inode, ceil=ceil,
-                              inode=self._inode, size=size)  # Set_Size
+            self.db.truncate1(inode=self._inode, ceil=ceil,
+                              size=size)  # Set_Size
 
         # Free unwanted chunks from the file
         else:
-            self.db.truncate2(file=self._inode, ceil=ceil,
-                              inode=self._inode, size=size)  # Set_Size
+            self.db.truncate2(inode=self._inode, ceil=ceil,
+                              size=size)  # Set_Size
 
         # Reset calculated free space on filesystem
         self.fs._freeSpace = None
@@ -144,7 +144,7 @@ class BaseFile(object):
                         self.db.Split_Chunks(**free)
 
                     # Adapt free chunk
-                    free.file = self._inode
+                    free.inode = self._inode
                     free.block = block
 
                     # Add free chunk to the hole
@@ -176,6 +176,8 @@ class BaseFile(object):
         # Set new file size if neccesary
         if self.db.Get_Size(inode=self._inode) < file_size:
             self.db.Set_Size(inode=self._inode, size=file_size)
+
+            # Reset calculated free space on filesystem
             self.fs._freeSpace = None
 ### DB ###
 
@@ -346,7 +348,7 @@ class BaseFile(object):
 #        print >> sys.stderr, '\tGet_Chunks', file,floor,ceil
 
         # Stored chunks
-        chunks = self.db.Get_Chunks(file=self._inode, floor=floor, ceil=ceil)
+        chunks = self.db.Get_Chunks(inode=self._inode, floor=floor, ceil=ceil)
 
         #If there are chunks, check their bounds
         if chunks:

@@ -1,8 +1,8 @@
 -- Free all the chunks from a file
 
 UPDATE chunks
-SET file = NULL, block = 0
-WHERE file = :file ;
+SET inode = NULL, block = 0
+WHERE inode = :inode ;
 
 -- Set new file size
 UPDATE files

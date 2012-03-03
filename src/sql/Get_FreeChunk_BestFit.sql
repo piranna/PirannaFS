@@ -3,13 +3,13 @@
 -- smaller than the required number of sectors
 
 SELECT * FROM chunks
-WHERE file IS NULL
+WHERE inode IS NULL
 --  AND block NOT IN (:blocks)
     AND length <= COALESCE
                   (
                       (
                           SELECT length FROM chunks
-                          WHERE file IS NULL
+                          WHERE inode IS NULL
 --                            AND block NOT IN (:blocks)
                               AND length >= :sectors_required
                           ORDER BY length
