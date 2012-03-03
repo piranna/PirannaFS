@@ -78,7 +78,8 @@ class BaseFile(object):
             self.db.truncate2(file=self._inode, ceil=ceil)
 
         # Set new file size
-        self.__Set_Size(size)
+        self.db.Set_Size(inode=self._inode, size=size)
+        self.fs._freeSpace = None
 
     @writeable
     def _write(self, data):
@@ -173,7 +174,8 @@ class BaseFile(object):
 
         # Set new file size if neccesary
         if self.db.Get_Size(inode=self._inode) < file_size:
-            self.__Set_Size(file_size)
+            self.db.Set_Size(inode=self._inode, size=file_size)
+            self.fs._freeSpace = None
 ### DB ###
 
     #
@@ -420,8 +422,3 @@ class BaseFile(object):
         self._offset += remanent
 
         return readed[offset:self._offset]
-
-    def __Set_Size(self, size):
-        """Set file size and reset filesystem free space counter"""
-        self.db.Set_Size(inode=self._inode, size=size)
-        self.fs._freeSpace = None
