@@ -9,4 +9,9 @@ INSERT INTO chunks(file, block, length,                 sector)
               AND block = length > :ceil-block ;
 
 UPDATE chunks       SET length = :ceil-block
-WHERE file IS :file AND length > :ceil-block;
+WHERE file IS :file AND length > :ceil-block ;
+
+-- Set new file size
+UPDATE files
+SET size = :size
+WHERE inode = :inode ;

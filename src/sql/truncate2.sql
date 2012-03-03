@@ -2,4 +2,9 @@
 
 UPDATE chunks
 SET file = NULL, block = 0
-WHERE file = :file
+WHERE file = :file ;
+
+-- Set new file size
+UPDATE files
+SET size = :size
+WHERE inode = :inode ;

@@ -71,14 +71,15 @@ class BaseFile(object):
 
         # If new file size if bigger than zero, split chunks
         if ceil >= 0:
-            self.db.truncate1(file=self._inode, ceil=ceil)
+            self.db.truncate1(file=self._inode, ceil=ceil,
+                              inode=self._inode, size=size)  # Set_Size
 
         # Free unwanted chunks from the file
         else:
-            self.db.truncate2(file=self._inode, ceil=ceil)
+            self.db.truncate2(file=self._inode, ceil=ceil,
+                              inode=self._inode, size=size)  # Set_Size
 
-        # Set new file size
-        self.db.Set_Size(inode=self._inode, size=size)
+        # Reset calculated free space on filesystem
         self.fs._freeSpace = None
 
     @writeable
