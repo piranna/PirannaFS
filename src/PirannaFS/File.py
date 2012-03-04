@@ -124,10 +124,9 @@ class BaseFile(object):
 
 ### DB ###
         # Fill holes between written chunks (if any)
-        for chunk in chunks:
+        for index, chunk in enumerate(chunks):
 #            print "chunks durante", chunks
             if chunk.sector == None:
-                index = chunks.index(chunk)
                 block = chunk.block
 
                 while chunk.length >= 0:
@@ -136,12 +135,12 @@ class BaseFile(object):
                     req = chunk.length
                     blocks = ','.join([str(chunk.block) for chunk in chunks])
                     free = self.db.Get_FreeChunk_BestFit(sectors_required=req,
-                            blocks=blocks)
+                                                         blocks=blocks)
 
                     # If free chunk is bigger that hole, split it
                     if free.length > chunk.length:
                         free.length = chunk.length
-                        self.db.Split_Chunks(**free)
+                        self.db.Split_Chunks(free)
 
                     # Adapt free chunk
                     free.inode = self._inode
