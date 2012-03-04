@@ -4,14 +4,11 @@ Created on 02/04/2011
 @author: piranna
 '''
 
-from stat import S_IFDIR, S_IFREG
-
-from os import SEEK_END
-from os.path import split
-
-from antiorm.utils import DictObj
-
-from errors import ResourceInvalid, ResourceNotFound, StorageSpace
+from collections import namedtuple
+from errors      import ResourceInvalid, ResourceNotFound, StorageSpace
+from os          import SEEK_END
+from os.path     import split
+from stat        import S_IFDIR, S_IFREG
 
 
 def readable(method):
@@ -91,14 +88,14 @@ class BaseFile(object):
         floor, ceil = self.__CalcBounds(size)
         sectors_required = ceil - floor
 
-        ### DB ###
+### DB ###
         sectors_required, chunks = self.__GetChunksWritten(sectors_required,
                                                            floor, ceil)
 
         # Raise error if there's not enought free space available
         if sectors_required > self.fs._FreeSpace() // self.ll.sector_size:
             raise StorageSpace
-        ### DB ###
+### DB ###
 
         file_size = self._offset + size
 
@@ -106,7 +103,7 @@ class BaseFile(object):
         # adapt data chunks
         offset = self._offset % self.ll.sector_size
         if offset:
-            sector = chunks[0]['sector']
+            sector = chunks[0].sector
 #            print "sector:", sector, chunks
 
             # If first sector was not written before
@@ -140,7 +137,9 @@ class BaseFile(object):
                     # If free chunk is bigger that hole, split it
                     if free.length > chunk.length:
                         free.length = chunk.length
-                        self.db.Split_Chunks(free)
+                        self.db.Split_Chunks(block=free.block,
+                                             inode=free.inode,
+                                             length=free.length)
 
                     # Adapt free chunk
                     free.inode = self._inode
@@ -170,6 +169,7 @@ class BaseFile(object):
 
 ### DB ###
         # Put chunks in database
+        print "chunks:", chunks
         self.db.Put_Chunks(chunks)
 
         # Set new file size if neccesary
@@ -349,42 +349,41 @@ class BaseFile(object):
         # Stored chunks
         chunks = self.db.Get_Chunks(inode=self._inode, floor=floor, ceil=ceil)
 
+        Namedtuple = namedtuple('namedtuple',
+                                ('inode', 'block', 'length', 'sector'))
+
         #If there are chunks, check their bounds
         if chunks:
             # Create first chunk if not stored
-            chunk = DictObj(chunks[0])
+            chunk = Namedtuple(chunks[0])
 
-            if chunk['block'] > floor:
+            if chunk.block > floor:
 
-                chunk.length = chunk['block'] - floor - 1
-                chunk['block'] = floor
-                chunk['drive'] = None
-                chunk['sector'] = None
+                chunk.length = chunk.block - floor - 1
+                chunk.block = floor
+                chunk.sector = None
 
+                chunk.drive = None
                 chunks = [chunk].extend(chunks)
 
             # Create last chunk if not stored
-            chunk = DictObj(chunks[-1])
+            chunk = Namedtuple(chunks[-1])
 
-            chunk['block'] += chunk.length
-            if  chunk['block'] < ceil:
-                chunk['block'] += 1
-                chunk.length = ceil - chunk['block']
+            chunk.block += chunk.length
+            if  chunk.block < ceil:
+                chunk.block += 1
+                chunk.length = ceil - chunk.block
+                chunk.sector = None
 
-                chunk['drive'] = None
-                chunk['sector'] = None
+                chunk.drive = None
                 chunks.append(chunk)
 
         # There's no chunks for that file at this blocks, make a fake empty one
         else:
             # Create first chunk if not stored
-            chunk = DictObj()
+            chunk = Namedtuple(None, floor, ceil - floor, None)
 
-            chunk.length = ceil - floor
-            chunk.block = floor
-            chunk.drive = None
-            chunk.sector = None
-
+#            chunk.drive = None
             chunks.append(chunk)
 
         # Return list of chunks
