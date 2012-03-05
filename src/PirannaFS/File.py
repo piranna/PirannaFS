@@ -135,24 +135,26 @@ class BaseFile(object):
                                                          blocks=blocks)
 
                     # If free chunk is bigger that hole, split it
-                    if free.length > chunk.length:
-                        free.length = chunk.length
+                    free_length = free.length
+                    if free_length > chunk.length:
+                        free_length = chunk.length
                         self.db.Split_Chunks(block=free.block,
                                              inode=free.inode,
-                                             length=free.length)
+                                             length=free_length)
 
                     # Adapt free chunk
-                    free.inode = self._inode
-                    free.block = block
+                    Namedtuple = namedtuple('namedtuple', free._fields)
+                    print free._fields
 
                     # Add free chunk to the hole
-                    chunks.insert(index, free)
+                    chunks.insert(index, Namedtuple(None, self._inode, block,
+                                                    free_length, free.sector))
                     index += 1
 
                     # Increase block number for the next free chunk in the hole
                     # and decrease size of hole
-                    block += free.length + 1
-                    chunk.length -= free.length + 1
+                    block += free_length + 1
+                    chunk.length -= free_length + 1
 
                 # Remove hole chunk since we have filled it
                 chunks.pop(index)
@@ -202,7 +204,7 @@ class BaseFile(object):
         raise StopIteration
 
     @readable
-    def read(self, size= -1):
+    def read(self, size=-1):
         floor, ceil, remanent = self.__readPre(size)
         if not remanent:
             return ""
@@ -214,7 +216,7 @@ class BaseFile(object):
         return self.__readPost(readed, remanent)
 
     @readable
-    def readline(self, size= -1):
+    def readline(self, size=-1):
         floor, _, remanent = self.__readPre(size)
         if not remanent:
             return ""
@@ -244,7 +246,7 @@ class BaseFile(object):
 
         return self.__readPost(readed, remanent)
 
-    def readlines(self, sizehint= -1):
+    def readlines(self, sizehint=-1):
         """
         """
         return self.read(sizehint).splitlines(True)
@@ -265,7 +267,6 @@ class BaseFile(object):
 
     def __iter__(self):
         return self
-
 
 #    def __str__(self):
 #        return "<File in %s %s>" % (self.__fs, self.path)
@@ -401,7 +402,7 @@ class BaseFile(object):
 
         return sectors_required, chunks
 
-    def __readPre(self, size= -1):
+    def __readPre(self, size=-1):
         if not size:
             return None, None, 0
 
