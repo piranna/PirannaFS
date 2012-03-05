@@ -351,7 +351,7 @@ class BaseFile(object):
         chunks = self.db.Get_Chunks(inode=self._inode, floor=floor, ceil=ceil)
 
         Namedtuple = namedtuple('namedtuple',
-                                ('inode', 'block', 'length', 'sector'))
+                                ('id', 'inode', 'block', 'length', 'sector'))
 
         #If there are chunks, check their bounds
         if chunks:
@@ -382,7 +382,7 @@ class BaseFile(object):
         # There's no chunks for that file at this blocks, make a fake empty one
         else:
             # Create first chunk if not stored
-            chunk = Namedtuple(None, floor, ceil - floor, None)
+            chunk = Namedtuple(None, None, floor, ceil - floor, None)
 
 #            chunk.drive = None
             chunks.append(chunk)
