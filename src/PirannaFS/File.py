@@ -113,7 +113,9 @@ class BaseFile(object):
 
             # Else get it's current value as base for new data
             else:
-                sector = self.ll.Read([{"sector":sector, "length":0}])
+                nt = namedtuple('namedtuple', ('sector', 'length'))
+                sector = self.ll.Read([nt(sector, 0)])
+#                sector = self.ll.Read([{"sector":sector, "length":0}])
                 sector = sector[:offset]
 
             # Adapt data
@@ -124,37 +126,38 @@ class BaseFile(object):
         for index, chunk in enumerate(chunks):
 #            print "chunks durante", chunks
             if chunk.sector == None:
-                block = chunk.block
+                chunk_block = chunk.block
+                chunk_length = chunk.length
 
-                while chunk.length >= 0:
+                while chunk_length >= 0:
                     # Get the free chunk that best fit the hole
 
-                    req = chunk.length
+                    req = chunk_length
                     blocks = ','.join([str(chunk.block) for chunk in chunks])
                     free = self.db.Get_FreeChunk_BestFit(sectors_required=req,
                                                          blocks=blocks)
 
                     # If free chunk is bigger that hole, split it
                     free_length = free.length
-                    if free_length > chunk.length:
-                        free_length = chunk.length
+                    if free_length > chunk_length:
+                        free_length = chunk_length
                         self.db.Split_Chunks(block=free.block,
                                              inode=free.inode,
                                              length=free_length)
 
                     # Adapt free chunk
                     Namedtuple = namedtuple('namedtuple', free._fields)
-                    print free._fields
 
                     # Add free chunk to the hole
-                    chunks.insert(index, Namedtuple(None, self._inode, block,
-                                                    free_length, free.sector))
+                    chunks.insert(index, Namedtuple(None, self._inode,
+                                                    chunk_block, free_length,
+                                                    free.sector))
                     index += 1
 
                     # Increase block number for the next free chunk in the hole
                     # and decrease size of hole
-                    block += free_length + 1
-                    chunk.length -= free_length + 1
+                    chunk_block += free_length + 1
+                    chunk_length -= free_length + 1
 
                 # Remove hole chunk since we have filled it
                 chunks.pop(index)
@@ -171,8 +174,7 @@ class BaseFile(object):
 
 ### DB ###
         # Put chunks in database
-        print "chunks:", chunks
-        self.db.Put_Chunks(chunks)
+        self.db.Put_Chunks([chunk._asdict() for chunk in chunks])
 
         # Set new file size if neccesary
         if self.db.Get_Size(inode=self._inode) < file_size:
@@ -356,7 +358,7 @@ class BaseFile(object):
         #If there are chunks, check their bounds
         if chunks:
             # Create first chunk if not stored
-            chunk = Namedtuple(chunks[0])
+            chunk = chunks[0]
 
             if chunk.block > floor:
 
@@ -368,16 +370,17 @@ class BaseFile(object):
                 chunks = [chunk].extend(chunks)
 
             # Create last chunk if not stored
-            chunk = Namedtuple(chunks[-1])
+            chunk = chunks[-1]
 
-            chunk.block += chunk.length
-            if  chunk.block < ceil:
-                chunk.block += 1
-                chunk.length = ceil - chunk.block
-                chunk.sector = None
+            chunk_block = chunk.block + chunk.length
+            if chunk_block < ceil:
+                chunk_block += 1
+                chunk_length = ceil - chunk_block
+                chunk_sector = None
 
-                chunk.drive = None
-                chunks.append(chunk)
+#                chunk.drive = None
+                chunks.append(Namedtuple(chunk.id, chunk.inode, chunk_block,
+                                         chunk_length, chunk_sector))
 
         # There's no chunks for that file at this blocks, make a fake empty one
         else:

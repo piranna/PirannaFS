@@ -33,8 +33,8 @@ class LL:
         """
         data = ""
         for chunk in chunks:
-            if chunk['sector'] != None:
-                data += self.Read_Chunk(chunk['sector'], chunk['length'])
+            if chunk.sector != None:
+                data += self.Read_Chunk(chunk.sector, chunk.length)
             else:
                 data += '\0' * (chunk.length + 1) * self.sector_size
 

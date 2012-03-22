@@ -94,7 +94,7 @@ class Filesystem(BaseFS, base.FS):
         self._delegate_methods(self.dir_class, self._dir_class_map)
         self._delegate_methods(self.file_class, self._file_class_map)
 
-        print "__init__", plugins.send("FS.__init__", db=db_file, ll=self.ll)
+#        print "__init__", plugins.send("FS.__init__", db=db_file, ll=self.ll)
 #        plugins.send("FS.__init__", db=self.db, ll=self.ll)
 
     #
@@ -120,7 +120,7 @@ class Filesystem(BaseFS, base.FS):
         if inode == None:
             raise ResourceNotFoundError(path)
 
-        return self.db.getinfo(parent_dir=parent_dir, name=name)
+        return self.db.getinfo(parent_dir=parent_dir, name=name)._asdict()
 
     def isdir(self, path):                                                 # OK
         """Check if a path references a directory.
