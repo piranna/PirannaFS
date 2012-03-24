@@ -89,8 +89,14 @@ class BaseFile(object):
         sectors_required = ceil - floor
 
 ### DB ###
-        sectors_required, chunks = self.__GetChunksWritten(sectors_required,
-                                                           floor, ceil)
+        # Get written chunks of the file
+        chunks = self.__GetChunks(floor, ceil)
+
+        # Check if there's enought free space available
+        for chunk in chunks:
+            # Discard chunks already in file from required space
+            if chunk.sector != None:
+                sectors_required -= chunk.length + 1
 
         # Raise error if there's not enought free space available
         if sectors_required > self.fs._FreeSpace() // self.ll.sector_size:
@@ -174,7 +180,7 @@ class BaseFile(object):
 
 ### DB ###
         # Put chunks in database
-        self.db.Put_Chunks([chunk._asdict() for chunk in chunks])
+        self.db.Put_Chunks(chunk._asdict() for chunk in chunks)
 
         # Set new file size if neccesary
         if self.db.Get_Size(inode=self._inode) < file_size:
@@ -392,18 +398,6 @@ class BaseFile(object):
 
         # Return list of chunks
         return chunks
-
-    def __GetChunksWritten(self, sectors_required, floor, ceil):
-        """Get written chunks of the file"""
-        chunks = self.__GetChunks(floor, ceil)
-
-        # Check if there's enought free space available
-        for chunk in chunks:
-            # Discard chunks already in file from required space
-            if chunk.sector != None:
-                sectors_required -= chunk.length + 1
-
-        return sectors_required, chunks
 
     def __readPre(self, size=-1):
         if not size:
