@@ -103,30 +103,6 @@ class BaseFile(object):
             raise StorageSpace
 ### DB ###
 
-        file_size = self._offset + size
-
-        # If there is an offset in the first sector
-        # adapt data chunks
-        offset = self._offset % self.ll.sector_size
-        if offset:
-            sector = chunks[0].sector
-#            print "sector:", sector, chunks
-
-            # If first sector was not written before
-            # fill space with zeroes
-            if sector == None:
-                sector = '\0' * offset
-
-            # Else get it's current value as base for new data
-            else:
-                nt = namedtuple('namedtuple', ('sector', 'length'))
-                sector = self.ll.Read([nt(sector, 0)])
-#                sector = self.ll.Read([{"sector":sector, "length":0}])
-                sector = sector[:offset]
-
-            # Adapt data
-            data = sector + data
-
 ### DB ###
         # Fill holes between written chunks (if any)
         for index, chunk in enumerate(chunks):
@@ -139,17 +115,18 @@ class BaseFile(object):
                     # Get the free chunk that best fit the hole
 
                     req = chunk_length
-                    blocks = ','.join([str(chunk.block) for chunk in chunks])
+                    blocks = ','.join(str(chunk.block) for chunk in chunks)
                     free = self.db.Get_FreeChunk_BestFit(sectors_required=req,
                                                          blocks=blocks)
 
                     # If free chunk is bigger that hole, split it
-                    free_length = free.length
-                    if free_length > chunk_length:
+                    if free.length > chunk_length:
                         free_length = chunk_length
                         self.db.Split_Chunks(block=free.block,
                                              inode=free.inode,
                                              length=free_length)
+                    else:
+                        free_length = free.length
 
                     # Adapt free chunk
                     Namedtuple = namedtuple('namedtuple', free._fields)
@@ -168,6 +145,27 @@ class BaseFile(object):
                 # Remove hole chunk since we have filled it
                 chunks.pop(index)
 ### DB ###
+
+        file_size = self._offset + size
+
+        # If there is an offset in the first sector
+        # adapt data chunks
+        offset = self._offset % self.ll.sector_size
+        if offset:
+            sector = chunks[0].sector
+#            print "sector:", sector, chunks
+
+            # If first sector was not written before
+            # fill space with zeroes
+            if sector == None:
+                sector = '\0' * offset
+
+            # Else get it's current value as base for new data
+            else:
+                sector = self.ll.Read_Chunk(sector, 0)[:offset]
+
+            # Adapt data
+            data = sector + data
 
         # Write chunks data to the drive
         for chunk in chunks:
