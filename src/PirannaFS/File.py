@@ -164,7 +164,7 @@ class BaseFile(object):
             data = sector + data
 
         # Write chunks data to the drive
-        self.ll.Write(chunks, data, floor)
+        self.ll.Write(chunks, data)
 
         # Set new offset
         self._offset = file_size
