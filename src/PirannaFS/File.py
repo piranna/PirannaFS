@@ -169,15 +169,12 @@ class BaseFile(object):
         # Set new offset
         self._offset = file_size
 
-### DB ###
+### DB - They are independent and unrelated between them, so don't worry ###
         # Put chunks in database
         self.db.Put_Chunks(chunk._asdict() for chunk in chunks)
-### DB ###
 
-### DB ###
         # Set new file size and reset calculated free space on filesystem
-        if self.db.Set_Size_ifLessThan(inode=self._inode, size=file_size):
-            self.fs._freeSpace = None
+        self.db._Set_Size(inode=self._inode, size=file_size)
 ### DB ###
 
     #
@@ -202,7 +199,7 @@ class BaseFile(object):
         raise StopIteration
 
     @readable
-    def read(self, size=-1):
+    def read(self, size= -1):
         floor, ceil, remanent = self.__readPre(size)
         if not remanent:
             return ""
@@ -214,7 +211,7 @@ class BaseFile(object):
         return self.__readPost(readed, remanent)
 
     @readable
-    def readline(self, size=-1):
+    def readline(self, size= -1):
         floor, _, remanent = self.__readPre(size)
         if not remanent:
             return ""
@@ -244,7 +241,7 @@ class BaseFile(object):
 
         return self.__readPost(readed, remanent)
 
-    def readlines(self, sizehint=-1):
+    def readlines(self, sizehint= -1):
         """
         """
         return self.read(sizehint).splitlines(True)
@@ -389,7 +386,7 @@ class BaseFile(object):
         # Return list of chunks
         return chunks
 
-    def __readPre(self, size=-1):
+    def __readPre(self, size= -1):
         if not size:
             return None, None, 0
 
