@@ -209,9 +209,9 @@ class BaseFile(object):
 
     ### DB ###
                 # Get the free chunk that best fit the hole
-                free = self.db.Get_FreeChunk_BestFit1(sectors_required=chunk.length)
-                if free:
-                    free_chunks = [free]
+                last = self.db.Get_FreeChunk_BestFit1(sectors_required=chunk.length)
+                if last:
+                    free_chunks = [last]
 
                 else:
                     free_chunks = self.db.Get_FreeChunk_BestFit2(sectors_required=chunk.length)
@@ -227,21 +227,21 @@ class BaseFile(object):
                                          chunk_block, c.length, c.sector)
                         chunk_block += c.length + 1
 
-                    free = free_chunks[-1]
+                    last = free_chunks[-1]
 
                 # If the last/only free chunk is bigger than the hole, split it
-                free_length = free.length
-                if free_length > chunk.length:
-                    free_length = chunk.length
-                    self.db.Split_Chunks(block=free.block,
-                                         inode=free.inode,
-                                         length=free_length)
+                last_length = last.length
+                if last_length > chunk.length:
+                    last_length = chunk.length
+                    self.db.Split_Chunks(block=last.block,
+                                         inode=last.inode,
+                                         length=last_length)
     ### DB ###
 
-                Namedtuple = namedtuple('namedtuple', free._fields)
+                Namedtuple = namedtuple('namedtuple', last._fields)
                 free_chunks[-1] = Namedtuple(None, self._inode,
-                                             chunk_block, free_length,
-                                             free.sector)
+                                             chunk_block, last_length,
+                                             last.sector)
 
                 # Add the free chunk to the hole
                 chunks[index:index + 1] = free_chunks
