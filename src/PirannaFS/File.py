@@ -214,6 +214,7 @@ class BaseFile(object):
                     free_chunks = [last]
 
                 else:
+        ### DB ###
                     free_chunks = self.db.Get_FreeChunk_BestFit2(sectors_required=chunk.length)
                     if not free_chunks:
                         raise StorageSpace
@@ -221,14 +222,16 @@ class BaseFile(object):
                     # Update free chunks to be the correct blocks
                     Namedtuple = namedtuple('namedtuple',
                                             free_chunks[0]._fields)
-
                     for i, c in enumerate(free_chunks[:-1]):
                         free_chunks[i] = Namedtuple(None, self._inode,
-                                         chunk_block, c.length, c.sector)
+                                                    chunk_block, c.length,
+                                                    c.sector)
                         chunk_block += c.length + 1
+        ### DB ###
 
                     last = free_chunks[-1]
 
+        ### DB ###
                 # If the last/only free chunk is bigger than the hole, split it
                 last_length = last.length
                 if last_length > chunk.length:
@@ -236,12 +239,13 @@ class BaseFile(object):
                     self.db.Split_Chunks(block=last.block,
                                          inode=last.inode,
                                          length=last_length)
-    ### DB ###
 
                 Namedtuple = namedtuple('namedtuple', last._fields)
                 free_chunks[-1] = Namedtuple(None, self._inode,
                                              chunk_block, last_length,
                                              last.sector)
+        ### DB ###
+    ### DB ###
 
                 # Add the free chunk to the hole
                 chunks[index:index + 1] = free_chunks
