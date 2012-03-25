@@ -32,6 +32,7 @@ class LL:
         Read data from the underlying device
         """
         data = ""
+
         for chunk in chunks:
             if chunk.sector != None:
                 data += self.Read_Chunk(chunk.sector, chunk.length)
@@ -46,6 +47,15 @@ class LL:
         """
         self._file.seek(sector * self.sector_size)
         return self._file.read((length + 1) * self.sector_size)
+
+    def Write(self, chunks, data, floor=0):
+        """
+        Write data the underlying device
+        """
+        for chunk in chunks:
+            offset = (chunk.block - floor) * self.sector_size
+            d = data[offset:offset + (chunk.length + 1) * self.sector_size]
+            self.Write_Chunk(chunk.sector, d)
 
     def Write_Chunk(self, sector, data):
         """

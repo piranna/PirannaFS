@@ -113,25 +113,21 @@ class BaseFile(object):
 
                 while chunk_length >= 0:
                     # Get the free chunk that best fit the hole
-
-                    req = chunk_length
                     blocks = ','.join(str(chunk.block) for chunk in chunks)
-                    free = self.db.Get_FreeChunk_BestFit(sectors_required=req,
-                                                         blocks=blocks)
+                    free = self.db.Get_FreeChunk_BestFit(blocks=blocks,
+                                                sectors_required=chunk_length)
 
-                    # If free chunk is bigger that hole, split it
-                    if free.length > chunk_length:
+                    # If the free chunk is bigger than the hole, split it
+                    # Obviously, it's just the only one returned...
+                    free_length = free.length
+                    if free_length > chunk_length:
                         free_length = chunk_length
                         self.db.Split_Chunks(block=free.block,
                                              inode=free.inode,
                                              length=free_length)
-                    else:
-                        free_length = free.length
 
-                    # Adapt free chunk
+                    # Add the free chunk to the hole
                     Namedtuple = namedtuple('namedtuple', free._fields)
-
-                    # Add free chunk to the hole
                     chunks.insert(index, Namedtuple(None, self._inode,
                                                     chunk_block, free_length,
                                                     free.sector))
@@ -168,10 +164,7 @@ class BaseFile(object):
             data = sector + data
 
         # Write chunks data to the drive
-        for chunk in chunks:
-            offset = (chunk.block - floor) * self.ll.sector_size
-            d = data[offset:offset + (chunk.length + 1) * self.ll.sector_size]
-            self.ll.Write_Chunk(chunk.sector, d)
+        self.ll.Write(chunks, data, floor)
 
         # Set new offset
         self._offset = file_size
@@ -179,12 +172,11 @@ class BaseFile(object):
 ### DB ###
         # Put chunks in database
         self.db.Put_Chunks(chunk._asdict() for chunk in chunks)
+### DB ###
 
-        # Set new file size if neccesary
-        if self.db.Get_Size(inode=self._inode) < file_size:
-            self.db.Set_Size(inode=self._inode, size=file_size)
-
-            # Reset calculated free space on filesystem
+### DB ###
+        # Set new file size and reset calculated free space on filesystem
+        if self.db.Set_Size_ifLessThan(inode=self._inode, size=file_size):
             self.fs._freeSpace = None
 ### DB ###
 
