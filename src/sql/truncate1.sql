@@ -12,6 +12,4 @@ UPDATE chunks         SET length = :ceil-block
 WHERE inode IS :inode AND length > :ceil-block ;
 
 -- Set new file size
-UPDATE files
-SET size = :size
-WHERE inode = :inode ;
+INCLUDE "_Set_Size.sql"
