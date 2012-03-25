@@ -79,6 +79,102 @@ class BaseFile(object):
         # Reset calculated free space on filesystem
         self.fs._freeSpace = None
 
+#    @writeable
+#    def _write(self, data):
+#        if not data:
+#            return
+#
+#        size = len(data)
+#        floor, ceil = self.__CalcBounds(size)
+#        sectors_required = ceil - floor
+#
+#### DB ###
+#        # Get written chunks of the file
+#        chunks = self.__GetChunks(floor, ceil)
+#
+#        # Check if there's enought free space available
+#        for chunk in chunks:
+#            # Discard chunks already in file from required space
+#            if chunk.sector != None:
+#                sectors_required -= chunk.length + 1
+#
+#        # Raise error if there's not enought free space available
+#        if sectors_required > self.fs._FreeSpace() // self.ll.sector_size:
+#            raise StorageSpace
+#### DB ###
+#
+#### DB ###
+#        # Fill holes between written chunks (if any)
+#        for index, chunk in enumerate(chunks):
+##            print "chunks durante", chunks
+#            if chunk.sector == None:
+#                chunk_block = chunk.block
+#                chunk_length = chunk.length
+#
+#                while chunk_length >= 0:
+#                    # Get the free chunk that best fit the hole
+#                    free = self.db.Get_FreeChunk_BestFit(sectors_required=chunk_length)
+#
+#                    # If the free chunk is bigger than the hole, split it
+#                    # Obviously, it's just the only one returned...
+#                    free_length = free.length
+#                    if free_length > chunk_length:
+#                        free_length = chunk_length
+#                        self.db.Split_Chunks(block=free.block,
+#                                             inode=free.inode,
+#                                             length=free_length)
+#
+#                    # Add the free chunk to the hole
+#                    Namedtuple = namedtuple('namedtuple', free._fields)
+#                    chunks.insert(index, Namedtuple(None, self._inode,
+#                                                    chunk_block, free_length,
+#                                                    free.sector))
+#                    index += 1
+#
+#                    # Increase block number for the next free chunk in the hole
+#                    # and decrease size of hole
+#                    chunk_block += free_length + 1
+#                    chunk_length -= free_length + 1
+#
+#                # Remove hole chunk since we have filled it
+#                chunks.pop(index)
+#### DB ###
+#
+#        file_size = self._offset + size
+#
+#        # If there is an offset in the first sector
+#        # adapt data chunks
+#        offset = self._offset % self.ll.sector_size
+#        if offset:
+#            sector = chunks[0].sector
+##            print "sector:", sector, chunks
+#
+#            # If first sector was not written before
+#            # fill space with zeroes
+#            if sector == None:
+#                sector = '\0' * offset
+#
+#            # Else get it's current value as base for new data
+#            else:
+#                sector = self.ll.Read_Chunk(sector, 0)[:offset]
+#
+#            # Adapt data
+#            data = sector + data
+#
+#        # Write chunks data to the drive
+#        self.ll.Write(chunks, data)
+#
+#        # Set new offset
+#        self._offset = file_size
+#
+#### DB - They are independent and unrelated between them, so don't worry ###
+#        # Put chunks in database
+#        self.db.Put_Chunks(chunk._asdict() for chunk in chunks)
+#
+#        # Set new file size and reset calculated free space on filesystem
+#        self.db._Set_Size(inode=self._inode, size=file_size)
+#### DB ###
+
     @writeable
     def _write(self, data):
         if not data:
@@ -92,13 +188,14 @@ class BaseFile(object):
         # Get written chunks of the file
         chunks = self.__GetChunks(floor, ceil)
 
-        # Check if there's enought free space available
+        # Check if there's enought free space available.
+        # This implementation is only for overwriting, not copy-on-write
         for chunk in chunks:
             # Discard chunks already in file from required space
             if chunk.sector != None:
                 sectors_required -= chunk.length + 1
 
-        # Raise error if there's not enought free space available
+        # Raise exception if there's not enought free space available
         if sectors_required > self.fs._FreeSpace() // self.ll.sector_size:
             raise StorageSpace
 ### DB ###
@@ -109,37 +206,45 @@ class BaseFile(object):
 #            print "chunks durante", chunks
             if chunk.sector == None:
                 chunk_block = chunk.block
-                chunk_length = chunk.length
 
-                while chunk_length >= 0:
-                    # Get the free chunk that best fit the hole
-                    blocks = ','.join(str(chunk.block) for chunk in chunks)
-                    free = self.db.Get_FreeChunk_BestFit(blocks=blocks,
-                                                sectors_required=chunk_length)
+    ### DB ###
+                # Get the free chunk that best fit the hole
+                free = self.db.Get_FreeChunk_BestFit1(sectors_required=chunk.length)
+                if free:
+                    free_chunks = [free]
 
-                    # If the free chunk is bigger than the hole, split it
-                    # Obviously, it's just the only one returned...
-                    free_length = free.length
-                    if free_length > chunk_length:
-                        free_length = chunk_length
-                        self.db.Split_Chunks(block=free.block,
-                                             inode=free.inode,
-                                             length=free_length)
+                else:
+                    free_chunks = self.db.Get_FreeChunk_BestFit2(sectors_required=chunk.length)
+                    if not free_chunks:
+                        raise StorageSpace
 
-                    # Add the free chunk to the hole
-                    Namedtuple = namedtuple('namedtuple', free._fields)
-                    chunks.insert(index, Namedtuple(None, self._inode,
-                                                    chunk_block, free_length,
-                                                    free.sector))
-                    index += 1
+                    # Update free chunks to be the correct blocks
+                    Namedtuple = namedtuple('namedtuple',
+                                            free_chunks[0]._fields)
 
-                    # Increase block number for the next free chunk in the hole
-                    # and decrease size of hole
-                    chunk_block += free_length + 1
-                    chunk_length -= free_length + 1
+                    for i, c in enumerate(free_chunks[:-1]):
+                        free_chunks[i] = Namedtuple(None, self._inode,
+                                         chunk_block, c.length, c.sector)
+                        chunk_block += c.length + 1
 
-                # Remove hole chunk since we have filled it
-                chunks.pop(index)
+                    free = free_chunks[-1]
+
+                # If the last/only free chunk is bigger than the hole, split it
+                free_length = free.length
+                if free_length > chunk.length:
+                    free_length = chunk.length
+                    self.db.Split_Chunks(block=free.block,
+                                         inode=free.inode,
+                                         length=free_length)
+    ### DB ###
+
+                Namedtuple = namedtuple('namedtuple', free._fields)
+                free_chunks[-1] = Namedtuple(None, self._inode,
+                                             chunk_block, free_length,
+                                             free.sector)
+
+                # Add the free chunk to the hole
+                chunks[index:index + 1] = free_chunks
 ### DB ###
 
         file_size = self._offset + size
