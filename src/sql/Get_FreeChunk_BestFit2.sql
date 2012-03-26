@@ -3,8 +3,8 @@
 -- smaller than the required number of sectors
 
 -- Biggest chunks smallest than required space
-SELECT * FROM chunks
+SELECT NULL AS id, inode, :block AS block, length, sector FROM chunks
 WHERE inode IS NULL
-    AND length <= :sectors_required
+  AND length <= :sectors_required
 ORDER BY length DESC
 -- LIMIT

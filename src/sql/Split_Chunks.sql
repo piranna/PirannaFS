@@ -8,8 +8,8 @@ INSERT INTO chunks(inode, block,           length,           sector)
             SELECT inode, block+:length+1, length-:length-1, sector+:length+1
             FROM chunks
             WHERE inode IS :inode
-              AND block = :block ;
+              AND sector = :sector ;
 
 UPDATE chunks SET length = :length
 WHERE inode IS :inode
-  AND block = :block;
+  AND sector = :sector;

@@ -209,13 +209,15 @@ class BaseFile(object):
 
     ### DB ###
                 # Get the free chunk that best fit the hole
-                last = self.db.Get_FreeChunk_BestFit1(sectors_required=chunk.length)
+                last = self.db.Get_FreeChunk_BestFit1(block=chunk_block,
+                                                sectors_required=chunk.length)
                 if last:
                     free_chunks = [last]
 
                 else:
         ### DB ###
-                    free_chunks = self.db.Get_FreeChunk_BestFit2(sectors_required=chunk.length)
+                    free_chunks = self.db.Get_FreeChunk_BestFit2(block=chunk_block,
+                                                sectors_required=chunk.length)
                     if not free_chunks:
                         raise StorageSpace
 
@@ -236,9 +238,9 @@ class BaseFile(object):
                 last_length = last.length
                 if last_length > chunk.length:
                     last_length = chunk.length
-                    self.db.Split_Chunks(block=last.block,
-                                         inode=last.inode,
-                                         length=last_length)
+                    self.db.Split_Chunks(inode=last.inode,
+                                         length=last_length,
+                                         sector=last.sector)
 
                 Namedtuple = namedtuple('namedtuple', last._fields)
                 free_chunks[-1] = Namedtuple(None, self._inode,
