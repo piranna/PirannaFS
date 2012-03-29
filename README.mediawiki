@@ -1,0 +1,20 @@
+PirannaFS is a modern and extensible general purpose filesystem developed in
+Python that uses a SQLite database to manage its metadata. The idea behind it is
+to have a minimalistic core so the user can addapt it to its own personal
+purposses throught a plugin system, allowing from a no-files, pure metadata
+filesystem up to ACLs, copy-on-write, logging, network distributed or whatever
+the user wants.
+
+This project won the first prize at the Madrid edition and the first honorable
+mention at the national edition of the V Free Software University Championship,
+Spain 2011.
+
+= Dependencies =
+* Python  >= 2.6 (by PyFilesystem)
+* SQLite  >= 3.6.19
+* [http://pypi.python.org/pypi/Louie/1.1 Louie]   >= 1.1
+* [https://github.com/piranna/AntiORM AntiORM] >= 2012.01.14
+
+== Interfaces (only one is needed) ==
+* Python-FUSE  >= 0.2     (Legacy, currently working in integration)
+* [http://code.google.com/p/pyfilesystem PyFilesystem] >= 0.4 SVN (Current standard)

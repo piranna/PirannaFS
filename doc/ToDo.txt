@@ -1,0 +1,81 @@
+[2010-08-22] 0.1
+================
+[2010-08-22] Creacion, listado y eliminacion de directorios (¡¡¡Hurra!!! :-D)
+
+[2010-09-04] 0.2
+================
+[2010-09-04] Archivos
+    [2010-08-26] Lectura
+    [2010-09-02] Escritura
+    [2010-09-04] Funciones varias (touch, truncate, append...)
+
+[2011-08-20] 0.3
+===
+[2011-08-20] Modificar base de datos
+    * Aumentar velocidad de acceso (cache y similares)
+    [2010-08-30] Size y timestamp en tabla files
+    [2011-07-31] Almacenar fechas como UNIX timestamp (INTEGER), no como texto
+[2011-07-30] Añadir inodo al directorio padre en Dir y File
+
+0.4
+===
+Hacer test para truncate mayor que un sector
+Opciones para seleccionar modo de sincronizacion
+Usar transacciones cuando sea posible/necesario y empaquetar peticiones
+    Transacciones encadenadas (APSW)
+Incorporar fsx.c a la bateria de pruebas
+Usar yield en lugar de devolver listas (si es posible)
+Modificar base de datos
+    Usar principio y final en lugar de principio y longitud (bug critico)
+* Unificar codigo e interfaces FUSE y PyFilesystem
+[2011-07-31] Sacar sentencias SQL a archivos independientes en lugar de estar hardcodeadas
+plugins
+    * soporte en PyFilesystem
+    plugins funcionando por eventos
+        [BUG] Ver porque no funcionan con UnitTest (desaparecen las conexiones)
+    File
+    Directories
+    "core"
+* Dividir base de datos en multiples archivos
+* Conexiones a base de datos multiples a nivel de plugins (¿instancias de objetos?)
+
+0.5
+===
+Hacer parches de delegacion de objetos para PyFilesystem
+plugins
+    log
+    checksum
+    Links simbolicos
+        Añadir soporte en PyFilesystem
+Commits dentro de la base de datos
+Habilitar informacion de StatFS
+
+0.9
+===
+Usar multiples dispositivos simultaneamente
+
+1.0
+===
+Utilidades de administracion externas
+    mkfs y fsck
+    defrag
+
+
+1.1
+===
+plugins
+    ACL
+    COW
+        Utilidades de versionado
+    auto_defrag
+
+2.0
+===
+Incluir la base de datos dentro de la propia particion (sistema autocontenido)
+	sector 0: apuntador y metadatos
+	filtrar eventos relaccionados con la base de datos (evitar sobrecarga y/o entrar en bucle infinito)
+
+3.0
+===
+Portar a C
+Conseguir que Linux arranque desde PirannaFS
