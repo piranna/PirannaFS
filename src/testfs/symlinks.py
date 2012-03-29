@@ -5,29 +5,11 @@ sys.stderr = open('../test/error.log', 'w')
 
 import errno
 import subprocess
-import unittest
 
-from PirannaFS import FileSystem
-
-import plugins
+from unittest import TestCase
 
 
-pm = plugins.Manager()
-pm.Load_Dir("./plugins")
-#pm.Load_Module('symlinks', './plugins')
-
-fs = FileSystem()
-
-fs.parser.fetch_mp = False
-fs.parse(values=fs, errex=1)
-
-fs.multithreaded = False
-fs.fuse_args.mountpoint = '../test/mountpoint'
-
-fs.main()
-
-
-class readlink(unittest.TestCase):
+class readlink(TestCase):
     '''
     http://www.opengroup.org/onlinepubs/009695399/functions/readlink.html
 
@@ -64,7 +46,7 @@ class readlink(unittest.TestCase):
         '''
         The path argument names a file that is not a symbolic link.
         '''
-        fs.mkdir("/test_EINVAL",0)
+        fs.mkdir("/test_EINVAL", 0)
         self.assertEqual(int(fs.readlink("/test_EINVAL")), -errno.EINVAL)
 #        fs.rmdir("/test_EINVAL")
 
@@ -137,7 +119,7 @@ class readlink(unittest.TestCase):
 #        self.assertEqual(int(fs.readlink("/file/test_ENOTDIR")), -errno.ENOTDIR)
 
 
-class symlink(unittest.TestCase):
+class symlink(TestCase):
     '''
     http://www.opengroup.org/onlinepubs/009695399/functions/symlink.html
 
@@ -315,4 +297,6 @@ class symlink(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    unittest.main()
+    from unittest import main
+
+    main()
