@@ -6,7 +6,7 @@ from fs.tests import FSTestCases, ThreadingTestCases
 
 import plugins
 
-from PirannaFS.pyfilesystem import Filesystem
+from pirannafs.backends.pyfilesystem import Filesystem
 
 
 class TestPirannaFS(unittest.TestCase, FSTestCases):

@@ -11,15 +11,15 @@ import stat
 from fs import base
 from fs.errors import ParentDirectoryMissingError, ResourceNotFoundError
 
-from PirannaFS.errors import ParentDirectoryMissing
-from PirannaFS.errors import ResourceInvalid, ResourceNotFound
+from pirannafs.errors import ParentDirectoryMissing
+from pirannafs.errors import ResourceInvalid, ResourceNotFound
 
 import Dir
 import File
 
 import plugins
 
-from .. import BaseFS
+from ... import BaseFS
 
 
 class Filesystem(BaseFS, base.FS):

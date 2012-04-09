@@ -9,9 +9,9 @@ from os import SEEK_SET, SEEK_CUR, SEEK_END
 from fs.errors import ResourceInvalidError, ResourceNotFoundError
 from fs.errors import StorageSpaceError
 
-from PirannaFS.errors import ResourceInvalid, ResourceNotFound, StorageSpace
+from pirannafs.errors import ResourceInvalid, ResourceNotFound, StorageSpace
 
-from ..File import BaseFile
+from ...base.File import BaseFile
 
 
 class File(BaseFile):

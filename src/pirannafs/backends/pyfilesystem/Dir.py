@@ -11,11 +11,11 @@ from fs.errors import DestinationExistsError, DirectoryNotEmptyError
 from fs.errors import ParentDirectoryMissingError, RemoveRootError
 from fs.errors import ResourceInvalidError, ResourceNotFoundError
 
-from PirannaFS.errors import ResourceError, ResourceNotFound
+from pirannafs.errors import ResourceError, ResourceNotFound
 
 import plugins
 
-from ..Dir import BaseDir
+from ...base.Dir import BaseDir
 
 
 class Dir(BaseDir):

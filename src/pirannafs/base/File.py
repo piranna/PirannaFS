@@ -5,10 +5,11 @@ Created on 02/04/2011
 '''
 
 from collections import namedtuple
-from errors      import ResourceInvalid, ResourceNotFound, StorageSpace
 from os          import SEEK_END
 from os.path     import split
 from stat        import S_IFDIR, S_IFREG
+
+from ..errors import ResourceInvalid, ResourceNotFound, StorageSpace
 
 
 def readable(method):
