@@ -9,10 +9,12 @@ import sqlite3
 
 import plugins
 
-from PirannaFS.backends.pyfilesystem import Filesystem
+from pirannafs.backends.pyfilesystem import Filesystem
 
 
-if __name__ == '__main__':
+def main():
+    'Start a new instance of the filesystem using the PyFilesystem backend'
+
     # Load plugins
     pm = plugins.Manager()
     pm.Load_Dir("./plugins")
@@ -23,3 +25,7 @@ if __name__ == '__main__':
 
     # Start filesystem
     Filesystem(db_file, drive)
+
+
+if __name__ == '__main__':
+    main()

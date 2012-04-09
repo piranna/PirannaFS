@@ -5,17 +5,16 @@ Created on 26/07/2010
 @author: piranna
 '''
 
-#import sys
-#sys.stderr = open('../test/error.log', 'w')
-
 import sqlite3
 
 import plugins
 
-from PirannaFS.backends.fuse import Filesystem
+from pirannafs.backends.fuse import Filesystem
 
 
-if __name__ == '__main__':
+def main():
+    'Start a new instance of the filesystem using the FUSE backend'
+
     # Load plugins
     pm = plugins.Manager()
     pm.Load_Dir("./plugins")
@@ -28,3 +27,7 @@ if __name__ == '__main__':
     fs = Filesystem(db_file, drive)
     fs.multithreaded = False
     fs.main()
+
+
+if __name__ == '__main__':
+    main()
