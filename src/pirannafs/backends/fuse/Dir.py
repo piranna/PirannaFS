@@ -4,15 +4,14 @@ Created on 15/08/2010
 @author: piranna
 '''
 
-import sys
-
 import errno
+import sys
 
 import fuse
 
 import plugins
 
-from ..Dir import BaseDir
+from ...base.Dir import BaseDir
 
 
 class Dir(BaseDir):

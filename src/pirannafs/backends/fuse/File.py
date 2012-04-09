@@ -8,9 +8,8 @@ import sys
 
 import errno
 
-from PirannaFS.errors import StorageSpace
-
-from ..File import BaseFile
+from ...base.File import BaseFile
+from ...errors    import StorageSpace
 
 
 class File(BaseFile):

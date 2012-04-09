@@ -4,9 +4,8 @@ Created on 16/08/2010
 @author: piranna
 '''
 
-import sys
-
 import errno
+import sys
 
 import fuse
 fuse.fuse_python_api = (0, 2)
@@ -14,7 +13,7 @@ fuse.fuse_python_api = (0, 2)
 import Dir
 import File
 
-from .. import BaseFS
+from ...base.fs import FS as BaseFS
 
 
 
