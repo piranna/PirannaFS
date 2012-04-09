@@ -5,14 +5,14 @@ Created on 26/07/2010
 @author: piranna
 '''
 
-import sys
-sys.stderr = open('../test/error.log', 'w')
+#import sys
+#sys.stderr = open('../test/error.log', 'w')
 
 import sqlite3
 
 import plugins
 
-from PirannaFS.pyfilesystem import Filesystem
+from PirannaFS.fuse import Filesystem
 
 
 if __name__ == '__main__':
@@ -21,11 +21,13 @@ if __name__ == '__main__':
     pm.Load_Dir("./plugins")
 
     # Set database, drive and sector size
-    db = sqlite3.connect('../test/db.sqlite')
-    drive = '../test/disk_part.img'
+    db_file = sqlite3.connect('../db.sqlite')
+    db_dirPath = '/home/piranna/Proyectos/FUSE/PirannaFS/src/sql'
+
+    drive = '../disk_part.img'
     sector_size = 512
 
     # Start filesystem
-    fs = Filesystem(db, drive, sector_size)
+    fs = Filesystem(db_file, db_dirPath, drive, sector_size)
     fs.multithreaded = False
     fs.main()

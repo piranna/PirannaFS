@@ -6,10 +6,10 @@ Created on 29/03/2012
 
 from unittest import main
 
+import plugins
 import testfs
 
-from PirannaFS import FileSystem
-import plugins
+from PirannaFS.fuse import Filesystem
 
 
 if __name__ == '__main__':
@@ -17,7 +17,7 @@ if __name__ == '__main__':
     pm.Load_Dir("./plugins")
     #pm.Load_Module('symlinks', './plugins')
 
-    fs = FileSystem()
+    fs = Filesystem()
 
     fs.parser.fetch_mp = False
     fs.parse(values=fs, errex=1)

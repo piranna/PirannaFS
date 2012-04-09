@@ -14,12 +14,12 @@ fuse.fuse_python_api = (0, 2)
 import Dir
 import File
 
-import FS
+from .. import BaseFS
 
 
 
-class FileSystem(FS.FileSystem, fuse.Fuse):
-    def __init__(self, *args, **kw):
+class Filesystem(BaseFS, fuse.Fuse):
+    def __init__(self, db_file, db_dirPath, drive, sector_size=512, *args, **kw):
         fuse.Fuse.__init__(self, *args, **kw)
 
         # This thing that is like a ugly hack it seems that is the correct way
@@ -28,24 +28,29 @@ class FileSystem(FS.FileSystem, fuse.Fuse):
         # and at the Xmp.py example code. You have to set the default values
         # to object attributes that will be overwritten later by the parser.
         # Really too little pythonic...
-        self.db = '../test/db.sqlite'
-        self.drive = '../test/disk_part.img'
-        self.sector = 512
+        self.db_file = db_file
+        self.db_dirPath = db_dirPath
 
-        self.parser.add_option(mountopt="db", metavar="DB",
-                               default=self.db,
+        self.drive = drive
+        self.sector_size = sector_size
+
+        self.parser.add_option(mountopt="db_file", metavar="DB_FILE",
+                               default=self.db_file,
                                help="filesystem metadata database")
+        self.parser.add_option(mountopt="db_dirPath", metavar="DB_DIRPATH",
+                               default=self.db_dirPath,
+                               help="filesystem database SQL queries directory")
         self.parser.add_option(mountopt="drive", metavar="DRIVE",
                                default=self.drive,
                                help="filesystem drive")
-        self.parser.add_option(mountopt="sector", metavar="SECTOR_SIZE",
-                               default=self.sector,
+        self.parser.add_option(mountopt="sector_size", metavar="SECTOR_SIZE",
+                               default=self.sector_size,
                                help="filesystem sector size")
 
         self.parse(values=self, errex=1)
 
 #        self.db = DB.DB(self.db)
-#        self.ll = LL.LL(self.drive,self.sector)
+#        self.ll = LL.LL(self.drive, sector_size)
 
         # http://sourceforge.net/apps/mediawiki/fuse/index.php?title=FUSE_Python_Reference#File_Class_Methods
         # http://old.nabble.com/Python:-Pass-parameters-to-file_class-td18301066.html
@@ -61,7 +66,8 @@ class FileSystem(FS.FileSystem, fuse.Fuse):
         self.dir_class = wrapped_dir_class
         self.file_class = wrapped_file_class
 
-        FS.FileSystem.__init__(self, self.db, self.drive, self.sector)
+        BaseFS.__init__(self, self.db_file, self.db_dirPath, self.drive,
+                        sector_size)
 
 
     # Overloaded
