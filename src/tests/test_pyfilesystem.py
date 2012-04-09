@@ -9,27 +9,27 @@ import plugins
 from pirannafs.backends.pyfilesystem import Filesystem
 
 
-class TestPirannaFS(unittest.TestCase, FSTestCases):
-#class TestPirannaFS(unittest.TestCase, FSTestCases, ThreadingTestCases):
+class PyFilesystem(unittest.TestCase, FSTestCases):
+#class PyFilesystem(unittest.TestCase, FSTestCases, ThreadingTestCases):
 
     test_id = 1
 
     def setUp(self):
         test_name = self.__class__.__name__ + '_' + str(self.test_id)
 
-        self.db_file = '../../../' + test_name + '.sqlite'
+        self.db_file = '../../' + test_name + '.sqlite'
 #        self.db_file = ':memory:'
 
-        db_dirPath = '/home/piranna/Proyectos/FUSE/PirannaFS/src/sql'
+        db_dirPath = '../pirannafs/sql'
 
-        self.ll_file = '../../../' + test_name + '.img'
+        self.ll_file = '../../' + test_name + '.img'
         drive = open(self.ll_file, 'w+')
 #        drive = StringIO()
 
         drive.write("\0" * 3 * 1024 * 1024)
 
         pm = plugins.Manager()
-        pm.Load_Dir("../../plugins")
+        pm.Load_Dir("../plugins")
 
         sector_size = 512
 
