@@ -13,7 +13,10 @@ Spain 2011.
 * Python  >= 2.6 (by PyFilesystem)
 * SQLite  >= 3.6.19
 * [http://pypi.python.org/pypi/Louie/1.1 Louie]   >= 1.1
-* [https://github.com/piranna/AntiORM AntiORM] >= 2012.01.14
+
+== Child projects ==
+* [https://github.com/piranna/AntiORM AntiORM] >= 2012.03.25
+* [https://github.com/piranna/FS-POSIX-tests FS POSIX tests] (for FUSE tests)
 
 == Interfaces (only one is needed) ==
 * Python-FUSE  >= 0.2     (Legacy, currently working in integration)

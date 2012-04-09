@@ -4,6 +4,7 @@
 	<comment></comment>
 	<projects>
 		<project>AntiORM</project>
+		<project>FS_POSIX_tests</project>
 		<project>pyfilesystem-read-only</project>
 	</projects>
 	<buildSpec>
