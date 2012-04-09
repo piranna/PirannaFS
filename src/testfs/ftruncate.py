@@ -2,12 +2,9 @@
 # http://www.opengroup.org/onlinepubs/009695399/functions/ftruncate.html
 
 
-import error
+import errno
 import subprocess
 import unittest
-
-from PirannaFS import FileSystem
-
 
 
 class Test_ftruncate(unittest.TestCase):
@@ -51,12 +48,12 @@ class Test_ftruncate(unittest.TestCase):
         '''
         # Create empty file
         # Increase size
-        
+
         # Get data from increased size
-        data = 
+#        data = 
 
         # Check all data are zeroes
-        self.assertEqual(data,'\0'*5)
+        self.assertEqual(data, '\0' * 5)
 
 
     def test_5_2(self):
@@ -66,12 +63,12 @@ class Test_ftruncate(unittest.TestCase):
         '''
         # Create file with random data
         # Increase size
-        
+
         # Get data from increased size
-        data = 
+#        data = 
 
         # Check all data are zeroes
-        self.assertEqual(data,'\0'*5)
+        self.assertEqual(data, '\0' * 5)
 
 
     def test_6(self):
@@ -160,7 +157,7 @@ class Test_ftruncate(unittest.TestCase):
         If fildes refers to a directory, ftruncate() shall fail.
         '''
         # Create directory
-        self.fs.mkdir('/test_10',0)
+        self.fs.mkdir('/test_10', 0)
         # truncate
         self.assertEqual(file.ftruncate(0), -errno.EISDIR)
 
@@ -316,5 +313,5 @@ class Test_ftruncate(unittest.TestCase):
         pass
 
 
-
-unittest.main()
+if __name__ == '__main__':
+    unittest.main()

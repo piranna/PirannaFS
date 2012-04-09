@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
-import sys
-sys.stderr = open('../test/error.log', 'w')
+#import sys
+#sys.stderr = open('../test/error.log', 'w')
 
 import errno
 import subprocess

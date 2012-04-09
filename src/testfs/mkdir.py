@@ -6,8 +6,6 @@ import errno
 import subprocess
 import unittest
 
-from PirannaFS import FileSystem
-
 
 
 class Test_ftruncate(unittest.TestCase):
@@ -47,7 +45,7 @@ class Test_ftruncate(unittest.TestCase):
         The directory's user ID shall be set to the process' effective user ID.
         '''
         # Create directory
-        self.fs.mkdir('/test_3',0)
+        self.fs.mkdir('/test_3', 0)
         # Get UID
         self.assertEqual(uid, uid)
 
@@ -97,7 +95,7 @@ class Test_ftruncate(unittest.TestCase):
         The newly created directory shall be an empty directory.
         '''
         # Create directory
-        self.fs.mkdir('/test_5',0)
+        self.fs.mkdir('/test_5', 0)
         # Read dir
         self.assertItemsEqual(self.fs.readdir('/test_5'), [])
 
@@ -155,7 +153,7 @@ class Test_ftruncate(unittest.TestCase):
         # Create symlink
         self.fs.symlink('/test_6')
         # Make dir
-        self.assertEqual(self.fs.mkdir('/test_6',0), -errno.EEXIST)
+        self.assertEqual(self.fs.mkdir('/test_6', 0), -errno.EEXIST)
 
 
     def test_EEXIST_1(self):                                                    # OK
@@ -163,7 +161,7 @@ class Test_ftruncate(unittest.TestCase):
         The named file exists.
         '''
         # Create first directory
-        self.fs.mkdir('/test_11',0)
+        self.fs.mkdir('/test_11', 0)
         # Create second directory
         self.assertEqual(self.fs.mkdir('/test_11'), -errno.EEXIST)
 
@@ -256,8 +254,5 @@ class Test_ftruncate(unittest.TestCase):
         pass
 
 
-
-
-
-
-unittest.main()
+if __name__ == '__main__':
+    unittest.main()

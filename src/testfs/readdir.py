@@ -6,8 +6,6 @@ import errno
 import subprocess
 import unittest
 
-from PirannaFS import FileSystem
-
 
 
 class Test_readdir(unittest.TestCase):
@@ -89,5 +87,5 @@ class Test_readdir(unittest.TestCase):
         pass
 
 
-
-unittest.main()
+if __name__ == '__main__':
+    unittest.main()
