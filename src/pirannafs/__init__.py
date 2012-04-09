@@ -4,7 +4,7 @@ Created on 02/04/2011
 @author: piranna
 '''
 
-from os.path import sep, split
+from os.path import abspath, dirname, join, sep, split
 from stat    import S_IFDIR
 
 from antiorm.backends.sqlite import Sqlite
@@ -35,7 +35,7 @@ class BaseFS(object):
     classdocs
     '''
 
-    def __init__(self, db_file, db_dirPath, drive, sector_size=512):
+    def __init__(self, db_file, drive, db_dirPath=None, sector_size=512):
         self.ll = LL(drive, sector_size)
 
         #
@@ -57,6 +57,8 @@ class BaseFS(object):
         #
         # antiORM
 
+        if not db_dirPath:
+            db_dirPath = join(dirname(abspath(__file__)), 'sql')
         self.db = Sqlite(db_conn, db_dirPath, True)
 
         # http://stackoverflow.com/questions/283707/size-of-an-open-file-object

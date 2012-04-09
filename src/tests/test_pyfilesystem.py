@@ -15,12 +15,14 @@ class PyFilesystem(unittest.TestCase, FSTestCases):
     test_id = 1
 
     def setUp(self):
+        # Load plugins
+        pm = plugins.Manager()
+        pm.Load_Dir("../plugins")
+
         test_name = self.__class__.__name__ + '_' + str(self.test_id)
 
         self.db_file = '../../' + test_name + '.sqlite'
 #        self.db_file = ':memory:'
-
-        db_dirPath = '../pirannafs/sql'
 
         self.ll_file = '../../' + test_name + '.img'
         drive = open(self.ll_file, 'w+')
@@ -28,12 +30,7 @@ class PyFilesystem(unittest.TestCase, FSTestCases):
 
         drive.write("\0" * 3 * 1024 * 1024)
 
-        pm = plugins.Manager()
-        pm.Load_Dir("../plugins")
-
-        sector_size = 512
-
-        self.fs = Filesystem(self.db_file, db_dirPath, drive, sector_size)
+        self.fs = Filesystem(self.db_file, drive)
 
     def tearDown(self):
         self.fs.close()

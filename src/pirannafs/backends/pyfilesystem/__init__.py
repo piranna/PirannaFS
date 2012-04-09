@@ -87,8 +87,8 @@ class Filesystem(BaseFS, base.FS):
                         applyMethod(method_func)
                         break
 
-    def __init__(self, db_file, db_dirPath, drive, sector_size):
-        BaseFS.__init__(self, db_file, db_dirPath, drive, sector_size)
+    def __init__(self, db_file, drive, db_dirPath=None, sector_size=512):
+        BaseFS.__init__(self, db_file, drive, db_dirPath, sector_size)
         base.FS.__init__(self)
 
         self._delegate_methods(self.dir_class, self._dir_class_map)
