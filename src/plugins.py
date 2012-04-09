@@ -35,10 +35,13 @@ class Plugin:
 
 class Manager:
     """Class to manage the plugins load and dependencies"""
-    def __init__(self):
+    def __init__(self, path=None):
         """Constructor"""
         self.__loaded = {}
         self.__pending = set()
+
+        if path:
+            self.Load_Dir(path)
 
 
     def Load_Dir(self, path):
