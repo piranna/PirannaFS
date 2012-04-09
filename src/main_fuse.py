@@ -12,7 +12,7 @@ import sqlite3
 
 import plugins
 
-from PirannaFS.fuse import Filesystem
+from PirannaFS.backends.fuse import Filesystem
 
 
 if __name__ == '__main__':
@@ -20,14 +20,11 @@ if __name__ == '__main__':
     pm = plugins.Manager()
     pm.Load_Dir("./plugins")
 
-    # Set database, drive and sector size
+    # Set database and drive
     db_file = sqlite3.connect('../db.sqlite')
-    db_dirPath = '/home/piranna/Proyectos/FUSE/PirannaFS/src/sql'
-
     drive = '../disk_part.img'
-    sector_size = 512
 
     # Start filesystem
-    fs = Filesystem(db_file, db_dirPath, drive, sector_size)
+    fs = Filesystem(db_file, drive)
     fs.multithreaded = False
     fs.main()
