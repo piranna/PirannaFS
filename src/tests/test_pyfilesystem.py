@@ -1,30 +1,32 @@
-import os
-import unittest
+from os       import remove
+from os.path  import abspath, dirname, join
+from unittest import TestCase
 
 from fs.filelike import StringIO
-from fs.tests import FSTestCases, ThreadingTestCases
+from fs.tests    import FSTestCases, ThreadingTestCases
 
-import plugins
+from plugins import Manager
 
 from pirannafs.backends.pyfilesystem import Filesystem
 
 
-class PyFilesystem(unittest.TestCase, FSTestCases):
-#class PyFilesystem(unittest.TestCase, FSTestCases, ThreadingTestCases):
+class PyFilesystem(TestCase, FSTestCases):
+#class PyFilesystem(TestCase, FSTestCases, ThreadingTestCases):
 
     test_id = 1
 
     def setUp(self):
+        file_path = dirname(abspath(__file__))
+
         # Load plugins
-        pm = plugins.Manager()
-        pm.Load_Dir("../plugins")
+        Manager(join(file_path, '..', 'plugins'))
 
         test_name = self.__class__.__name__ + '_' + str(self.test_id)
 
-        self.db_file = '../../' + test_name + '.sqlite'
+        self.db_file = join(file_path, '../..', test_name + '.sqlite')
 #        self.db_file = ':memory:'
 
-        self.ll_file = '../../' + test_name + '.img'
+        self.ll_file = join(file_path, '../..', test_name + '.img')
         drive = open(self.ll_file, 'w+')
 #        drive = StringIO()
 
@@ -36,12 +38,14 @@ class PyFilesystem(unittest.TestCase, FSTestCases):
         self.fs.close()
 
         if self.db_file != ':memory:':
-            os.remove(self.db_file)
+            remove(self.db_file)
         if not isinstance(self.ll_file, StringIO):
-            os.remove(self.ll_file)
+            remove(self.ll_file)
 
         self.__class__.test_id += 1
 
 
 if __name__ == '__main__':
-    unittest.main()
+    from unittest import main
+
+    main()

@@ -9,7 +9,7 @@ from unittest import main
 import plugins
 import testfs
 
-from PirannaFS.fuse import Filesystem
+from pirannafs.backends.fuse import Filesystem
 
 
 if __name__ == '__main__':
