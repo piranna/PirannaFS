@@ -19,7 +19,7 @@ import File
 
 import plugins
 
-from ... import BaseFS
+from ...base.fs import FS as BaseFS
 
 
 class Filesystem(BaseFS, base.FS):
