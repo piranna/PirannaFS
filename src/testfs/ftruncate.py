@@ -3,6 +3,7 @@
 
 
 import errno
+import os
 import subprocess
 import unittest
 
@@ -157,7 +158,7 @@ class Test_ftruncate(unittest.TestCase):
         If fildes refers to a directory, ftruncate() shall fail.
         '''
         # Create directory
-        self.fs.mkdir('/test_10', 0)
+        os.mkdir('/test_10', 0)
         # truncate
         self.assertEqual(file.ftruncate(0), -errno.EISDIR)
 

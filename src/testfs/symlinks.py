@@ -4,6 +4,7 @@
 #sys.stderr = open('../test/error.log', 'w')
 
 import errno
+import os
 import subprocess
 
 from unittest import TestCase
@@ -13,7 +14,7 @@ class readlink(TestCase):
     '''
     http://www.opengroup.org/onlinepubs/009695399/functions/readlink.html
 
-    Note: I have to convert the return value of fs.readlink() explicitly to int
+    Note: I have to convert the return value of os.readlink() explicitly to int
     to check them since Python-FUSE return always a string on success and error.
     '''
 
@@ -23,9 +24,9 @@ class readlink(TestCase):
         The readlink() function shall return the contents of the symbolic link
         referred to by path.
         '''
-        fs.symlink("/", "/test_1")
-        self.assertEqual(fs.readlink("/test_1"), "/")
-#        fs.rmdir("/test_1")
+        os.symlink("/", "/test_1")
+        self.assertEqual(os.readlink("/test_1"), "/")
+        os.rmdir("/test_1")
 
 
     def test_EACCES_1(self):
@@ -46,9 +47,9 @@ class readlink(TestCase):
         '''
         The path argument names a file that is not a symbolic link.
         '''
-        fs.mkdir("/test_EINVAL", 0)
-        self.assertEqual(int(fs.readlink("/test_EINVAL")), -errno.EINVAL)
-#        fs.rmdir("/test_EINVAL")
+        os.mkdir("/test_EINVAL", 0)
+        self.assertEqual(int(os.readlink("/test_EINVAL")), -errno.EINVAL)
+#        os.rmdir("/test_EINVAL")
 
 
     def test_EIO(self):
@@ -101,22 +102,22 @@ class readlink(TestCase):
         '''
         A component of path does not name an existing file.
         '''
-        self.assertEqual(int(fs.readlink("/none/test_ENOENT_1")), -errno.ENOENT)
+        self.assertEqual(int(os.readlink("/none/test_ENOENT_1")), -errno.ENOENT)
 
 
     def test_ENOENT_2(self):                                                    # OK
         '''
         path is an empty string.
         '''
-        self.assertEqual(int(fs.readlink("")), -errno.ENOENT)
+        self.assertEqual(int(os.readlink("")), -errno.ENOENT)
 
 
 #    def test_ENOTDIR(self):                                                     # OK
 #        '''
 #        A component of the path prefix is not a directory.
 #        '''
-#        fs.mknod("/file")
-#        self.assertEqual(int(fs.readlink("/file/test_ENOTDIR")), -errno.ENOTDIR)
+#        os.mknod("/file")
+#        self.assertEqual(int(os.readlink("/file/test_ENOTDIR")), -errno.ENOTDIR)
 
 
 class symlink(TestCase):
@@ -144,8 +145,8 @@ class symlink(TestCase):
         '''
         Upon successful completion, symlink() shall return 0.
         '''
-        self.assertEqual(fs.symlink("/", "/test_2"), 0)
-#        fs.rmdir("/test_2")
+        self.assertEqual(os.symlink("/", "/test_2"), 0)
+#        os.rmdir("/test_2")
 
 
     def test_EACCES_1(self):
@@ -167,26 +168,26 @@ class symlink(TestCase):
 #        '''
 #        The path2 argument names an existing file.
 #        '''
-#        fs.mknod("/test_EEXIST_3")
-#        self.assertEqual(fs.symlink("/test_EEXIST_3", "/"), -errno.EEXIST)
+#        os.mknod("/test_EEXIST_3")
+#        self.assertEqual(os.symlink("/test_EEXIST_3", "/"), -errno.EEXIST)
 
 
     def test_EEXIST_2(self):                                                    # OK
         '''
         The path2 argument names an existing directory.
         '''
-        fs.mkdir("/test_EEXIST_2", 0)
-        self.assertEqual(fs.symlink("/", "/test_EEXIST_2"), -errno.EEXIST)
-        fs.rmdir("/test_EEXIST_2")
+        os.mkdir("/test_EEXIST_2", 0)
+        self.assertEqual(os.symlink("/", "/test_EEXIST_2"), -errno.EEXIST)
+        os.rmdir("/test_EEXIST_2")
 
 
     def test_EEXIST_3(self):                                                    # OK
         '''
         The path2 argument names an existing symbolic link.
         '''
-        fs.symlink("/", "/test_EEXIST_3")
-        self.assertEqual(fs.symlink("/", "/test_EEXIST_3"), -errno.EEXIST)
-#        fs.rmdir("/test_EEXIST_3")
+        os.symlink("/", "/test_EEXIST_3")
+        self.assertEqual(os.symlink("/", "/test_EEXIST_3"), -errno.EEXIST)
+#        os.rmdir("/test_EEXIST_3")
 
 
     def test_EIO(self):
@@ -247,14 +248,14 @@ class symlink(TestCase):
         '''
         A component of path2 does not name an existing directory.
         '''
-        self.assertEqual(fs.symlink("/", "/none/test_ENOENT_2"), -errno.ENOENT)
+        self.assertEqual(os.symlink("/", "/none/test_ENOENT_2"), -errno.ENOENT)
 
 
     def test_ENOENT_2(self):                                                    # OK
         '''
         path2 is an empty string.
         '''
-        self.assertEqual(fs.symlink("/", ""), -errno.ENOENT)
+        self.assertEqual(os.symlink("/", ""), -errno.ENOENT)
 
 
     def test_ENOSPC_1(self):
@@ -285,8 +286,8 @@ class symlink(TestCase):
 #        '''
 #        A component of the path prefix of path2 is not a directory.
 #        '''
-#        fs.mknod("/file")
-#        self.assertEqual(fs.symlink("/", "/file/test_ENOTDIR"), -errno.ENOTDIR)
+#        os.mknod("/file")
+#        self.assertEqual(os.symlink("/", "/file/test_ENOTDIR"), -errno.ENOTDIR)
 
 
     def test_EROFS(self):

@@ -3,6 +3,7 @@
 
 
 import errno
+import os
 import subprocess
 import unittest
 
@@ -45,7 +46,7 @@ class Test_ftruncate(unittest.TestCase):
         The directory's user ID shall be set to the process' effective user ID.
         '''
         # Create directory
-        self.fs.mkdir('/test_3', 0)
+        os.mkdir('/test_3', 0)
         # Get UID
         self.assertEqual(uid, uid)
 
@@ -95,9 +96,9 @@ class Test_ftruncate(unittest.TestCase):
         The newly created directory shall be an empty directory.
         '''
         # Create directory
-        self.fs.mkdir('/test_5', 0)
+        os.mkdir('/test_5', 0)
         # Read dir
-        self.assertItemsEqual(self.fs.readdir('/test_5'), [])
+        self.assertListEqual(os.listdir('/test_5'), [])
 
 
     def test_7_1(self):
@@ -151,19 +152,19 @@ class Test_ftruncate(unittest.TestCase):
         If path names a symbolic link, mkdir() shall fail.
         '''
         # Create symlink
-        self.fs.symlink('/test_6')
+        os.symlink('/test_6')
         # Make dir
-        self.assertEqual(self.fs.mkdir('/test_6', 0), -errno.EEXIST)
+        self.assertEqual(os.mkdir('/test_6', 0), -errno.EEXIST)
 
 
-    def test_EEXIST_1(self):                                                    # OK
+    def test_EEXIST_2(self):                                                    # OK
         '''
         The named file exists.
         '''
         # Create first directory
-        self.fs.mkdir('/test_11', 0)
+        os.mkdir('/test_11', 0)
         # Create second directory
-        self.assertEqual(self.fs.mkdir('/test_11'), -errno.EEXIST)
+        self.assertEqual(os.mkdir('/test_11'), -errno.EEXIST)
 
 
 
@@ -196,7 +197,7 @@ class Test_ftruncate(unittest.TestCase):
         existing directory.
         '''
         # Create second directory
-        self.assertEqual(self.fs.mkdir('/null/test_15'), -errno.ENOENT)
+        self.assertEqual(os.mkdir('/null/test_15'), -errno.ENOENT)
 
 
     def test_ENOENT_2(self):                                                          # OK
@@ -204,7 +205,7 @@ class Test_ftruncate(unittest.TestCase):
         Path is an empty string.
         '''
         # Create second directory
-        self.assertEqual(self.fs.mkdir(''), -errno.ENOENT)
+        self.assertEqual(os.mkdir(''), -errno.ENOENT)
 
 
     def test_ENOSPC_1(self):

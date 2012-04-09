@@ -3,9 +3,11 @@
 
 
 import errno
+import os
 import subprocess
 import unittest
 
+from stat import ST_ATIME
 
 
 class Test_readdir(unittest.TestCase):
@@ -37,10 +39,10 @@ class Test_readdir(unittest.TestCase):
         readdir() shall mark for update the st_atime field of the directory each
         time the directory is actually read.
         '''
-        st_atime = self.fs.getattr('test_3').st_atime
-        self.fs.readdir('test_3')
+        st_atime = os.stat('test_3')[ST_ATIME]
+        os.listdir('test_3')
 
-        self.assertLess(st_atime, self.fs.getattr('test_3').st_atime)
+        self.assertLess(st_atime, os.stat('test_3')[ST_ATIME])
 
 
     def test_4(self):
