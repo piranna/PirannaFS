@@ -7,7 +7,7 @@ Created on 26/07/2010
 
 import sqlite3
 
-import plugins
+from plugins import Manager
 
 from pirannafs.backends.fuse import Filesystem
 
@@ -16,8 +16,7 @@ def main():
     'Start a new instance of the filesystem using the FUSE backend'
 
     # Load plugins
-    pm = plugins.Manager()
-    pm.Load_Dir("./plugins")
+    Manager('./plugins')
 
     # Set database and drive
     db_file = sqlite3.connect('../db.sqlite')

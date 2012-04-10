@@ -18,7 +18,8 @@ from ...base.fs import FS as BaseFS
 
 
 class Filesystem(BaseFS, fuse.Fuse):
-    def __init__(self, db_file, db_dirPath, drive, sector_size=512, *args, **kw):
+    def __init__(self, db_file, drive, db_dirPath=None, sector_size=512,
+                 *args, **kw):
         fuse.Fuse.__init__(self, *args, **kw)
 
         # This thing that is like a ugly hack it seems that is the correct way

@@ -5,9 +5,10 @@ Created on 26/07/2010
 @author: piranna
 '''
 
-import sqlite3
+from os.path import abspath, dirname, join
+from sqlite3 import connect
 
-import plugins
+from plugins import Manager
 
 from pirannafs.backends.pyfilesystem import Filesystem
 
@@ -15,13 +16,14 @@ from pirannafs.backends.pyfilesystem import Filesystem
 def main():
     'Start a new instance of the filesystem using the PyFilesystem backend'
 
+    file_path = dirname(abspath(__file__))
+
     # Load plugins
-    pm = plugins.Manager()
-    pm.Load_Dir("./plugins")
+    Manager(join(file_path, '../..', 'plugins'))
 
     # Set database and drive
-    db_file = sqlite3.connect('../db.sqlite')
-    drive = '../disk_part.img'
+    db_file = connect(join(file_path, '..', 'db.sqlite'))
+    drive = join(file_path, '../..', 'disk_part.img')
 
     # Start filesystem
     Filesystem(db_file, drive)
