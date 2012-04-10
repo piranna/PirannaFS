@@ -8,13 +8,17 @@ Created on 26/07/2010
 from os.path import abspath, dirname, join
 from sqlite3 import connect
 
+from fs.expose.fuse import mount
+
 from plugins import Manager
 
 from pirannafs.backends.pyfilesystem import Filesystem
 
 
 def main():
-    'Start a new instance of the filesystem using the PyFilesystem backend'
+    '''Start a new instance of the filesystem using the PyFilesystem backend
+    and export it using the FUSE expose subsystem
+    '''
 
     file_path = dirname(abspath(__file__))
 
@@ -26,7 +30,9 @@ def main():
     drive = join(file_path, '../..', 'disk_part.img')
 
     # Start filesystem
-    Filesystem(db_file, drive)
+    fs = Filesystem(db_file, drive)
+    path = '/'
+    mount(fs, path, True)
 
 
 if __name__ == '__main__':
