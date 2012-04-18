@@ -11,7 +11,7 @@ from stat    import S_IFDIR
 from antiorm.backends.sqlite import Sqlite
 from antiorm.utils           import Namedtuple_factory
 
-from ..errors import ParentDirectoryMissing, ResourceInvalid, ResourceNotFound
+from ..errors import ParentDirectoryMissing, NotADirectoryError, ResourceNotFound
 from ..LL     import LL
 
 
@@ -112,7 +112,7 @@ class FS(object):
             # If is not a directory and is not the last path element
             # return error
             if path:
-                raise ResourceInvalid(path)
+                raise NotADirectoryError(path)
 
         # Path is empty, so
         # * it's the root path

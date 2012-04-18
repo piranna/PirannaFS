@@ -9,7 +9,7 @@ from os          import SEEK_END
 from os.path     import split
 from stat        import S_IFDIR, S_IFREG
 
-from ..errors import ResourceInvalid, ResourceNotFound, StorageSpace
+from ..errors import IsADirectoryError, ResourceNotFound, StorageSpace
 
 
 def readable(method):
@@ -47,7 +47,7 @@ class BaseFile(object):
         else:
             # If inode is a dir, raise error
             if fs.db.Get_Mode(inode=self._inode) == S_IFDIR:
-                raise ResourceInvalid(path)
+                raise IsADirectoryError(path)
 
         self.fs = fs        # Filesystem
         self.db = fs.db     # Database

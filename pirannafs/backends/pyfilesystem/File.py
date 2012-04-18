@@ -9,7 +9,7 @@ from os import SEEK_SET, SEEK_CUR, SEEK_END
 from fs.errors import ResourceInvalidError, ResourceNotFoundError
 from fs.errors import StorageSpaceError
 
-from pirannafs.errors import ResourceInvalid, ResourceNotFound, StorageSpace
+from pirannafs.errors import IsADirectoryError, ResourceNotFound, StorageSpace
 
 from ...base.File import BaseFile
 
@@ -27,7 +27,7 @@ class File(BaseFile):
         """
         try:
             BaseFile.__init__(self, fs, path)
-        except ResourceInvalid, e:
+        except IsADirectoryError, e:
             raise ResourceInvalidError(e)
 
         # File mode
