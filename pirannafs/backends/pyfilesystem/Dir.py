@@ -11,7 +11,7 @@ from fs.errors import DestinationExistsError, DirectoryNotEmptyError
 from fs.errors import ParentDirectoryMissingError, RemoveRootError
 from fs.errors import ResourceInvalidError, ResourceNotFoundError
 
-from pirannafs.errors import ResourceError, ResourceNotFound
+from pirannafs.errors import DirNotFoundError, ResourceError, ResourceNotFound
 
 import plugins
 
@@ -43,7 +43,7 @@ class Dir(BaseDir):
 
         try:
             self._inode = fs._Get_Inode(path)
-        except ResourceError:
+        except (ResourceError, ResourceNotFound):
             self._inode = None
         else:
             # If inode is not a dir, raise error
@@ -107,7 +107,7 @@ class Dir(BaseDir):
         try:
             return list(self.ilist(wildcard, full, absolute, dirs_only,
                                    files_only))
-        except ResourceNotFound, e:
+        except DirNotFoundError, e:
             raise ResourceNotFoundError(e)
 
 #    def listinfo(self):

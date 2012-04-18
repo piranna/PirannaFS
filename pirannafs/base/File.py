@@ -9,7 +9,8 @@ from os          import SEEK_END
 from os.path     import split
 from stat        import S_IFDIR, S_IFREG
 
-from ..errors import IsADirectoryError, ResourceNotFound, StorageSpace
+from ..errors import FileNotFoundError, IsADirectoryError, ResourceNotFound
+from ..errors import StorageSpace
 
 
 def readable(method):
@@ -401,7 +402,7 @@ class BaseFile(object):
         if 'r' in mode:
             # Action
             if self._inode == None:
-                raise ResourceNotFound(self.path)
+                raise FileNotFoundError(self.path)
 
             # Set mode
             self._mode.add('r')

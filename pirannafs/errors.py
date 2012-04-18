@@ -56,10 +56,6 @@ class ParentDirectoryMissing(ResourceError):
     """Exception raised when a parent directory is missing."""
     default_message = "Parent directory is missing: %(path)s"
 
-class ResourceNotFound(ResourceError):
-    """Exception raised when a required resource is not found."""
-    default_message = "Resource not found: %(path)s"
-
 
 class StorageSpace(OperationFailedError):
     """Exception raised when operations encounter storage space trouble."""
@@ -67,6 +63,15 @@ class StorageSpace(OperationFailedError):
 
 
 # Python 3.3-like exceptions
+
+class ResourceNotFound(OSError):    # No oficial
+    pass
+
+class DirNotFoundError(ResourceNotFound):   # No oficial
+    pass
+
+class FileNotFoundError(ResourceNotFound):
+    pass
 
 class IsADirectoryError(OSError):
     pass

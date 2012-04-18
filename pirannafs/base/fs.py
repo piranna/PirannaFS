@@ -101,8 +101,7 @@ class FS(object):
             if inode == None:
                 if path:
                     raise ParentDirectoryMissing(parent)
-                else:
-                    raise ResourceNotFound(parent)
+                raise ResourceNotFound(parent)
 
             # If the dir entry is a directory
             # get child inode

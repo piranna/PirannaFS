@@ -6,7 +6,7 @@ Created on 02/04/2011
 
 from os.path import split
 
-from ..errors import ParentDirectoryMissing, ResourceNotFound
+from ..errors import DirNotFoundError, ParentDirectoryMissing, ResourceNotFound
 
 import plugins
 
@@ -42,7 +42,7 @@ class BaseDir(object):
         @raise ResourceNotFound: directory doesn't exists
         """
         if self._inode == None:
-            raise ResourceNotFound(self.path)
+            raise DirNotFoundError(self.path)
 
         plugins.send("Dir.list begin")
 

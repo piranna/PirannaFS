@@ -9,7 +9,7 @@ from os import SEEK_SET, SEEK_CUR, SEEK_END
 from fs.errors import ResourceInvalidError, ResourceNotFoundError
 from fs.errors import StorageSpaceError
 
-from pirannafs.errors import IsADirectoryError, ResourceNotFound, StorageSpace
+from pirannafs.errors import FileNotFoundError, IsADirectoryError, StorageSpace
 
 from ...base.File import BaseFile
 
@@ -45,7 +45,7 @@ class File(BaseFile):
     def open(self, mode="r", **kwargs):
         try:
             self._CalcMode(mode)
-        except ResourceNotFound, e:
+        except FileNotFoundError, e:
             raise ResourceNotFoundError(e)
 
         return self
