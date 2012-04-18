@@ -39,6 +39,10 @@ class BaseFile(object):
     def __init__(self, fs, path):
         '''
         Constructor
+
+        @raise IsADirectoryError:
+        @raise ParentDirectoryMissing:
+        @raise ParentNotADirectoryError:
         '''
         # Get the inode of the parent or raise ParentDirectoryMissing exception
         self.parent, self.name = fs._Path2InodeName(path)

@@ -6,10 +6,12 @@ Created on 14/08/2010
 
 from os import SEEK_SET, SEEK_CUR, SEEK_END
 
-from fs.errors import ResourceInvalidError, ResourceNotFoundError
-from fs.errors import StorageSpaceError
+from fs.errors import ParentDirectoryMissingError, ResourceInvalidError
+from fs.errors import ResourceNotFoundError, StorageSpaceError
 
-from pirannafs.errors import FileNotFoundError, IsADirectoryError, StorageSpace
+from pirannafs.errors import FileNotFoundError, IsADirectoryError
+from pirannafs.errors import ParentDirectoryMissing, ParentNotADirectoryError
+from pirannafs.errors import StorageSpace
 
 from ...base.File import BaseFile
 
@@ -22,13 +24,16 @@ class File(BaseFile):
         """Constructor
 
         @raise ParentDirectoryMissingError:
-        @raise ResourceNotFoundError:
         @raise ResourceInvalidError:
         """
         try:
             BaseFile.__init__(self, fs, path)
-        except IsADirectoryError, e:
+
+        except (IsADirectoryError, ParentNotADirectoryError), e:
             raise ResourceInvalidError(e)
+
+        except ParentDirectoryMissing, e:
+            raise ParentDirectoryMissingError(e)
 
         # File mode
         self._mode = frozenset()

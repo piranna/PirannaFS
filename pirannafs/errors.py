@@ -78,3 +78,6 @@ class IsADirectoryError(OSError):
 
 class NotADirectoryError(OSError):
     pass
+
+class ParentNotADirectoryError(NotADirectoryError): # Not oficial
+    pass

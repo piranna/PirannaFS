@@ -11,7 +11,8 @@ from stat    import S_IFDIR
 from antiorm.backends.sqlite import Sqlite
 from antiorm.utils           import Namedtuple_factory
 
-from ..errors import ParentDirectoryMissing, NotADirectoryError, ResourceNotFound
+from ..errors import ParentDirectoryMissing, ParentNotADirectoryError
+from ..errors import ResourceNotFound
 from ..LL     import LL
 
 
@@ -108,10 +109,10 @@ class FS(object):
             if self.db.Get_Mode(inode=inode) == S_IFDIR:
                 return self._Get_Inode(path, inode)
 
-            # If is not a directory and is not the last path element
+            # If inode is not a directory and is not the last path element
             # return error
             if path:
-                raise NotADirectoryError(path)
+                raise ParentNotADirectoryError(path)
 
         # Path is empty, so
         # * it's the root path
