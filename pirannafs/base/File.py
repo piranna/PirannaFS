@@ -40,9 +40,12 @@ class BaseFile(object):
         '''
         Constructor
         '''
+        # Get the inode of the parent or raise ParentDirectoryMissing exception
+        self.parent, self.name = fs._Path2InodeName(path)
+
         # Get file inode or raise exception
         try:
-            self._inode = fs._Get_Inode(path)
+            self._inode = fs._Get_Inode(self.name, self.parent)
         except ResourceNotFound:
             self._inode = None
         else:
@@ -54,9 +57,7 @@ class BaseFile(object):
         self.db = fs.db     # Database
         self.ll = fs.ll     # Low level implementation
 
-        self.path = path
-        path, self.name = split(path)
-        self.parent = fs._Get_Inode(path)
+        self.path = path    # calc it later from self.parent?
 
         self._offset = 0
 
