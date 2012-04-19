@@ -10,8 +10,8 @@ import sys
 import fuse
 fuse.fuse_python_api = (0, 2)
 
-import Dir
-import File
+import dir
+import file
 
 from ...base.fs import FS as BaseFS
 
