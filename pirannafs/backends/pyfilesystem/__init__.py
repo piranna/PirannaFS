@@ -14,8 +14,8 @@ from fs.errors import ParentDirectoryMissingError, ResourceNotFoundError
 from pirannafs.errors import IsADirectoryError, NotADirectoryError
 from pirannafs.errors import ParentDirectoryMissing, ResourceNotFound
 
-import Dir
-import File
+import dir
+import file
 
 import plugins
 
@@ -48,8 +48,8 @@ class Filesystem(BaseFS, base.FS):
                        'safeopen': 'safeopen',
                        'size':     'getsize'}
 
-    dir_class = Dir.Dir
-    file_class = File.File
+    dir_class = dir.Dir
+    file_class = file.File
 
     def _delegate_methods(self, klass, class_map):
         """Method that looks inside class `klass` and its ancestors for some
