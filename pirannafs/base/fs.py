@@ -11,9 +11,9 @@ from stat    import S_IFDIR
 from antiorm.backends.sqlite import Sqlite
 from antiorm.utils           import Namedtuple_factory
 
-from ..errors import ParentDirectoryMissing, ParentNotADirectoryError
-from ..errors import ResourceNotFound
-from ..LL     import LL
+from pirannafs.errors import ParentDirectoryMissing, ParentNotADirectoryError
+from pirannafs.errors import ResourceNotFound
+from pirannafs.LL     import LL
 
 
 class FS(object):

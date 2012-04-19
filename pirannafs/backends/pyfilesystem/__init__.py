@@ -4,22 +4,19 @@ Created on 16/08/2010
 @author: piranna
 '''
 
-import errno
-import os
-import stat
+from stat import S_IFDIR
 
-from fs import base
+from fs        import base
 from fs.errors import ParentDirectoryMissingError, ResourceNotFoundError
 
-from pirannafs.errors import IsADirectoryError, NotADirectoryError
-from pirannafs.errors import ParentDirectoryMissing, ResourceNotFound
+from pirannafs.base.fs import FS as BaseFS
+from pirannafs.errors  import IsADirectoryError, NotADirectoryError
+from pirannafs.errors  import ParentDirectoryMissing, ResourceNotFound
 
-import dir
-import file
+#import plugins
 
-import plugins
-
-from ...base.fs import FS as BaseFS
+from dir  import Dir
+from file import File
 
 
 class Filesystem(BaseFS, base.FS):
@@ -48,8 +45,8 @@ class Filesystem(BaseFS, base.FS):
                        'safeopen': 'safeopen',
                        'size':     'getsize'}
 
-    dir_class = dir.Dir
-    file_class = file.File
+    dir_class = Dir
+    file_class = File
 
     def _delegate_methods(self, klass, class_map):
         """Method that looks inside class `klass` and its ancestors for some
@@ -134,10 +131,10 @@ class Filesystem(BaseFS, base.FS):
         except (NotADirectoryError,
                 ParentDirectoryMissing, ResourceNotFound):
             return False
-        return self.db.Get_Mode(inode=inode) == stat.S_IFDIR
+        return self.db.Get_Mode(inode=inode) == S_IFDIR
 
     def isfile(self, path):                                                # OK
-        """Check if a path references a file.
+        """Check if a path references a file
 
         :param path: a path in the filessystem
 
@@ -148,7 +145,7 @@ class Filesystem(BaseFS, base.FS):
         except (IsADirectoryError, NotADirectoryError,
                 ParentDirectoryMissing, ResourceNotFound):
             return False
-        return self.db.Get_Mode(inode=inode) != stat.S_IFDIR
+        return self.db.Get_Mode(inode=inode) != S_IFDIR
 
     def rename(self, src, dst):                                            # OK
         """Renames a file or directory
