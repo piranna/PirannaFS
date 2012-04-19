@@ -10,11 +10,10 @@ import sys
 import fuse
 fuse.fuse_python_api = (0, 2)
 
-import dir
-import file
+from pirannafs.base.fs import FS as BaseFS
 
-from ...base.fs import FS as BaseFS
-
+from dir  import Dir
+from file import File
 
 
 class FS(BaseFS, fuse.Fuse):
@@ -55,11 +54,11 @@ class FS(BaseFS, fuse.Fuse):
         # http://sourceforge.net/apps/mediawiki/fuse/index.php?title=FUSE_Python_Reference#File_Class_Methods
         # http://old.nabble.com/Python:-Pass-parameters-to-file_class-td18301066.html
 
-        class wrapped_dir_class(Dir.Dir):
+        class wrapped_dir_class(Dir):
             def __init__(self2, *a, **kw):
                 Dir.Dir.__init__(self2, self, *a, **kw)
 
-        class wrapped_file_class(File.File):
+        class wrapped_file_class(File):
             def __init__(self2, *a, **kw):
                 File.File.__init__(self2, self, *a, **kw)
 
