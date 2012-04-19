@@ -19,7 +19,7 @@ from dir  import Dir
 from file import File
 
 
-class Filesystem(BaseFS, base.FS):
+class FS(BaseFS, base.FS):
     _meta = {"pickle_contents": False, "thread_safe": False}
 
     _dir_class_map = {'copy':      'copydir',

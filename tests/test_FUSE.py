@@ -10,7 +10,7 @@ from sqlite3 import connect
 from plugins import Manager
 import testfs
 
-from pirannafs.backends.fuse import Filesystem
+from pirannafs.backends.fuse import FS
 
 
 def main():
@@ -24,7 +24,7 @@ def main():
     drive = join(file_path, '../..', 'disk_part.img')
 
     # Start filesystem
-    fs = Filesystem(db_file, drive)
+    fs = FS(db_file, drive)
 
     fs.parser.fetch_mp = False
     fs.parse(values=fs, errex=1)

@@ -7,7 +7,7 @@ from fs.tests    import FSTestCases, ThreadingTestCases
 
 from plugins import Manager
 
-from pirannafs.backends.pyfilesystem import Filesystem
+from pirannafs.backends.pyfilesystem import FS
 
 
 class PyFilesystem(TestCase, FSTestCases):
@@ -32,7 +32,7 @@ class PyFilesystem(TestCase, FSTestCases):
 
         drive.write("\0" * 3 * 1024 * 1024)
 
-        self.fs = Filesystem(self.db_file, drive)
+        self.fs = FS(self.db_file, drive)
 
     def tearDown(self):
         self.fs.close()
