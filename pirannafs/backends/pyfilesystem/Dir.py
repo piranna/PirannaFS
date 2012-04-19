@@ -15,7 +15,7 @@ from pirannafs.errors import DirNotFoundError, ResourceError, ResourceNotFound
 
 import plugins
 
-from ...base.Dir import BaseDir
+from ...base.dir import BaseDir
 
 
 class Dir(BaseDir):

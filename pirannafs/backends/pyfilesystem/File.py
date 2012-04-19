@@ -13,7 +13,7 @@ from pirannafs.errors import FileNotFoundError, IsADirectoryError
 from pirannafs.errors import ParentDirectoryMissing, ParentNotADirectoryError
 from pirannafs.errors import StorageSpace
 
-from ...base.File import BaseFile
+from ...base.file import BaseFile
 
 
 class File(BaseFile):

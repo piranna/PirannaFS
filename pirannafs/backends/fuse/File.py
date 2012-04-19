@@ -8,7 +8,7 @@ import sys
 
 import errno
 
-from ...base.File import BaseFile
+from ...base.file import BaseFile
 from ...errors    import StorageSpace
 
 
