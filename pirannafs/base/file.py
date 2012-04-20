@@ -9,7 +9,7 @@ from os          import SEEK_END
 from stat        import S_IFDIR, S_IFREG
 
 from pirannafs.errors import FileNotFoundError, IsADirectoryError
-from pirannafs.errors import ResourceNotFound, StorageSpace
+from pirannafs.errors import StorageSpace
 
 from direntry import DirEntry
 

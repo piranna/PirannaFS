@@ -7,8 +7,6 @@ Created on 02/04/2011
 from stat import S_IFDIR
 
 from pirannafs.errors import DirNotFoundError, NotADirectoryError
-from pirannafs.errors import ParentDirectoryMissing, ResourceError
-from pirannafs.errors import ResourceNotFound
 
 from direntry import DirEntry
 
