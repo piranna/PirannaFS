@@ -4,10 +4,12 @@ Created on 02/04/2011
 @author: piranna
 '''
 
-from stat import S_IFDIR
+from os.path import split
+from stat    import S_IFDIR
 
 from pirannafs.errors import DirNotFoundError, NotADirectoryError
-from pirannafs.errors import ParentDirectoryMissing, ResourceNotFound
+from pirannafs.errors import ParentDirectoryMissing, ResourceError
+from pirannafs.errors import ResourceNotFound
 
 import plugins
 
@@ -22,21 +24,26 @@ class BaseDir(object):
         Constructor
         '''
         # Get the inode of the parent or raise ParentDirectoryMissing exception
-        self.parent, self.name = fs._Path2InodeName(path)
+        parent_path, self.name = split(path)
 
         try:
-            self._inode = fs._Get_Inode(self.name, self.parent)
-        except ResourceNotFound:
-            self._inode = None
-        else:
-            # If inode is not a dir, raise error
-            if fs.db.Get_Mode(inode=self._inode) != S_IFDIR:
-                raise NotADirectoryError(path)
+            self.parent = fs._Get_Inode(parent_path)
 
-#        try:
-#            self.parent = fs._Get_Inode(parent_path)
-#        except (ParentDirectoryMissing, ResourceNotFound):
-#            self.parent = parent_path
+        except (ParentDirectoryMissing, ResourceNotFound):
+            self.parent = parent_path
+            self._inode = None
+
+        else:
+            try:
+                self._inode = fs._Get_Inode(self.name, self.parent)
+
+            except (ResourceError, ResourceNotFound):
+                self._inode = None
+
+            else:
+                # If inode is not a dir, raise error
+                if fs.db.Get_Mode(inode=self._inode) != S_IFDIR:
+                    raise NotADirectoryError(path)
 
         self.fs = fs
         self.db = fs.db

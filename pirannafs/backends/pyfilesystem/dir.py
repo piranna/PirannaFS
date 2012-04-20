@@ -4,17 +4,15 @@ Created on 15/08/2010
 @author: piranna
 '''
 
-import os
-import stat
-
-from os.path import split
+from os.path import join, sep
+from stat    import S_IFDIR
 
 from fs.errors import DestinationExistsError, DirectoryNotEmptyError
 from fs.errors import ParentDirectoryMissingError, RemoveRootError
 from fs.errors import ResourceInvalidError, ResourceNotFoundError
 
 from pirannafs.errors import DirNotFoundError, NotADirectoryError
-from pirannafs.errors import ParentDirectoryMissing, ResourceError, ResourceNotFound
+from pirannafs.errors import ResourceNotFound
 
 import plugins
 
@@ -43,28 +41,10 @@ class Dir(BaseDir):
             path = ''
 
         # Base
-#        BaseDir.__init__(self, fs, path)
-
-        self.fs = fs
-        self.db = fs.db
-
-        self.path = path
-        parent_path, self.name = split(path)
-
         try:
-            self.parent = fs._Get_Inode(parent_path)
-        except (ParentDirectoryMissing, ResourceNotFound):
-            self.parent = parent_path
-
-        # PyFilesystem
-        try:
-            self._inode = fs._Get_Inode(path)
-        except (ResourceError, ResourceNotFound):
-            self._inode = None
-        else:
-            # If inode is not a dir, raise error
-            if fs.db.Get_Mode(inode=self._inode) != stat.S_IFDIR:
-                raise ResourceInvalidError(path)
+            BaseDir.__init__(self, fs, path)
+        except NotADirectoryError, e:
+            raise ResourceInvalidError(e)
 
 #    def copy(self):
 #        pass
@@ -161,7 +141,7 @@ class Dir(BaseDir):
             self.parent = d._inode
 
         # Make directory
-        self._inode = self.db._Make_DirEntry(type=stat.S_IFDIR)
+        self._inode = self.db._Make_DirEntry(type=S_IFDIR)
         self.db.link(parent_dir=self.parent, name=self.name,
                      child_entry=self._inode)
 
@@ -195,7 +175,7 @@ class Dir(BaseDir):
         # Force dir deletion
         if force:
             for dir_entry in self.db.readdir(parent_dir=self._inode, limit= -1):
-                path = os.path.join(self.path, dir_entry.name)
+                path = join(self.path, dir_entry.name)
 
                 try:
                     inode = self.fs._Get_Inode(path)
@@ -209,7 +189,7 @@ class Dir(BaseDir):
 
                 else:
                     # Entry is from a directory, delete it recursively
-                    if self.db.Get_Mode(inode=inode) == stat.S_IFDIR:
+                    if self.db.Get_Mode(inode=inode) == S_IFDIR:
                         d = Dir(self.fs, path)
                         d.remove(force=True)
 
@@ -227,7 +207,7 @@ class Dir(BaseDir):
 
         # Delete parent dirs recursively if empty
         if recursive:
-            path = self.path.rpartition(os.sep)[0]
+            path = self.path.rpartition(sep)[0]
             d = Dir(self.fs, path)
             try:
                 d.remove(True)
