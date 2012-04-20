@@ -26,15 +26,16 @@ class Dir(BaseDir):
 #        print >> sys.stderr, '*** Dir __init__',fs, path
 
         BaseDir.__init__(self, fs, path)
+#        BaseDir.__init__(self, fs, path[1:])
 
-        try:
-            self._inode = fs._Get_Inode(path[1:])
-        except ResourceError:
-            self._inode = None
-        else:
-            # If inode is not a dir, raise error
-            if fs.db.Get_Mode(inode=self._inode) != stat.S_IFDIR:
-                raise NotADirectoryError(path)
+#        try:
+#            self._inode = fs._Get_Inode(path[1:])
+#        except ResourceNotFound:
+#            self._inode = None
+#        else:
+#            # If inode is not a dir, raise error
+#            if fs.db.Get_Mode(inode=self._inode) != stat.S_IFDIR:
+#                raise NotADirectoryError(path)
 
 
     # Overloaded

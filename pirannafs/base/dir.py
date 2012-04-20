@@ -4,9 +4,10 @@ Created on 02/04/2011
 @author: piranna
 '''
 
-from os.path import split
+from stat import S_IFDIR
 
-from ..errors import DirNotFoundError, ParentDirectoryMissing, ResourceNotFound
+from pirannafs.errors import DirNotFoundError, NotADirectoryError
+from pirannafs.errors import ParentDirectoryMissing, ResourceNotFound
 
 import plugins
 
@@ -16,22 +17,31 @@ class BaseDir(object):
     classdocs
     '''
 
-
     def __init__(self, fs, path):
         '''
         Constructor
         '''
+        # Get the inode of the parent or raise ParentDirectoryMissing exception
+        self.parent, self.name = fs._Path2InodeName(path)
+
+        try:
+            self._inode = fs._Get_Inode(self.name, self.parent)
+        except ResourceNotFound:
+            self._inode = None
+        else:
+            # If inode is not a dir, raise error
+            if fs.db.Get_Mode(inode=self._inode) != S_IFDIR:
+                raise NotADirectoryError(path)
+
+#        try:
+#            self.parent = fs._Get_Inode(parent_path)
+#        except (ParentDirectoryMissing, ResourceNotFound):
+#            self.parent = parent_path
+
         self.fs = fs
         self.db = fs.db
 
         self.path = path
-        path, self.name = split(path)
-
-        try:
-            self.parent = fs._Get_Inode(path)
-        except (ParentDirectoryMissing, ResourceNotFound):
-            self.parent = path
-
 
     def _list(self):
         """Lists the files and directories under a given path.

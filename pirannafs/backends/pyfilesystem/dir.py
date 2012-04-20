@@ -7,11 +7,14 @@ Created on 15/08/2010
 import os
 import stat
 
+from os.path import split
+
 from fs.errors import DestinationExistsError, DirectoryNotEmptyError
 from fs.errors import ParentDirectoryMissingError, RemoveRootError
 from fs.errors import ResourceInvalidError, ResourceNotFoundError
 
-from pirannafs.errors import DirNotFoundError, ResourceError, ResourceNotFound
+from pirannafs.errors import DirNotFoundError, NotADirectoryError
+from pirannafs.errors import ParentDirectoryMissing, ResourceError, ResourceNotFound
 
 import plugins
 
@@ -39,8 +42,21 @@ class Dir(BaseDir):
         if path == './':    # [HACK] Ugly hack to pass unittest, need a re-do
             path = ''
 
-        BaseDir.__init__(self, fs, path)
+        # Base
+#        BaseDir.__init__(self, fs, path)
 
+        self.fs = fs
+        self.db = fs.db
+
+        self.path = path
+        parent_path, self.name = split(path)
+
+        try:
+            self.parent = fs._Get_Inode(parent_path)
+        except (ParentDirectoryMissing, ResourceNotFound):
+            self.parent = parent_path
+
+        # PyFilesystem
         try:
             self._inode = fs._Get_Inode(path)
         except (ResourceError, ResourceNotFound):
