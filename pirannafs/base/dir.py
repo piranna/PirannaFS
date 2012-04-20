@@ -59,26 +59,8 @@ class BaseDir(DirEntry):
     def close(self):
         pass
 
-    def next(self):
-        data = self.readline()
-        if data:
-            return data
-        raise StopIteration
-
-
     readline = _list
 
     def readlines(self):
         """Return a list of all lines in the file."""
         return list(self._list())
-
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self.close()
-        return False
-
-    def __iter__(self):
-        return self

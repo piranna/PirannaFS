@@ -37,3 +37,19 @@ class DirEntry(object):
             self._inode = fs._Get_Inode(self.name, self.parent)
         except ResourceNotFound:
             self._inode = None
+
+    def next(self):
+        data = self.readline()
+        if data:
+            return data
+        raise StopIteration
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
+        return False
+
+    def __iter__(self):
+        return self

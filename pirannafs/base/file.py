@@ -298,12 +298,6 @@ class BaseFile(DirEntry):
         pass
 #        self.ll._file.flush()
 
-    def next(self):
-        data = self.readline()
-        if data:
-            return data
-        raise StopIteration
-
     @readable
     def read(self, size= -1):
         floor, ceil, remanent = self.__readPre(size)
@@ -358,16 +352,6 @@ class BaseFile(DirEntry):
         @return: integer
         """
         return self._offset
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self.close()
-        return False
-
-    def __iter__(self):
-        return self
 
 #    def __str__(self):
 #        return "<File in %s %s>" % (self.__fs, self.path)
