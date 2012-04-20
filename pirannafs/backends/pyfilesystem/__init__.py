@@ -4,10 +4,12 @@ Created on 16/08/2010
 @author: piranna
 '''
 
-from stat import S_IFDIR
+from os.path import split
+from stat    import S_IFDIR
 
 from fs        import base
-from fs.errors import ParentDirectoryMissingError, ResourceNotFoundError
+from fs.errors import ParentDirectoryMissingError, ResourceInvalidError
+from fs.errors import ResourceNotFoundError
 
 from pirannafs.base.fs import FS as BaseFS
 from pirannafs.errors  import IsADirectoryError, NotADirectoryError
@@ -205,3 +207,15 @@ class FS(BaseFS, base.FS):
 #            the new file
 #        """
 #        pass
+
+    def _Path2InodeName(self, path):                                       # OK
+        '''
+        Get the parent dir inode and the name of a dir entry defined by path
+        '''
+        path, name = split(path)
+        try:
+            inode = self._Get_Inode(path)
+        except ResourceNotFound:
+            raise ParentDirectoryMissing(path)
+
+        return inode, name

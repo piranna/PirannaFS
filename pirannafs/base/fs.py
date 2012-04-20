@@ -4,7 +4,7 @@ Created on 09/04/2012
 @author: piranna
 '''
 
-from os.path import abspath, dirname, join, sep, split
+from os.path import abspath, dirname, join, sep
 from sqlite3 import connect
 from stat    import S_IFDIR
 
@@ -120,16 +120,3 @@ class FS(object):
         # * or it's not a directory and it's the last path element
         # so return computed inode
         return inode
-
-    def _Path2InodeName(self, path):                                       # OK
-        '''
-        Get the parent dir inode and the name of a dir entry defined by path
-        '''
-#        print >> sys.stderr, '*** _Path2InodeName', repr(path)
-        path, name = split(path)
-        try:
-            inode = self._Get_Inode(path)
-        except ResourceNotFound:
-            raise ParentDirectoryMissing(path)
-
-        return inode, name
