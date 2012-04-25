@@ -46,8 +46,8 @@ class Dir(BaseDir):
 
         @rtype: iterable of fuse.Direntry structs
         """
-        for dir_entry in self._list():
-            yield fuse.Direntry(dir_entry)
+        for direntry in self._list():
+            yield fuse.Direntry(direntry)
 
 
 #    def releasedir(self):

@@ -45,9 +45,9 @@ class BaseDir(DirEntry):
 #        yield unicode('.')
 #        yield unicode('..')
 
-        for dir_entry in self.db.readdir(parent_dir=self._inode, limit= -1):
-            if dir_entry.name:
-                yield unicode(dir_entry.name)
+        for direntry in self.db.readdir(parent_dir=self._inode, limit= -1):
+            if direntry.name:
+                yield unicode(direntry.name)
 
         plugins.send("Dir.list end")
 

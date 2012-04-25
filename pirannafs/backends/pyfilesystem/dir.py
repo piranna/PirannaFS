@@ -123,7 +123,7 @@ class Dir(BaseDir):
         """
         plugins.send("Dir.make.begin")
 
-        # Check if dir_entry exist and we can recreate it if so happens
+        # Check if direntry exist and we can recreate it if so happens
         if self._inode:
             if allow_recreate:
                 return
@@ -141,7 +141,7 @@ class Dir(BaseDir):
             self.parent = d._inode
 
         # Make directory
-        self._inode = self.db._Make_DirEntry(type=S_IFDIR)
+        self._inode = self.db._Make_Inode(type=S_IFDIR)
         self.db.link(parent_dir=self.parent, name=self.name,
                      child_entry=self._inode)
 
@@ -174,8 +174,8 @@ class Dir(BaseDir):
 
         # Force dir deletion
         if force:
-            for dir_entry in self.db.readdir(parent_dir=self._inode, limit= -1):
-                path = join(self.path, dir_entry.name)
+            for direntry in self.db.readdir(parent_dir=self._inode, limit= -1):
+                path = join(self.path, direntry.name)
 
                 try:
                     inode = self.fs._Get_Inode(path)
