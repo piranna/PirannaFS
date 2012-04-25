@@ -3,27 +3,27 @@ SELECT
     0 AS st_uid,
     0 AS st_gid,
 
-    dir_entries.type         AS st_mode,
-    dir_entries.inode        AS st_ino,
+    inodes.type         AS st_mode,
+    inodes.inode        AS st_ino,
     COUNT(links.child_entry) AS st_nlink,
 
     links.creation           AS st_ctime,
-    dir_entries.access       AS st_atime,
-    dir_entries.modification AS st_mtime,
---    links.creation                                           AS st_ctime,
---    CAST(STRFTIME('%s',dir_entries.access)       AS INTEGER) AS st_atime,
---    CAST(STRFTIME('%s',dir_entries.modification) AS INTEGER) AS st_mtime,
+    inodes.access       AS st_atime,
+    inodes.modification AS st_mtime,
+--    links.creation                                      AS st_ctime,
+--    CAST(STRFTIME('%s',inodes.access)       AS INTEGER) AS st_atime,
+--    CAST(STRFTIME('%s',inodes.modification) AS INTEGER) AS st_mtime,
 
     COALESCE(files.size,0) AS st_size, -- Python-FUSE
     COALESCE(files.size,0) AS size     -- PyFilesystem
 
-FROM dir_entries
+FROM inodes
     LEFT JOIN files
-        ON dir_entries.inode == files.inode
+        ON inodes.inode == files.inode
     LEFT JOIN links
-        ON dir_entries.inode == links.child_entry
+        ON inodes.inode == links.child_entry
 
 WHERE parent_dir == :parent_dir AND name == :name
 
-GROUP BY dir_entries.inode
+GROUP BY inodes.inode
 LIMIT 1

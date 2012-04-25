@@ -2,5 +2,5 @@
 -- and return its inode
 
 
-INSERT INTO dir_entries(type)
-                VALUES(:type)
+INSERT INTO inodes(type)
+            VALUES(:type)

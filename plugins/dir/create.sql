@@ -7,9 +7,9 @@ CREATE TABLE IF NOT EXISTS links
     name        TEXT      NOT NULL,
     creation    timestamp DEFAULT CURRENT_TIMESTAMP,
 
-    FOREIGN KEY(child_entry) REFERENCES dir_entries(inode)
+    FOREIGN KEY(child_entry) REFERENCES inodes(inode)
         ON DELETE CASCADE ON UPDATE CASCADE,
-    FOREIGN KEY(parent_dir) REFERENCES dir_entries(inode)
+    FOREIGN KEY(parent_dir) REFERENCES inodes(inode)
         ON DELETE CASCADE ON UPDATE CASCADE,
 
     UNIQUE(parent_dir,name)
@@ -28,8 +28,8 @@ CREATE TRIGGER IF NOT EXISTS remove_if_it_was_the_last_file_link
         LIMIT 1
     )
 BEGIN
-    DELETE FROM dir_entries
-    WHERE dir_entries.inode = OLD.child_entry;
+    DELETE FROM inodes
+    WHERE inodes.inode = OLD.child_entry;
 END;
 
 --
@@ -38,33 +38,33 @@ CREATE TRIGGER IF NOT EXISTS after_insert_on_links
 -- Update the parent dir modification timestamp when a new direntry is inserted
     AFTER INSERT ON links
 BEGIN
-    UPDATE dir_entries
+    UPDATE inodes
     SET modification = CURRENT_TIMESTAMP
-    WHERE dir_entries.inode = NEW.parent_dir;
+    WHERE inodes.inode = NEW.parent_dir;
 END;
 
 CREATE TRIGGER IF NOT EXISTS after_update_on_links
 -- Update the parent dir modification timestamp when a new direntry is updated
     AFTER UPDATE ON links
 BEGIN
-    UPDATE dir_entries
+    UPDATE inodes
     SET modification = CURRENT_TIMESTAMP
-    WHERE dir_entries.inode IN(OLD.parent_dir,NEW.parent_dir);
+    WHERE inodes.inode IN(OLD.parent_dir,NEW.parent_dir);
 END;
 
 CREATE TRIGGER IF NOT EXISTS after_delete_on_links
 -- Update the parent dir modification timestamp when a new direntry is deleted
     AFTER DELETE ON links
 BEGIN
-    UPDATE dir_entries
+    UPDATE inodes
     SET modification = CURRENT_TIMESTAMP
-    WHERE dir_entries.inode = OLD.parent_dir;
+    WHERE inodes.inode = OLD.parent_dir;
 END;
 
 
 -- If links table is empty (table has just been created)
 -- create initial row defining the root directory
-INSERT INTO dir_entries(inode,type)
+INSERT INTO inodes(inode,type)
                  SELECT 0,   :type
                  WHERE NOT EXISTS(SELECT * FROM links LIMIT 1);
 

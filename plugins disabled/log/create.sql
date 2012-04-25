@@ -9,6 +9,6 @@ CREATE TABLE IF NOT EXISTS log
     'whom'  INTEGER   NULL,                      --Inode
     'for'   TEXT      NULL,
 
-    FOREIGN KEY('whom') REFERENCES dir_entries(inode)
+    FOREIGN KEY('whom') REFERENCES inodes(inode)
         ON UPDATE CASCADE
 )

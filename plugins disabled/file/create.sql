@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS files
 
     size  INTEGER DEFAULT 0,
 
-    FOREIGN KEY(inode) REFERENCES dir_entries(inode)
+    FOREIGN KEY(inode) REFERENCES inodes(inode)
         ON DELETE CASCADE ON UPDATE CASCADE
 );
 
