@@ -5,5 +5,5 @@
 
 SELECT type
 FROM inodes
-WHERE inode == :inode
+WHERE id == :inode
 LIMIT 1

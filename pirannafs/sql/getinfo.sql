@@ -4,7 +4,7 @@ SELECT
     0 AS st_gid,
 
     inodes.type         AS st_mode,
-    inodes.inode        AS st_ino,
+    inodes.id           AS st_ino,
     COUNT(links.child_entry) AS st_nlink,
 
     links.creation           AS st_ctime,
@@ -19,11 +19,11 @@ SELECT
 
 FROM inodes
     LEFT JOIN files
-        ON inodes.inode == files.inode
+        ON inodes.id == files.inode
     LEFT JOIN links
-        ON inodes.inode == links.child_entry
+        ON inodes.id == links.child_entry
 
 WHERE parent_dir == :parent_dir AND name == :name
 
-GROUP BY inodes.inode
+GROUP BY inodes.id
 LIMIT 1
