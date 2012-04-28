@@ -48,7 +48,7 @@ class LL:
         self._file.seek(sector * self.sector_size)
         return self._file.read((length + 1) * self.sector_size)
 
-    def Write(self, chunks, data):
+    def Write(self, chunks, data, sector_offset=0):
         """
         Write data the underlying device
         """
@@ -56,11 +56,14 @@ class LL:
             start = chunk.block * self.sector_size
             end = start + (chunk.length + 1) * self.sector_size
 
-            self.Write_Chunk(chunk.sector, data[start:end])
+            self.Write_Chunk(chunk.sector, data[start:end], sector_offset)
 
-    def Write_Chunk(self, sector, data):
+            # We have just written the first sector, we can reset offset to 0
+            sector_offset = 0
+
+    def Write_Chunk(self, sector, data, sector_offset=0):
         """
         Write a single chunk in the underlying device
         """
-        self._file.seek(sector * self.sector_size)
+        self._file.seek(sector * self.sector_size + sector_offset)
         self._file.write(data)

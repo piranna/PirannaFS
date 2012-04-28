@@ -248,31 +248,20 @@ class BaseFile(DirEntry):
                 chunks[index:index + 1] = free_chunks
 ### DB ###
 
-        file_size = self._offset + size
-
-        # If there is an offset in the first sector
-        # adapt data chunks
+        # Get write offset of the first sector
         offset = self._offset % self.ll.sector_size
-        if offset:
-            sector = chunks[0].sector
-#            print "sector:", sector, chunks
 
-            # If first sector was not written before
-            # fill space with zeroes
-            if sector == None:
-                sector = '\0' * offset
-
-            # Else get it's current value as base for new data
-            else:
-                sector = self.ll.Read_Chunk(sector, 0)[:offset]
-
-            # Adapt data
-            data = sector + data
+        # If there is an offset in the first sector and it was not written
+        # before, padding with zeroes and reset offset since we have filled it
+        if offset and chunks[0].sector == None:
+            data = '\0' * offset + data
+            offset = 0
 
         # Write chunks data to the drive
-        self.ll.Write(chunks, data)
+        self.ll.Write(chunks, data, offset)
 
-        # Set new offset
+        # Set new file size and offset
+        file_size = self._offset + size
         self._offset = file_size
 
 ### DB - They are independent and unrelated between them, so don't worry ###
