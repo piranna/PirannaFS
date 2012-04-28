@@ -253,7 +253,7 @@ class BaseFile(DirEntry):
 
         # If there is an offset in the first sector and it was not written
         # before, padding with zeroes and reset offset since we have filled it
-        if offset and chunks[0].sector == None:
+        if offset and chunks[0].inode == None:
             data = '\0' * offset + data
             offset = 0
 
