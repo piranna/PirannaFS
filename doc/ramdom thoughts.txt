@@ -9,3 +9,6 @@ http://www.sqlite.org/vfs.html
 http://www.nongnu.org/libsqlfs/ (fsx.c)
 
 http://drdobbs.com/database/202802959
+
+http://code.google.com/p/pysendfile/
+    Copy data from one file descriptor to another in one step (so much faster)
