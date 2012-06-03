@@ -9,7 +9,7 @@ from sqlite3 import connect
 from stat    import S_IFDIR
 
 from antiorm.backends.sqlite import Sqlite
-from antiorm.utils           import Namedtuple_factory
+from antiorm.utils           import namedtuple_factory
 
 from pirannafs.errors import ParentDirectoryMissing, ParentNotADirectoryError
 from pirannafs.errors import ResourceNotFound
@@ -30,7 +30,7 @@ class FS(object):
 #        db_conn = connect(db_file)
         db_conn = connect(db_file, check_same_thread=False)
 
-        db_conn.row_factory = Namedtuple_factory
+        db_conn.row_factory = namedtuple_factory
 #        db_conn.isolation_level = None
 
         # SQLite tune-ups
