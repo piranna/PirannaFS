@@ -6,9 +6,10 @@ Created on 02/04/2011
 
 from collections import namedtuple
 from os          import SEEK_SET, SEEK_END
-from stat        import S_IFREG
+from stat        import S_IFDIR, S_IFREG
 
-from pirannafs.errors import FileNotFoundError
+from pirannafs.errors import FileNotFoundError, IsADirectoryError
+from pirannafs.errors import ParentDirectoryMissing, ResourceNotFound
 from pirannafs.errors import StorageSpace
 
 from inode import Inode
@@ -489,3 +490,22 @@ class BaseFile(Inode):
         self._offset += remanent
 
         return readed[offset:self._offset]
+
+
+class NamedFile(BaseFile):
+    def __init__(self, fs, name):
+        # Get the inode of the parent or raise ParentDirectoryMissing exception
+        try:
+            self.parent = fs._Get_Inode(self.parent)
+            inode = fs._Get_Inode(name, self.parent)
+        except (ParentDirectoryMissing, ResourceNotFound):
+            inode = None
+
+        # If inode is a dir, raise error
+        if inode and fs.db.Get_Mode(inode=inode) == S_IFDIR:
+            raise IsADirectoryError(name)
+#            raise IsADirectoryError(path)
+
+        BaseFile.__init__(self, fs, inode)
+
+        self.name = name

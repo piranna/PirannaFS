@@ -6,19 +6,17 @@ Created on 14/08/2010
 
 from os      import SEEK_SET, SEEK_CUR, SEEK_END
 from os.path import split
-from stat    import S_IFDIR
 
 from fs.errors import ParentDirectoryMissingError, ResourceInvalidError
 from fs.errors import ResourceNotFoundError, StorageSpaceError
 
-from pirannafs.base.file import BaseFile
+from pirannafs.base.file import NamedFile
 from pirannafs.errors    import FileNotFoundError, IsADirectoryError
 from pirannafs.errors    import ParentDirectoryMissing
-from pirannafs.errors    import ParentNotADirectoryError, ResourceNotFound
-from pirannafs.errors    import StorageSpace
+from pirannafs.errors    import ParentNotADirectoryError, StorageSpace
 
 
-class File(BaseFile):
+class File(NamedFile):
     '''
     classdocs
     '''
@@ -29,22 +27,10 @@ class File(BaseFile):
         @raise ResourceInvalidError:
         """
         self.path = path
-        self.parent, self.name = split(path)
+        self.parent, name = split(path)
 
         try:
-            # Get the inode of the parent or raise ParentDirectoryMissing exception
-            try:
-                self.parent = fs._Get_Inode(self.parent)
-                inode = fs._Get_Inode(self.name, self.parent)
-            except (ParentDirectoryMissing, ResourceNotFound):
-                inode = None
-
-            # If inode is a dir, raise error
-            if inode and fs.db.Get_Mode(inode=inode) == S_IFDIR:
-                raise IsADirectoryError(self.name)
-    #            raise IsADirectoryError(path)
-
-            BaseFile.__init__(self, fs, inode)
+            NamedFile.__init__(self, fs, name)
 
         except (IsADirectoryError, ParentNotADirectoryError), e:
             raise ResourceInvalidError(e)
