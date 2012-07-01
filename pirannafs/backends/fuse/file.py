@@ -8,8 +8,12 @@ import sys
 
 import errno
 
-from ...base.file import BaseFile
-from ...errors    import StorageSpace
+from os.path import split
+from stat    import S_IFDIR
+
+from pirannafs.base.file import BaseFile
+from pirannafs.errors    import IsADirectoryError, ParentDirectoryMissing
+from pirannafs.errors    import ResourceNotFound, StorageSpace
 
 
 class File(BaseFile):
@@ -21,7 +25,22 @@ class File(BaseFile):
         '''
         Constructor
         '''
-        BaseFile.__init__(self, fs, path[1:])
+        self.path = path[1:]
+        self.parent, self.name = split(path)
+
+        # Get the inode of the parent or raise ParentDirectoryMissing exception
+        try:
+            self.parent = fs._Get_Inode(self.parent)
+            inode = fs._Get_Inode(self.name, self.parent)
+        except (ParentDirectoryMissing, ResourceNotFound):
+            inode = None
+
+        # If inode is a dir, raise error
+        if inode and fs.db.Get_Mode(inode=inode) == S_IFDIR:
+            raise IsADirectoryError(self.name)
+#            raise IsADirectoryError(path)
+
+        BaseFile.__init__(self, fs, inode)
 
         # File mode
         self._CalcMode(mode)

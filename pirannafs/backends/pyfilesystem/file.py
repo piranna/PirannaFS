@@ -4,16 +4,18 @@ Created on 14/08/2010
 @author: piranna
 '''
 
-from os import SEEK_SET, SEEK_CUR, SEEK_END
+from os      import SEEK_SET, SEEK_CUR, SEEK_END
+from os.path import split
+from stat    import S_IFDIR
 
 from fs.errors import ParentDirectoryMissingError, ResourceInvalidError
 from fs.errors import ResourceNotFoundError, StorageSpaceError
 
-from pirannafs.errors import FileNotFoundError, IsADirectoryError
-from pirannafs.errors import ParentDirectoryMissing, ParentNotADirectoryError
-from pirannafs.errors import StorageSpace
-
-from ...base.file import BaseFile
+from pirannafs.base.file import BaseFile
+from pirannafs.errors    import FileNotFoundError, IsADirectoryError
+from pirannafs.errors    import ParentDirectoryMissing
+from pirannafs.errors    import ParentNotADirectoryError, ResourceNotFound
+from pirannafs.errors    import StorageSpace
 
 
 class File(BaseFile):
@@ -26,8 +28,23 @@ class File(BaseFile):
         @raise ParentDirectoryMissingError:
         @raise ResourceInvalidError:
         """
+        self.path = path
+        self.parent, self.name = split(path)
+
         try:
-            BaseFile.__init__(self, fs, path)
+            # Get the inode of the parent or raise ParentDirectoryMissing exception
+            try:
+                self.parent = fs._Get_Inode(self.parent)
+                inode = fs._Get_Inode(self.name, self.parent)
+            except (ParentDirectoryMissing, ResourceNotFound):
+                inode = None
+
+            # If inode is a dir, raise error
+            if inode and fs.db.Get_Mode(inode=inode) == S_IFDIR:
+                raise IsADirectoryError(self.name)
+    #            raise IsADirectoryError(path)
+
+            BaseFile.__init__(self, fs, inode)
 
         except (IsADirectoryError, ParentNotADirectoryError), e:
             raise ResourceInvalidError(e)
