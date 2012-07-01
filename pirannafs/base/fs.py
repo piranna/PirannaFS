@@ -55,7 +55,7 @@ class FS(object):
 
         if not db_dirPath:
             db_dirPath = join(dirname(abspath(__file__)), '..', 'sql')
-        self.db = Sqlite(db_conn, db_dirPath, True)
+        self.db = Sqlite(db_conn, db_dirPath, False, True)
 
         # http://stackoverflow.com/questions/283707/size-of-an-open-file-object
         drive = self.ll._file
