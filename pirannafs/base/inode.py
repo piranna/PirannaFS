@@ -10,13 +10,10 @@ class Inode(object):
     classdocs
     '''
 
-    def __init__(self, fs, inode):
+    def __init__(self, inode):
         '''
         Constructor
         '''
-        self.fs = fs
-        self.db = fs.db
-
         self._inode = inode
 
     def close(self):

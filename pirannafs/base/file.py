@@ -50,6 +50,9 @@ class BaseFile(Inode):
         self.path = path
         self.parent, self.name = split(path)
 
+        self.fs = fs
+        self.db = fs.db
+
         # Get the inode of the parent or raise ParentDirectoryMissing exception
         try:
             self.parent = fs._Get_Inode(self.parent)
@@ -57,7 +60,7 @@ class BaseFile(Inode):
         except (ParentDirectoryMissing, ResourceNotFound):
             inode = None
 
-        Inode.__init__(self, fs, inode)
+        Inode.__init__(self, inode)
 
         # If inode is a dir, raise error
         if self._inode and fs.db.Get_Mode(inode=self._inode) == S_IFDIR:
