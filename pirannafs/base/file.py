@@ -356,13 +356,18 @@ class BaseFile(Inode):
     # Protected
     #
 
+    def _db_link(self):
+        pass
+
+    def _raiseFileNotFoundError(self):
+        raise FileNotFoundError(self._inode)
+
     def _CalcMode(self, mode):
         # Based on code from filelike.py
 
         def make():
             self._inode = self.db.mknod(type=S_IFREG)
-            self.db.link(parent_dir=self.parent, name=self.name,
-                         child_entry=self._inode)
+            self._db_link()
 
         # Set `self._mode` as a set so we can modify it.
         # Needed to truncate the file while processing the mode
@@ -372,8 +377,7 @@ class BaseFile(Inode):
         if 'r' in mode:
             # Action
             if self._inode == None:
-                raise FileNotFoundError(self.name)
-#                raise FileNotFoundError(self.path)
+                self._raiseFileNotFoundError()
 
             # Set mode
             self._mode.add('r')
@@ -509,3 +513,11 @@ class NamedFile(BaseFile):
         BaseFile.__init__(self, fs, inode)
 
         self.name = name
+
+    def _db_link(self):
+        self.db.link(parent_dir=self.parent, name=self.name,
+                     child_entry=self._inode)
+
+    def _raiseFileNotFoundError(self):
+        raise FileNotFoundError(self.name)
+#        raise FileNotFoundError(self.path)
