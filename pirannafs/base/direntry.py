@@ -24,11 +24,17 @@ class Inode(object):
 
         self._inode = inode
 
+    def close(self):
+        raise NotImplementedError
+
     def next(self):
         data = self.readline()
         if data:
             return data
         raise StopIteration
+
+    def readline(self):
+        raise NotImplementedError
 
     def __enter__(self):
         return self
