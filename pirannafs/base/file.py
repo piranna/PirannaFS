@@ -13,7 +13,7 @@ from pirannafs.errors import FileNotFoundError, IsADirectoryError
 from pirannafs.errors import ParentDirectoryMissing, ResourceNotFound
 from pirannafs.errors import StorageSpace
 
-from direntry import Inode
+from inode import Inode
 
 
 def readable(method):

@@ -10,7 +10,7 @@ from stat    import S_IFDIR
 from pirannafs.errors import DirNotFoundError, NotADirectoryError
 from pirannafs.errors import ParentDirectoryMissing, ResourceNotFound
 
-from direntry import Inode
+from inode import Inode
 
 import plugins
 
