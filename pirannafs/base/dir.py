@@ -4,16 +4,18 @@ Created on 02/04/2011
 @author: piranna
 '''
 
-from stat import S_IFDIR
+from os.path import split
+from stat    import S_IFDIR
 
 from pirannafs.errors import DirNotFoundError, NotADirectoryError
+from pirannafs.errors import ParentDirectoryMissing, ResourceNotFound
 
-from direntry import DirEntry
+from direntry import Inode
 
 import plugins
 
 
-class BaseDir(DirEntry):
+class BaseDir(Inode):
     '''
     classdocs
     '''
@@ -23,9 +25,16 @@ class BaseDir(DirEntry):
         Constructor
         '''
         self.path = path
+        self.parent, self.name = split(path)
 
         # Get the inode of the parent or raise ParentDirectoryMissing exception
-        DirEntry.__init__(self, fs)
+        try:
+            self.parent = fs._Get_Inode(self.parent)
+            inode = fs._Get_Inode(self.name, self.parent)
+        except (ParentDirectoryMissing, ResourceNotFound):
+            inode = None
+
+        Inode.__init__(self, fs, inode)
 
         # If inode is not a dir, raise error
         if self._inode and fs.db.Get_Mode(inode=self._inode) != S_IFDIR:

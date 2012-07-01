@@ -6,12 +6,14 @@ Created on 02/04/2011
 
 from collections import namedtuple
 from os          import SEEK_END
+from os.path     import split
 from stat        import S_IFDIR, S_IFREG
 
 from pirannafs.errors import FileNotFoundError, IsADirectoryError
+from pirannafs.errors import ParentDirectoryMissing, ResourceNotFound
 from pirannafs.errors import StorageSpace
 
-from direntry import DirEntry
+from direntry import Inode
 
 
 def readable(method):
@@ -32,7 +34,7 @@ def writeable(method):
     return wrapper
 
 
-class BaseFile(DirEntry):
+class BaseFile(Inode):
     '''
     classdocs
     '''
@@ -46,9 +48,16 @@ class BaseFile(DirEntry):
         @raise ParentNotADirectoryError:
         '''
         self.path = path
+        self.parent, self.name = split(path)
 
         # Get the inode of the parent or raise ParentDirectoryMissing exception
-        DirEntry.__init__(self, fs)
+        try:
+            self.parent = fs._Get_Inode(self.parent)
+            inode = fs._Get_Inode(self.name, self.parent)
+        except (ParentDirectoryMissing, ResourceNotFound):
+            inode = None
+
+        Inode.__init__(self, fs, inode)
 
         # If inode is a dir, raise error
         if self._inode and fs.db.Get_Mode(inode=self._inode) == S_IFDIR:
