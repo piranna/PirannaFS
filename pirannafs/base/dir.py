@@ -22,8 +22,10 @@ class BaseDir(DirEntry):
         '''
         Constructor
         '''
+        self.path = path
+
         # Get the inode of the parent or raise ParentDirectoryMissing exception
-        DirEntry.__init__(self, fs, path)
+        DirEntry.__init__(self, fs)
 
         # If inode is not a dir, raise error
         if self._inode and fs.db.Get_Mode(inode=self._inode) != S_IFDIR:

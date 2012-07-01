@@ -15,17 +15,14 @@ class DirEntry(object):
     classdocs
     '''
 
-
-    def __init__(self, fs, path):
+    def __init__(self, fs):
         '''
         Constructor
         '''
         self.fs = fs
         self.db = fs.db
 
-        self.path = path
-
-        self.parent, self.name = split(path)
+        self.parent, self.name = split(self.path)
 
         try:
             self.parent = fs._Get_Inode(self.parent)
