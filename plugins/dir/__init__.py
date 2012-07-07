@@ -1,18 +1,12 @@
-'''
-Created on 02/04/2011
-
-@author: piranna
-'''
-
 from os.path import split
 from stat    import S_IFDIR
 
-from pirannafs.errors import DirNotFoundError, NotADirectoryError
-from pirannafs.errors import ParentDirectoryMissing, ResourceNotFound
-
-from inode import Inode
-
 import plugins
+
+from pirannafs.base.inode import Inode
+from pirannafs.errors     import DirNotFoundError, NotADirectoryError
+from pirannafs.errors     import ParentDirectoryMissing, ResourceNotFound
+from pirannafs.PluginDB   import PluginDB
 
 
 class BaseDir(Inode):
@@ -70,3 +64,29 @@ class BaseDir(Inode):
     def readlines(self):
         """Return a list of all lines in the file."""
         return list(self._list())
+
+
+class DirPlugin(plugins.Plugin):
+    def __init__(self):
+        print "*************DirPlugin"
+        plugins.connect(self.FS__init__, "FS.__init__")
+        plugins.connect(self.list, "FS.dir.list")
+
+#    def __del__(self):
+#        print "*************DirPlugin"
+#        disconnect(self.FS__init__, "FS.__init__")
+#        disconnect(self.list, "FS.dir.list")
+#        disconnect(self.prueba, "FS.dir.list")
+
+    def FS__init__(self, db):
+#        print '*** create', db
+
+        self.db = PluginDB('dir', db)
+        self.db.create(type=S_IFDIR)
+
+    def list(self, path):
+        print "*************list 1"
+        for direntry in self.db.readdir(parent_dir=self._inode, limit= -1):
+            if direntry.name:
+                yield unicode(direntry.name)
+        print "list 2"
