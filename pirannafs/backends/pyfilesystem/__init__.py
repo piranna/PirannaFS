@@ -15,9 +15,9 @@ from pirannafs.base.fs import FS as BaseFS
 from pirannafs.errors  import IsADirectoryError, NotADirectoryError
 from pirannafs.errors  import ParentDirectoryMissing, ResourceNotFound
 
-#import plugins
+from plugins import send
+from pydispatch.dispatcher import connections, getAllReceivers
 
-from dir  import Dir
 from file import File
 
 
@@ -47,7 +47,7 @@ class FS(BaseFS, base.FS):
                        'safeopen': 'safeopen',
                        'size':     'getsize'}
 
-    dir_class = Dir
+    dir_class = None
     file_class = File
 
     def _delegate_methods(self, klass, class_map):
@@ -90,11 +90,11 @@ class FS(BaseFS, base.FS):
         BaseFS.__init__(self, db_file, drive, db_dirPath, sector_size)
         base.FS.__init__(self)
 
+        self.dir_class = send("FS.__init__", self,
+                              db_file=db_file, ll=self.ll)[0][1]
+
         self._delegate_methods(self.dir_class, self._dir_class_map)
         self._delegate_methods(self.file_class, self._file_class_map)
-
-#        print "__init__", plugins.send("FS.__init__", db=db_file, ll=self.ll)
-#        plugins.send("FS.__init__", db=self.db, ll=self.ll)
 
     #
     # Essential methods

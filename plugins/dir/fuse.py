@@ -11,7 +11,7 @@ import fuse
 
 import plugins
 
-from ...base.dir import BaseDir
+from base import BaseDir
 
 
 class Dir(BaseDir):

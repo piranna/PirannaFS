@@ -1,18 +1,16 @@
 '''
-Created on 02/04/2011
+Created on 08/07/2012
 
 @author: piranna
 '''
-
 from os.path import split
 from stat    import S_IFDIR
 
-from pirannafs.errors import DirNotFoundError, NotADirectoryError
-from pirannafs.errors import ParentDirectoryMissing, ResourceNotFound
-
-from inode import Inode
-
 import plugins
+
+from pirannafs.base.inode import Inode
+from pirannafs.errors     import DirNotFoundError, NotADirectoryError
+from pirannafs.errors     import ParentDirectoryMissing, ResourceNotFound
 
 
 class BaseDir(Inode):

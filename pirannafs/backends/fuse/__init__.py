@@ -12,7 +12,6 @@ fuse.fuse_python_api = (0, 2)
 
 from pirannafs.base.fs import FS as BaseFS
 
-from dir  import Dir
 from file import File
 
 
