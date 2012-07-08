@@ -14,12 +14,13 @@ from pirannafs.errors     import ParentDirectoryMissing, ResourceNotFound
 
 
 class BaseDir(Inode):
+    db = None
+
     def __init__(self, fs, path):
         self.path = path
         self.parent, self.name = split(path)
 
         self.fs = fs
-        self.db = fs.db
 
         # Get the inode of the parent or raise ParentDirectoryMissing exception
         try:
@@ -50,7 +51,7 @@ class BaseDir(Inode):
 #        yield unicode('.')
 #        yield unicode('..')
 
-        for direntry in self.db.readdir(parent_dir=self._inode, limit= -1):
+        for direntry in self.db.read(parent_dir=self._inode, limit= -1):
             if direntry.name:
                 yield unicode(direntry.name)
 
