@@ -19,7 +19,7 @@ class Dir(BaseDir):
     classdocs
     '''
 
-    def __init__(self, fs, path):                                           # OK
+    def __init__(self, fs, path):                                          # OK
         '''
         Constructor
         '''
@@ -34,13 +34,11 @@ class Dir(BaseDir):
 #        print >> sys.stderr, '*** fsyncdir'
 #        return -errno.ENOSYS
 
-
 #    def opendir(self):
 #        print >> sys.stderr, '*** opendir'
 #        return -errno.ENOSYS
 
-
-    def readdir(self, offset=None):                                         # OK
+    def readdir(self, offset=None):                                        # OK
         """Lists the files and directories under a given path.
         The directory contents are returned as a list of fuse.Direntry structs.
 
