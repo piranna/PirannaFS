@@ -7,7 +7,7 @@ Created on 29/03/2012
 from os.path import abspath, dirname, join
 from sqlite3 import connect
 
-from plugins import Manager
+from plugins import Load_Dir
 import testfs
 
 from pirannafs.backends.fuse import FS
@@ -17,7 +17,7 @@ def main():
     file_path = dirname(abspath(__file__))
 
     # Load plugins
-    Manager(join(file_path, '../..', 'plugins'))
+    Load_Dir(join(file_path, '../..', 'plugins'))
 
     # Set database and drive
     db_file = connect(join(file_path, '..', 'db.sqlite'))

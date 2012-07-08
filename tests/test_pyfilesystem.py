@@ -5,7 +5,7 @@ from unittest import TestCase
 from fs.filelike import StringIO
 from fs.tests    import FSTestCases, ThreadingTestCases
 
-from plugins import Manager
+from plugins import Load_Dir
 
 from pirannafs.backends.pyfilesystem import FS
 
@@ -19,7 +19,7 @@ class PyFilesystem(TestCase, FSTestCases):
         file_path = dirname(abspath(__file__))
 
         # Load plugins
-        Manager(join(file_path, '..', 'plugins'))
+        Load_Dir(join(file_path, '..', 'plugins'))
 
         test_name = self.__class__.__name__ + '_' + str(self.test_id)
 

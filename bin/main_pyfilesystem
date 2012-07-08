@@ -10,7 +10,7 @@ from sqlite3 import connect
 
 from fs.expose.fuse import mount
 
-from plugins import Manager
+from plugins import Load_Dir
 
 from pirannafs.backends.pyfilesystem import Filesystem
 
@@ -23,7 +23,7 @@ def main():
     file_path = dirname(abspath(__file__))
 
     # Load plugins
-    Manager(join(file_path, '../..', 'plugins'))
+    Load_Dir(join(file_path, '../..', 'plugins'))
 
     # Set database and drive
     db_file = connect(join(file_path, '..', 'db.sqlite'))
