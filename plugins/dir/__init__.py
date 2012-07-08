@@ -7,14 +7,12 @@ from pirannafs.base.fs    import initDB
 
 from pydispatch.dispatcher import connections, getAllReceivers
 
-import fuse
-import pyfilesystem
+import backends.fuse
+import backends.pyfilesystem
 
 
 class DirPlugin(plugins.Plugin):
     def __init__(self):
-        print "*************DirPlugin"
-
         self.db = None
 
         plugins.connect(self.FS__init__, "FS.__init__")
@@ -26,9 +24,9 @@ class DirPlugin(plugins.Plugin):
 
         module = sender.__class__.__module__
         if module == 'pirannafs.backends.fuse':
-            return fuse.Dir
+            return backends.fuse.Dir
         if module == 'pirannafs.backends.pyfilesystem':
-            return pyfilesystem.Dir
+            return backends.pyfilesystem.Dir
 
 #    def list(self, path):
 #        print "*************list 1"
