@@ -21,7 +21,9 @@ class DirPlugin(plugins.Plugin):
 #        plugins.connect(self.list, "FS.dir.list")
 
     def FS__init__(self, sender, db_file):
-        db = initDB(db_file, join(dirname(abspath(__file__)), 'sql'))
+        db = initDB(db_file, join(dirname(abspath(__file__)), '..', '..',
+                                  'pirannafs', 'sql'))
+        db.parse_dir(join(dirname(abspath(__file__)), 'sql'), False, True)
         db.create(type=S_IFDIR)
 
         # Set the Dir objects to use the plugin database instance instead of
