@@ -8,6 +8,8 @@ from collections import namedtuple
 from os          import SEEK_SET, SEEK_END
 from stat        import S_IFDIR, S_IFREG
 
+from plugins import send
+
 from pirannafs.errors import FileNotFoundError, IsADirectoryError
 from pirannafs.errors import ParentDirectoryMissing, ResourceNotFound
 from pirannafs.errors import StorageSpace
@@ -515,8 +517,8 @@ class NamedFile(BaseFile):
         self.name = name
 
     def _db_link(self):
-        self.db.link(parent_dir=self.parent, name=self.name,
-                     child_entry=self._inode)
+        send("FS.link", parent_dir=self.parent, name=self.name,
+                        child_entry=self._inode)
 
     def _raiseFileNotFoundError(self):
         raise FileNotFoundError(self.name)

@@ -18,17 +18,17 @@ class DirPlugin(plugins.Plugin):
         self.db = None
 
         plugins.connect(self.FS__init__, "FS.__init__")
-#        plugins.connect(self.list, "FS.dir.list")
+        plugins.connect(self.link, "FS.link")
 
     def FS__init__(self, sender, db_file):
-        db = initDB(db_file, join(dirname(abspath(__file__)), '..', '..',
+        self.db = initDB(db_file, join(dirname(abspath(__file__)), '..', '..',
                                   'pirannafs', 'sql'))
-        db.parse_dir(join(dirname(abspath(__file__)), 'sql'), False, True)
-        db.create(type=S_IFDIR)
+        self.db.parse_dir(join(dirname(abspath(__file__)), 'sql'), False, True)
+        self.db.create(type=S_IFDIR)
 
         # Set the Dir objects to use the plugin database instance instead of
         # the filesystem main one
-        BaseDir.db = db
+        BaseDir.db = self.db
 
         module = sender.__class__.__module__
         if module == 'pirannafs.backends.fuse':
@@ -36,9 +36,5 @@ class DirPlugin(plugins.Plugin):
         if module == 'pirannafs.backends.pyfilesystem':
             return backends.pyfilesystem.Dir
 
-#    def list(self, path):
-#        print "*************list 1"
-#        for direntry in self.db.readdir(parent_dir=self._inode, limit= -1):
-#            if direntry.name:
-#                yield unicode(direntry.name)
-#        print "list 2"
+    def link(self, parent_dir, name, child_entry):
+        self.db.link(parent_dir=parent_dir, name=name, child_entry=child_entry)
