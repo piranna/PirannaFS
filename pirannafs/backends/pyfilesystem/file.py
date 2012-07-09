@@ -10,6 +10,8 @@ from os.path import split
 from fs.errors import ParentDirectoryMissingError, ResourceInvalidError
 from fs.errors import ResourceNotFoundError, StorageSpaceError
 
+from plugins import send
+
 from pirannafs.base.file import NamedFile
 from pirannafs.errors    import FileNotFoundError, IsADirectoryError
 from pirannafs.errors    import ParentDirectoryMissing
@@ -73,7 +75,7 @@ class File(NamedFile):
             raise ResourceNotFoundError(self.path)
 
         # Unlink dir entry
-        self.db.unlink(parent_dir=self.parent, name=self.name)
+        send('FS.unlink', parent_dir=self.parent, name=self.name)
 
         self._inode = None
         self._offset = 0

@@ -19,6 +19,7 @@ class DirPlugin(plugins.Plugin):
 
         plugins.connect(self.FS__init__, "FS.__init__")
         plugins.connect(self.link, "FS.link")
+        plugins.connect(self.unlink, "FS.unlink")
 
     def FS__init__(self, sender, db_file):
         self.db = initDB(db_file, join(dirname(abspath(__file__)), '..', '..',
@@ -38,3 +39,6 @@ class DirPlugin(plugins.Plugin):
 
     def link(self, parent_dir, name, child_entry):
         self.db.link(parent_dir=parent_dir, name=name, child_entry=child_entry)
+
+    def unlink(self, parent_dir, name):
+        self.db.unlink(parent_dir=parent_dir, name=name)
