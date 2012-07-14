@@ -10,7 +10,7 @@ from sqlite3 import connect
 from plugins import Load_Dir
 import testfs
 
-from pirannafs.backends.fuse import FS
+from pirannafs.backends._fuse import FS
 
 
 def main():
