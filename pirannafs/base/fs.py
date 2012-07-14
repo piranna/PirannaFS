@@ -13,7 +13,6 @@ from antiorm.utils           import namedtuple_factory
 
 from pirannafs.errors import ParentDirectoryMissing, ParentNotADirectoryError
 from pirannafs.errors import ResourceNotFound
-from pirannafs.LL     import LL
 
 
 def initDB(db_file, db_dirPath):
@@ -54,23 +53,12 @@ class FS(object):
     classdocs
     '''
 
-    def __init__(self, db_file, drive, db_dirPath=None, sector_size=512):
-        self.ll = LL(drive, sector_size)
-
+    def __init__(self, db_file, db_dirPath=None, sector_size=512):
         if not db_dirPath:
             db_dirPath = join(dirname(abspath(__file__)), '..', 'sql')
         self.db = initDB(db_file, db_dirPath)
 
-        # http://stackoverflow.com/questions/283707/size-of-an-open-file-object
-        drive = self.ll._file
-
-        def Get_NumSectors():
-            drive.seek(0, 2)
-            end = drive.tell()
-            drive.seek(0)
-            return (end - 1) // sector_size
-
-        self.db.create(type=S_IFDIR, length=Get_NumSectors(), sector=0)
+        self.db.create()
 
         self._freeSpace = None
         self.__sector_size = sector_size

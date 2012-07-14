@@ -51,7 +51,6 @@ class BaseFile(Inode):
 
         self.fs = fs
 
-        self.ll = fs.ll     # Low level implementation
         self._offset = 0
 
     #
