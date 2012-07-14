@@ -90,8 +90,13 @@ class FS(BaseFS, base.FS):
         BaseFS.__init__(self, db_file, drive, db_dirPath, sector_size)
         base.FS.__init__(self)
 
-        self.dir_class = send("FS.__init__", self,
-                              db_file=db_file, ll=self.ll)[0][1]
+        for receiver, response in send("FS.__init__", self,
+                                       db_file=db_file, ll=self.ll):
+            recv_name = receiver.im_self.__class__.__name__
+            if recv_name == 'DirPlugin':
+                self.dir_class = response
+            elif recv_name == 'FilePlugin':
+                self.file_class = response
 
         self._delegate_methods(self.dir_class, self._dir_class_map)
         self._delegate_methods(self.file_class, self._file_class_map)
