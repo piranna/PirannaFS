@@ -191,11 +191,11 @@ class FS(BaseFS, base.FS):
                 raise ResourceInvalidError(src)
 
             # Unlink new path and rename old path to new
-            self.db.unlink(parent_dir=parent_inode_new, name=name_new)
+            send('FS.unlink', parent_dir=parent_inode_new, name=name_new)
 
         # Rename old link
-        self.db.rename(parent_old=parent_inode_old, name_old=name_old,
-                       parent_new=parent_inode_new, name_new=name_new)
+        send('FS.rename', parent_old=parent_inode_old, name_old=name_old,
+                          parent_new=parent_inode_new, name_new=name_new)
 
 
     #
