@@ -12,10 +12,11 @@ from fs.errors import ResourceNotFoundError, StorageSpaceError
 
 from plugins import send
 
-from pirannafs.base.file import NamedFile
-from pirannafs.errors    import FileNotFoundError, IsADirectoryError
-from pirannafs.errors    import ParentDirectoryMissing
-from pirannafs.errors    import ParentNotADirectoryError, StorageSpace
+from pirannafs.errors import FileNotFoundError, IsADirectoryError
+from pirannafs.errors import ParentDirectoryMissing
+from pirannafs.errors import ParentNotADirectoryError, StorageSpace
+
+from ..base import NamedFile
 
 
 class File(NamedFile):

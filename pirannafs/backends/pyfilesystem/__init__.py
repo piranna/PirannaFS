@@ -18,8 +18,6 @@ from pirannafs.errors  import ParentDirectoryMissing, ResourceNotFound
 from plugins import send
 from pydispatch.dispatcher import connections, getAllReceivers
 
-from file import File
-
 
 class FS(BaseFS, base.FS):
     _meta = {"pickle_contents": False, "thread_safe": False}
@@ -48,7 +46,7 @@ class FS(BaseFS, base.FS):
                        'size':     'getsize'}
 
     dir_class = None
-    file_class = File
+    file_class = None
 
     def _delegate_methods(self, klass, class_map):
         """Method that looks inside class `klass` and its ancestors for some

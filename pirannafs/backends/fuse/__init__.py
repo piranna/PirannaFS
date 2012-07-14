@@ -12,8 +12,6 @@ fuse.fuse_python_api = (0, 2)
 
 from pirannafs.base.fs import FS as BaseFS
 
-from file import File
-
 
 class FS(BaseFS, fuse.Fuse):
     def __init__(self, db_file, drive, db_dirPath=None, sector_size=512,

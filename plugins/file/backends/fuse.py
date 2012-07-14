@@ -10,8 +10,9 @@ import errno
 
 from os.path import split
 
-from pirannafs.base.file import NamedFile
-from pirannafs.errors    import StorageSpace
+from pirannafs.errors import StorageSpace
+
+from ..base import NamedFile
 
 
 class File(NamedFile):

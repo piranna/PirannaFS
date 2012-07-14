@@ -10,11 +10,10 @@ from stat        import S_IFDIR, S_IFREG
 
 from plugins import send
 
-from pirannafs.errors import FileNotFoundError, IsADirectoryError
-from pirannafs.errors import ParentDirectoryMissing, ResourceNotFound
-from pirannafs.errors import StorageSpace
-
-from inode import Inode
+from pirannafs.base.inode import Inode
+from pirannafs.errors     import FileNotFoundError, IsADirectoryError
+from pirannafs.errors     import ParentDirectoryMissing, ResourceNotFound
+from pirannafs.errors     import StorageSpace
 
 
 def readable(method):
