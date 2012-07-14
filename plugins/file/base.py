@@ -50,7 +50,6 @@ class BaseFile(Inode):
         Inode.__init__(self, inode)
 
         self.fs = fs
-        self.db = fs.db
 
         self.ll = fs.ll     # Low level implementation
         self._offset = 0
