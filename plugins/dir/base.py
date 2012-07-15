@@ -9,8 +9,8 @@ from stat    import S_IFDIR
 import plugins
 
 from pirannafs.base.inode import Inode
-from pirannafs.errors     import DirNotFoundError, NotADirectoryError
-from pirannafs.errors     import ParentDirectoryMissing, ResourceNotFound
+from pirannafs.errors     import FileNotFoundError, NotADirectoryError
+from pirannafs.errors     import ParentDirectoryMissing
 
 
 class BaseDir(Inode):
@@ -26,7 +26,7 @@ class BaseDir(Inode):
         try:
             self.parent = fs._Get_Inode(self.parent)
             inode = fs._Get_Inode(self.name, self.parent)
-        except (ParentDirectoryMissing, ResourceNotFound):
+        except (FileNotFoundError, ParentDirectoryMissing):
             inode = None
 
         Inode.__init__(self, inode)
@@ -44,7 +44,7 @@ class BaseDir(Inode):
         @raise DirNotFoundError: directory doesn't exists
         """
         if self._inode == None:
-            raise DirNotFoundError(self.path)
+            raise FileNotFoundError(self.path)
 
         plugins.send("Dir.list begin")
 

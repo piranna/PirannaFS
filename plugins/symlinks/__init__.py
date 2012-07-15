@@ -11,7 +11,7 @@ from os.path import abspath, dirname, join
 import plugins
 
 from pirannafs.base.fs import initDB
-from pirannafs.errors  import FileExistsError, ResourceNotFound
+from pirannafs.errors  import FileExistsError, FileNotFoundError
 
 
 class NotASymlink(OSError):
@@ -38,7 +38,7 @@ class symlinks(plugins.Plugin):
 #        print >> sys.stderr, '*** fs_readlink', sender,path
 
         if not path:
-            raise ResourceNotFound(path)
+            raise FileNotFoundError(path)
 
         inode = sender.Get_Inode(path[1:])
 
@@ -62,7 +62,7 @@ class symlinks(plugins.Plugin):
         # If no linkPath,
         # return error
         if not linkPath:
-            raise ResourceNotFound(linkPath)
+            raise FileNotFoundError(linkPath)
 
         # Get parent dir of linkPath
         link_parentInode, name = sender.Path2InodeName(linkPath[1:])

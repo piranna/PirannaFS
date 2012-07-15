@@ -12,7 +12,7 @@ from plugins import send
 
 from pirannafs.base.inode import Inode
 from pirannafs.errors     import FileNotFoundError, IsADirectoryError
-from pirannafs.errors     import ParentDirectoryMissing, ResourceNotFound
+from pirannafs.errors     import ParentDirectoryMissing
 from pirannafs.errors     import StorageSpace
 
 
@@ -38,6 +38,8 @@ class BaseFile(Inode):
     '''
     classdocs
     '''
+    db = None
+    ll = None
 
     def __init__(self, fs, inode):
         '''
@@ -501,7 +503,7 @@ class NamedFile(BaseFile):
         try:
             self.parent = fs._Get_Inode(self.parent)
             inode = fs._Get_Inode(name, self.parent)
-        except (ParentDirectoryMissing, ResourceNotFound):
+        except (FileNotFoundError, ParentDirectoryMissing):
             inode = None
 
         # If inode is a dir, raise error

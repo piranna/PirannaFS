@@ -11,8 +11,7 @@ from fs.errors import DestinationExistsError, DirectoryNotEmptyError
 from fs.errors import ParentDirectoryMissingError, RemoveRootError
 from fs.errors import ResourceInvalidError, ResourceNotFoundError
 
-from pirannafs.errors import DirNotFoundError, NotADirectoryError
-from pirannafs.errors import ResourceNotFound
+from pirannafs.errors import FileNotFoundError, NotADirectoryError
 
 import plugins
 
@@ -103,7 +102,7 @@ class Dir(BaseDir):
         try:
             return list(self.ilist(wildcard, full, absolute, dirs_only,
                                    files_only))
-        except DirNotFoundError, e:
+        except FileNotFoundError, e:
             raise ResourceNotFoundError(e)
 
 #    def listinfo(self):

@@ -13,7 +13,7 @@ from fs.errors import ResourceNotFoundError
 
 from pirannafs.base.fs import FS as BaseFS
 from pirannafs.errors  import IsADirectoryError, NotADirectoryError
-from pirannafs.errors  import ParentDirectoryMissing, ResourceNotFound
+from pirannafs.errors  import FileNotFoundError, ParentDirectoryMissing
 
 from plugins import send
 from pydispatch.dispatcher import connections, getAllReceivers
@@ -135,7 +135,7 @@ class FS(BaseFS, base.FS):
         try:
             inode = self._Get_Inode(path)
         except (NotADirectoryError,
-                ParentDirectoryMissing, ResourceNotFound):
+                FileNotFoundError, ParentDirectoryMissing):
             return False
         return self.db.Get_Mode(inode=inode) == S_IFDIR
 
@@ -149,7 +149,7 @@ class FS(BaseFS, base.FS):
         try:
             inode = self._Get_Inode(path)
         except (IsADirectoryError, NotADirectoryError,
-                ParentDirectoryMissing, ResourceNotFound):
+                FileNotFoundError, ParentDirectoryMissing):
             return False
         return self.db.Get_Mode(inode=inode) != S_IFDIR
 
@@ -198,7 +198,6 @@ class FS(BaseFS, base.FS):
         send('FS.rename', parent_old=parent_inode_old, name_old=name_old,
                           parent_new=parent_inode_new, name_new=name_new)
 
-
     #
     # Utility methods
     #
@@ -219,7 +218,7 @@ class FS(BaseFS, base.FS):
         path, name = split(path)
         try:
             inode = self._Get_Inode(path)
-        except ResourceNotFound:
+        except FileNotFoundError:
             raise ParentDirectoryMissing(path)
 
         return inode, name

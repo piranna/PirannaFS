@@ -12,7 +12,7 @@ from antiorm.backends.sqlite import Sqlite
 from antiorm.utils           import namedtuple_factory
 
 from pirannafs.errors import ParentDirectoryMissing, ParentNotADirectoryError
-from pirannafs.errors import ResourceNotFound
+from pirannafs.errors import FileNotFoundError
 
 
 def initDB(db_file, db_dirPath):
@@ -94,7 +94,7 @@ class FS(object):
             if inode == None:
                 if path:
                     raise ParentDirectoryMissing(parent)
-                raise ResourceNotFound(parent)
+                raise FileNotFoundError(parent)
 
             # If the dir entry is a directory
             # get child inode

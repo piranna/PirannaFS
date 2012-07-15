@@ -64,16 +64,10 @@ class StorageSpace(OperationFailedError):
 
 # Python 3.3-like exceptions
 
-class ResourceNotFound(OSError):    # No oficial
-    pass
-
-class DirNotFoundError(ResourceNotFound):   # No oficial
-    pass
-
 class FileExistsError(OSError):
     pass
 
-class FileNotFoundError(ResourceNotFound):
+class FileNotFoundError(OSError):
     pass
 
 class IsADirectoryError(OSError):
