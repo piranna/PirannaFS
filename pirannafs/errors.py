@@ -70,6 +70,9 @@ class ResourceNotFound(OSError):    # No oficial
 class DirNotFoundError(ResourceNotFound):   # No oficial
     pass
 
+class FileExistsError(OSError):
+    pass
+
 class FileNotFoundError(ResourceNotFound):
     pass
 
