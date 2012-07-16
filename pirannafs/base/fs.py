@@ -62,7 +62,8 @@ class FS(object):
 
         self.db.create()
 
-    def _FreeSpace(self):
+    @property
+    def freespace(self):
         freespace = 0
         for _, space in send('FS.freespace'):
             freespace += space

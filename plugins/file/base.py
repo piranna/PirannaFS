@@ -110,7 +110,7 @@ class BaseFile(Inode):
 #                sectors_required -= chunk.length + 1
 #
 #        # Raise error if there's not enought free space available
-#        if sectors_required > self.fs._FreeSpace() // self.ll.sector_size:
+#        if sectors_required > self.fs.freespace // self.ll.sector_size:
 #            raise StorageSpace
 #### DB ###
 #
@@ -207,7 +207,7 @@ class BaseFile(Inode):
                 sectors_required -= chunk.length + 1
 
         # Raise exception if there's not enought free space available
-        if sectors_required > self.fs._FreeSpace() // self.ll.sector_size:
+        if sectors_required > self.fs.freespace // self.ll.sector_size:
             raise StorageSpace
 ### DB ###
 
