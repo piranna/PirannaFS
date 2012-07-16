@@ -21,9 +21,9 @@ class FilePlugin(Plugin):
     def FS__init__(self, sender, db_file, drive_file):
         self.ll = LL(drive_file)
 
-        self.db = initDB(db_file, join(dirname(abspath(__file__)), '..', '..',
-                                  'pirannafs', 'sql'))
-        self.db.parse_dir(join(dirname(abspath(__file__)), 'sql'), False, True)
+        pwd = dirname(abspath(__file__))
+        self.db = initDB(db_file, join(pwd, '..', '..', 'pirannafs', 'sql'))
+        self.db.parse_dir(join(pwd, 'sql'), False, True)
 
         self.db.create(length=self.ll.Get_NumSectors(), sector=0)
 

@@ -4,7 +4,7 @@ Created on 07/08/2010
 @author: piranna
 '''
 
-from fcntl  import ioctl
+from fcntl import ioctl
 
 
 # http://kogs-www.informatik.uni-hamburg.de/~meine/software/scripts/readfloppy
@@ -13,9 +13,9 @@ _IOC_TYPEBITS = 8
 _IOC_SIZEBITS = 14
 
 _IOC_NRSHIFT = 0
-_IOC_TYPESHIFT = (_IOC_NRSHIFT + _IOC_NRBITS)
-_IOC_SIZESHIFT = (_IOC_TYPESHIFT + _IOC_TYPEBITS)
-_IOC_DIRSHIFT = (_IOC_SIZESHIFT + _IOC_SIZEBITS)
+_IOC_TYPESHIFT = _IOC_NRSHIFT + _IOC_NRBITS
+_IOC_SIZESHIFT = _IOC_TYPESHIFT + _IOC_TYPEBITS
+_IOC_DIRSHIFT = _IOC_SIZESHIFT + _IOC_SIZEBITS
 
 _IOC_NONE = 0
 
