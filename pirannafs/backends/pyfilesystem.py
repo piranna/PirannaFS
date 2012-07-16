@@ -84,13 +84,12 @@ class FS(BaseFS, base.FS):
                         applyMethod(method_func)
                         break
 
-    def __init__(self, db_file, drive, db_dirPath=None, sector_size=512):
-        BaseFS.__init__(self, db_file, db_dirPath, sector_size)
+    def __init__(self, db_file, drive, db_dirPath=None):
+        BaseFS.__init__(self, db_file, db_dirPath)
         base.FS.__init__(self)
 
         for receiver, response in send("FS.__init__", self,
-                                       db_file=db_file, drive_file=drive,
-                                       sector_size=sector_size):
+                                       db_file=db_file, drive_file=drive):
             recv_name = receiver.im_self.__class__.__name__
             if recv_name == 'DirPlugin':
                 self.dir_class = response

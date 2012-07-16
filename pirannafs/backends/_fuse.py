@@ -14,8 +14,7 @@ from pirannafs.base.fs import FS as BaseFS
 
 
 class FS(BaseFS, fuse.Fuse):
-    def __init__(self, db_file, drive, db_dirPath=None, sector_size=512,
-                 *args, **kw):
+    def __init__(self, db_file, drive, db_dirPath=None, *args, **kw):
         fuse.Fuse.__init__(self, *args, **kw)
 
         # This thing that is like a ugly hack it seems that is the correct way
@@ -28,7 +27,6 @@ class FS(BaseFS, fuse.Fuse):
         self.db_dirPath = db_dirPath
 
         self.drive = drive
-        self.sector_size = sector_size
 
         self.parser.add_option(mountopt="db_file", metavar="DB_FILE",
                                default=self.db_file,
@@ -39,14 +37,10 @@ class FS(BaseFS, fuse.Fuse):
         self.parser.add_option(mountopt="drive", metavar="DRIVE",
                                default=self.drive,
                                help="filesystem drive")
-        self.parser.add_option(mountopt="sector_size", metavar="SECTOR_SIZE",
-                               default=self.sector_size,
-                               help="filesystem sector size")
 
         self.parse(values=self, errex=1)
 
 #        self.db = DB.DB(self.db)
-#        self.ll = LL.LL(self.drive, sector_size)
 
         # http://sourceforge.net/apps/mediawiki/fuse/index.php?title=FUSE_Python_Reference#File_Class_Methods
         # http://old.nabble.com/Python:-Pass-parameters-to-file_class-td18301066.html
@@ -62,8 +56,7 @@ class FS(BaseFS, fuse.Fuse):
         self.dir_class = wrapped_dir_class
         self.file_class = wrapped_file_class
 
-        BaseFS.__init__(self, self.db_file, self.db_dirPath, self.drive,
-                        sector_size)
+        BaseFS.__init__(self, self.db_file, self.db_dirPath, self.drive)
 
 
     # Overloaded
