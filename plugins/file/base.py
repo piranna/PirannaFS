@@ -8,7 +8,7 @@ from collections import namedtuple
 from os          import SEEK_SET, SEEK_END
 from stat        import S_IFDIR, S_IFREG
 
-from plugins import send
+from plugins import connect, send
 
 from pirannafs.base.inode import Inode
 from pirannafs.errors     import FileNotFoundError, IsADirectoryError
@@ -54,6 +54,20 @@ class BaseFile(Inode):
         self.fs = fs
 
         self._offset = 0
+
+        self._freeSpace = None
+        connect(self.freespace, "FS.freespace")
+
+    def freespace(self):
+        if self._freeSpace == None:
+            freespace = self.db.Get_FreeSpace()
+
+            if freespace:
+                self._freeSpace = freespace * self.ll.sector_size
+            else:
+                self._freeSpace = 0
+
+        return self._freeSpace
 
     #
     # Evented

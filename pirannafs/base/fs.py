@@ -11,6 +11,8 @@ from stat    import S_IFDIR
 from antiorm.backends.sqlite import Sqlite
 from antiorm.utils           import namedtuple_factory
 
+from plugins import send
+
 from pirannafs.errors import ParentDirectoryMissing, ParentNotADirectoryError
 from pirannafs.errors import FileNotFoundError
 
@@ -53,26 +55,18 @@ class FS(object):
     classdocs
     '''
 
-    def __init__(self, db_file, db_dirPath=None, sector_size=512):
+    def __init__(self, db_file, db_dirPath=None):
         if not db_dirPath:
             db_dirPath = join(dirname(abspath(__file__)), '..', 'sql')
         self.db = initDB(db_file, db_dirPath)
 
         self.db.create()
 
-        self._freeSpace = None
-        self.__sector_size = sector_size
-
     def _FreeSpace(self):
-        if self._freeSpace == None:
-            freespace = self.db.Get_FreeSpace()
-
-            if freespace:
-                self._freeSpace = freespace * self.__sector_size
-            else:
-                self._freeSpace = 0
-
-        return self._freeSpace
+        freespace = 0
+        for _, space in send('FS.freespace'):
+            freespace += space
+        return freespace
 
     def _Get_Inode(self, path, inode=0):                                   # OK
         '''
