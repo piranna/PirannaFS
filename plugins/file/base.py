@@ -193,7 +193,6 @@ class BaseFile(Inode):
 
         size = len(data)
         floor, ceil = self.__CalcBounds(size)
-        sectors_required = ceil - floor
 
 ### DB ###
         # Get written chunks of the file
@@ -201,6 +200,7 @@ class BaseFile(Inode):
 
         # Check if there's enought free space available.
         # This implementation is only for overwriting, not copy-on-write
+        sectors_required = ceil - floor
         for chunk in chunks:
             # Discard chunks already in file from required space
             if chunk.sector != None:
@@ -515,8 +515,8 @@ class NamedFile(BaseFile):
     def __init__(self, fs, name):
         # Get the inode of the parent or raise ParentDirectoryMissing exception
         try:
-            self.parent = fs._Get_Inode(self.parent)
-            inode = fs._Get_Inode(name, self.parent)
+            self.parent = send('Dir._Get_Inode', path=self.parent)[0][1]
+            inode = send('Dir._Get_Inode', path=name, inode=self.parent)[0][1]
         except (FileNotFoundError, ParentDirectoryMissing):
             inode = None
 

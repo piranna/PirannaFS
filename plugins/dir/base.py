@@ -12,6 +12,8 @@ from pirannafs.base.inode import Inode
 from pirannafs.errors     import FileNotFoundError, NotADirectoryError
 from pirannafs.errors     import ParentDirectoryMissing
 
+from plugins import send
+
 
 class BaseDir(Inode):
     db = None
@@ -24,8 +26,9 @@ class BaseDir(Inode):
 
         # Get the inode of the parent or raise ParentDirectoryMissing exception
         try:
-            self.parent = fs._Get_Inode(self.parent)
-            inode = fs._Get_Inode(self.name, self.parent)
+            self.parent = send('Dir._Get_Inode', path=self.parent)[0][1]
+            inode = send('Dir._Get_Inode', path=self.name,
+                                           inode=self.parent)[0][1]
         except (FileNotFoundError, ParentDirectoryMissing):
             inode = None
 

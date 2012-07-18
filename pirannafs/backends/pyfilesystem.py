@@ -16,7 +16,6 @@ from pirannafs.errors  import IsADirectoryError, NotADirectoryError
 from pirannafs.errors  import FileNotFoundError, ParentDirectoryMissing
 
 from plugins import send
-from pydispatch.dispatcher import connections, getAllReceivers
 
 
 class FS(BaseFS, base.FS):
@@ -132,7 +131,7 @@ class FS(BaseFS, base.FS):
         :rtype: bool
         """
         try:
-            inode = self._Get_Inode(path)
+            inode = send('Dir._Get_Inode', path=path)[0][1]
         except (NotADirectoryError,
                 FileNotFoundError, ParentDirectoryMissing):
             return False
@@ -146,7 +145,7 @@ class FS(BaseFS, base.FS):
         :rtype: bool
         """
         try:
-            inode = self._Get_Inode(path)
+            inode = send('Dir._Get_Inode', path=path)[0][1]
         except (IsADirectoryError, NotADirectoryError,
                 FileNotFoundError, ParentDirectoryMissing):
             return False
@@ -182,10 +181,13 @@ class FS(BaseFS, base.FS):
         inode = self.db.Get_Inode(parent_dir=parent_inode_new, name=name_new)
         if inode != None:
             # If old path type is different from new path type then raise error
-            type_old = self.db.Get_Mode(inode=self._Get_Inode(name_old,
-                                                             parent_inode_old))
-            type_new = self.db.Get_Mode(inode=self._Get_Inode(name_new,
-                                                             parent_inode_new))
+            type_old = send('Dir._Get_Inode', path=name_old,
+                                              inode=parent_inode_old)[0][1]
+            type_new = send('Dir._Get_Inode', path=name_new,
+                                              inode=parent_inode_new)[0][1]
+
+            type_old = self.db.Get_Mode(inode=type_old)
+            type_new = self.db.Get_Mode(inode=type_new)
 
             if type_old != type_new:
                 raise ResourceInvalidError(src)
@@ -216,7 +218,7 @@ class FS(BaseFS, base.FS):
         '''
         path, name = split(path)
         try:
-            inode = self._Get_Inode(path)
+            inode = send('Dir._Get_Inode', path=path)[0][1]
         except FileNotFoundError:
             raise ParentDirectoryMissing(path)
 

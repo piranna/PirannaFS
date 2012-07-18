@@ -13,7 +13,7 @@ from fs.errors import ResourceInvalidError, ResourceNotFoundError
 
 from pirannafs.errors import FileNotFoundError, NotADirectoryError
 
-import plugins
+from plugins import send
 
 from ..base import BaseDir
 
@@ -120,7 +120,7 @@ class Dir(BaseDir):
         :raises DestinationExistsError: if the path is already a directory, and
             allow_recreate is False
         """
-        plugins.send("Dir.make.begin")
+        send("Dir.make.begin")
 
         # Check if direntry exist and we can recreate it if so happens
         if self._inode:
@@ -144,7 +144,7 @@ class Dir(BaseDir):
         self.db.link(parent_dir=self.parent, name=self.name,
                      child_entry=self._inode)
 
-        plugins.send("Dir.make.end")
+        send("Dir.make.end")
 
 #    def makeopen(self):
 #        pass
@@ -177,13 +177,13 @@ class Dir(BaseDir):
                 path = join(self.path, direntry.name)
 
                 try:
-                    inode = self.fs._Get_Inode(path)
+                    inode = send('Dir._Get_Inode', path=path)[0][1]
 
                 # Path doesn't exist, probably because it was removed by
                 # another thead while we were getting the entries in this one.
                 # Since in any case we are removing it, we can ignore the
                 # exception
-                except ResourceNotFound:
+                except FileNotFoundError:
                     pass
 
                 else:
@@ -213,7 +213,7 @@ class Dir(BaseDir):
             except (DirectoryNotEmptyError, ResourceNotFoundError):
                 pass
 
-        plugins.send("Dir.remove")
+        send("Dir.remove")
 
 
 #    def walk(self):

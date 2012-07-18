@@ -4,17 +4,13 @@ Created on 09/04/2012
 @author: piranna
 '''
 
-from os.path import abspath, dirname, join, sep
+from os.path import abspath, dirname, join
 from sqlite3 import connect
-from stat    import S_IFDIR
 
 from antiorm.backends.sqlite import Sqlite
 from antiorm.utils           import namedtuple_factory
 
 from plugins import send
-
-from pirannafs.errors import ParentDirectoryMissing, ParentNotADirectoryError
-from pirannafs.errors import FileNotFoundError
 
 
 def initDB(db_file, db_dirPath):
@@ -68,42 +64,3 @@ class FS(object):
         for _, space in send('FS.freespace'):
             freespace += space
         return freespace
-
-    def _Get_Inode(self, path, inode=0):                                   # OK
-        '''
-        Get the inode of a path
-        '''
-#        print >> sys.stderr, '*** _Get_Inode', repr(path),inode
-
-        # If there are path elements
-        # get their inodes
-        if path:
-            parent, _, path = path.partition(sep)
-
-            # Get inode of the dir entry
-            inode = self.db.Get_Inode(parent_dir=inode, name=parent)
-
-            # If there's no such dir entry, raise the adecuate exception
-            # depending of it's related to the resource we are looking for
-            # or to one of it's parents
-            if inode == None:
-                if path:
-                    raise ParentDirectoryMissing(parent)
-                raise FileNotFoundError(parent)
-
-            # If the dir entry is a directory
-            # get child inode
-            if self.db.Get_Mode(inode=inode) == S_IFDIR:
-                return self._Get_Inode(path, inode)
-
-            # If inode is not a directory and is not the last path element
-            # return error
-            if path:
-                raise ParentNotADirectoryError(path)
-
-        # Path is empty, so
-        # * it's the root path
-        # * or we consumed it
-        # * or it's not a directory and it's the last path element
-        # so return computed inode
-        return inode
