@@ -1,7 +1,7 @@
-PirannaFS is a modern and extensible general purpose filesystem developed in
+PirannaFS is a modern and extensible general-purpose filesystem developed in
 Python that uses a SQLite database to manage its metadata. The idea behind it is
-to have a minimalistic core so the user can addapt it to its own personal
-purposses throught a plugin system, allowing from a no-files, pure metadata
+to have a minimal core so the user can adapt it to their own personal
+purposes through a plugin system, allowing from a no-files, pure metadata
 filesystem up to ACLs, copy-on-write, logging, network distributed or whatever
 the user wants.
 
